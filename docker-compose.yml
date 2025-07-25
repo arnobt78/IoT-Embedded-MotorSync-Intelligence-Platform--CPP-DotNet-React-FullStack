@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ./motor-speed-backend
+      dockerfile: Server/Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./motor-speed-backend/EngineMock/libmotor_engine.dylib:/app/libmotor_engine.dylib
+    command: >
+      sh -c "dotnet ef database update --project Server/MotorServer/MotorServer.csproj --startup-project Server/MotorServer && dotnet MotorServer.dll"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build: ./motor-speed-frontend
+    ports:
+      - "5173:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
