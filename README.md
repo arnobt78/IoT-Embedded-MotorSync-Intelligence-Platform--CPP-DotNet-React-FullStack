@@ -1,6 +1,8 @@
 
 # Embedded Motor Engine Speed Dashboard C++, .Net, React Project
 
+<img width="1040" height="744" alt="Screenshot 2025-07-25 at 23 11 13" src="https://github.com/user-attachments/assets/7eb6ad46-73a4-4170-a10e-75ff6b4b9966" /> <img width="1079" height="737" alt="Screenshot 2025-07-25 at 23 11 36" src="https://github.com/user-attachments/assets/7d0562ee-b9f7-4655-a486-c8e4c49a06b9" /> <img width="1443" height="678" alt="Screenshot 2025-07-25 at 23 11 49" src="https://github.com/user-attachments/assets/c304f109-e689-4bda-b496-be94f741155b" /> <img width="606" height="737" alt="Screenshot 2025-07-25 at 23 13 54" src="https://github.com/user-attachments/assets/a01c4b2a-a9ce-480f-bc7c-50dbb4f5648c" />
+
 ---
 
 ## Project Overview (motor-dashboard, motor-speed-backend, motor-speed-frontend)
