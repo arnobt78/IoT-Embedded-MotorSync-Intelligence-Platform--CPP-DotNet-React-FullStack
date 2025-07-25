@@ -6,7 +6,7 @@ export default function NavBar() {
         <a href="/" className="hover:underline">Dashboard</a>
         <a href="http://localhost:5001/swagger/index.html" className="hover:underline" target="_blank" rel="noopener noreferrer">API Docs</a>
         <a href="http://localhost:5001/health" className="hover:underline" target="_blank" rel="noopener noreferrer">Health</a>
-        <a href="https://github.com/" className="hover:underline" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/arnobt78/Embedded-Motor-Engine-Speed-Temperature-Measurement--CPP-DotNet-React" className="hover:underline" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </nav>
   );
