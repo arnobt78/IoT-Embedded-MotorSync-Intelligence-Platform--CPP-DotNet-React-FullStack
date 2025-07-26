@@ -33,8 +33,8 @@ RUN g++ -shared -fPIC -o libmotor_engine.so motor_engine.cpp
 # --- Final runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/out .
-COPY --from=build /app/MotorServer/motors.db ./motors.db
+COPY --from=build /app/Server/out .
+COPY --from=build /app/Server/MotorServer/motors.db ./motors.db
 COPY --from=native-build /src/libmotor_engine.so .
 COPY Server/MotorServer/appsettings.json ./appsettings.json
 COPY Server/MotorServer/appsettings.Development.json ./appsettings.Development.json
