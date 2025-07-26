@@ -10,6 +10,7 @@ using MotorServer.Services;
 // ...existing code...
 
 // --- Top-level code starts here ---
+// --- Top-level code starts here ---
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite("Data Source=motors.db"));
@@ -52,6 +53,9 @@ app.UseCors();
 // Add authentication/authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add a default endpoint for '/'
+app.MapGet("/", () => Results.Content("MotorServer API is running!", "text/plain"));
 
 // Map endpoints
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", time = DateTime.UtcNow }));
