@@ -14,6 +14,9 @@ This backend powers the Motor Dashboard, providing real-time motor data from a n
 - RESTful API endpoints
 - Dockerized deployment
 
+- **Live-Demo:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
+- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
+
 ---
 
 ## Table of Contents
