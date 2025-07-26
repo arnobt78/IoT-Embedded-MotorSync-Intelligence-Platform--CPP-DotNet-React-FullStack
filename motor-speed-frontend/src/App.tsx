@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, SIGNALR_URL } from './services/api';
 import AnimatedMotor from './components/AnimatedMotor';
+import MotorSpinner from './components/MotorSpinner';
 import NotificationSidebar from './components/NotificationSidebar';
 import type { MotorReading } from './types';
 import ReadingList from './components/ReadingList';
@@ -13,6 +14,8 @@ import NavBar from './components/NavBar';
 function App() {
   const [readings, setReadings] = useState<MotorReading[]>([]);
   const [alert, setAlert] = useState('');
+
+  const [loading, setLoading] = useState(true);
 
   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -43,12 +46,16 @@ function App() {
   const lowestRpm = readings.length ? readings.reduce((a, b) => a.speed < b.speed ? a : b) : null;
 
   useEffect(() => {
+
     axios.get<MotorReading[]>(`${API_BASE_URL}/api/motor`).then(res => {
       console.log('[DEBUG] Readings loaded from backend:', res.data);
       res.data.forEach(r => {
         console.log(`[DEBUG] Reading id=${r.id} timestamp=`, r.timestamp);
       });
       setReadings(res.data);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false); // still hide spinner on error
     });
 
     const hub = new signalR.HubConnectionBuilder()
@@ -66,7 +73,12 @@ function App() {
   }, [maxReadings]);
 
   return (
-    <div className={`p-6 max-w-xl mx-auto${darkMode ? ' dark bg-gray-900 text-white' : ''}`}>
+    <div className={`p-6 max-w-xl mx-auto relative${darkMode ? ' dark bg-gray-900 text-white' : ''}`}>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
+          <MotorSpinner />
+        </div>
+      )}
       <NavBar />
       {/* Top bar with nav and settings */}
       <div className="flex flex-row items-center justify-between mb-6 w-full">

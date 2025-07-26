@@ -1,7 +1,6 @@
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/appsettings.Development.json
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/appsettings.json
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/MotorServer.staticwebassets.endpoints.json
-/Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/libmotor_engine.dylib
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/MotorServer
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/MotorServer.deps.json
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/MotorServer.runtimeconfig.json
@@ -173,3 +172,4 @@
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/obj/Debug/net8.0/MotorServer.sourcelink.json
