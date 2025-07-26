@@ -17,6 +17,8 @@ WORKDIR /app/Server
 
 RUN dotnet ef migrations add DockerInit --project MotorServer/MotorServer.csproj --startup-project MotorServer || echo "Migrations already exist"
 
+# Build the project to surface errors
+RUN dotnet build MotorServer/MotorServer.csproj -c Release
 # Apply migrations in build stage so motors.db is created
 RUN dotnet ef database update --project MotorServer/MotorServer.csproj --startup-project MotorServer
 RUN dotnet publish MotorServer/MotorServer.csproj -c Release -o out -p:DefineConstants=LINUX
