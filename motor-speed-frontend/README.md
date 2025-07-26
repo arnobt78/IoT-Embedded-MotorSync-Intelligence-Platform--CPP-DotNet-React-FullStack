@@ -13,6 +13,9 @@ This frontend is the UI for the Motor Dashboard, visualizing real-time motor dat
 - CSV export, settings, and dark mode
 - Modular, reusable components
 
+- **Live-Demo:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
+- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
+
 ---
 
 ## Table of Contents
