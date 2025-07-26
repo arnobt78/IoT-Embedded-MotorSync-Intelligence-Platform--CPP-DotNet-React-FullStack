@@ -1,14 +1,20 @@
 # motor-speed-backend/Server/Dockerfile
 
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-COPY . .
+# Copy solution file and Server/ contents
+COPY motor-speed-backend.sln ./
+COPY Server/. ./Server/
+WORKDIR /app/Server
+
 
 # Install EF tools and build
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"
 RUN dotnet restore
 ENV ASPNETCORE_ENVIRONMENT=Development
+
 
 RUN dotnet ef migrations add DockerInit --project MotorServer/MotorServer.csproj --startup-project MotorServer || echo "Migrations already exist"
 
