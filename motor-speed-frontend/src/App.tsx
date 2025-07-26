@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import * as signalR from '@microsoft/signalr';
+import { API_BASE_URL, SIGNALR_URL } from './services/api';
 import AnimatedMotor from './components/AnimatedMotor';
 import NotificationSidebar from './components/NotificationSidebar';
 import type { MotorReading } from './types';
@@ -39,7 +40,7 @@ function App() {
   const lowestRpm = readings.length ? readings.reduce((a, b) => a.speed < b.speed ? a : b) : null;
 
   useEffect(() => {
-    axios.get<MotorReading[]>("http://localhost:5001/api/motor").then(res => {
+    axios.get<MotorReading[]>(`${API_BASE_URL}/api/motor`).then(res => {
       console.log('[DEBUG] Readings loaded from backend:', res.data);
       res.data.forEach(r => {
         console.log(`[DEBUG] Reading id=${r.id} timestamp=`, r.timestamp);
@@ -48,7 +49,7 @@ function App() {
     });
 
     const hub = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5001/motorHub")
+      .withUrl(SIGNALR_URL)
       .withAutomaticReconnect()
       .build();
 
@@ -80,7 +81,7 @@ function App() {
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={() => {
-              axios.get('http://localhost:5001/api/motor/sample');
+              axios.get(`${API_BASE_URL}/api/motor/sample`);
               setFastSpinCount(c => c + 1);
             }}
           >

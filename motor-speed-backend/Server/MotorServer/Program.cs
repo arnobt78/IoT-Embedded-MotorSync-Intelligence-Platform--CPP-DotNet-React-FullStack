@@ -15,9 +15,13 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlite("Data Source=motors.db"));
 builder.Services.AddSignalR();
 builder.Services.AddScoped<EngineService>();
+var allowedOrigins = new[] {
+    "http://localhost:5173",
+    Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "https://your-frontend.onrender.com"
+};
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(p =>
-        p.WithOrigins("http://localhost:5173")
+        p.WithOrigins(allowedOrigins)
          .AllowAnyHeader().AllowAnyMethod()
          .AllowCredentials()));
 builder.Services.AddControllers()
