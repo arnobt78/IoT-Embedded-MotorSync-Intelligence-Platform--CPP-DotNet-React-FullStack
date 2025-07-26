@@ -29,8 +29,8 @@ WORKDIR /app
 COPY --from=build /app/out .
 COPY --from=build /app/MotorServer/motors.db ./motors.db
 COPY --from=native-build /src/libmotor_engine.so .
-COPY Server/MotorServer/appsettings.json ./appsettings.json
-COPY Server/MotorServer/appsettings.Development.json ./appsettings.Development.json
+COPY MotorServer/appsettings.json ./appsettings.json
+COPY MotorServer/appsettings.Development.json ./appsettings.Development.json
 
 # Run app on port 5001
 EXPOSE 5001
