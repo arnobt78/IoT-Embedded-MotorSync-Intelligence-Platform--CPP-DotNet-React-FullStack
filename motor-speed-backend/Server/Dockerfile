@@ -19,8 +19,8 @@ RUN dotnet publish MotorServer/MotorServer.csproj -c Release -o out -p:DefineCon
 # --- Native build stage ---
 FROM gcc:latest AS native-build
 WORKDIR /src
-COPY EngineMock/motor_engine.cpp .
-COPY EngineMock/motor_engine.hpp .
+COPY ../EngineMock/motor_engine.cpp .
+COPY ../EngineMock/motor_engine.hpp .
 RUN g++ -shared -fPIC -o libmotor_engine.so motor_engine.cpp
 
 # --- Final runtime stage ---
