@@ -12,6 +12,9 @@
 
 This project demonstrates a complete workflow for real-time machine data monitoring, from a native C++ engine (mock or real, via DLL) to a .NET backend (with SignalR and EF Core) to a modern React frontend. It is designed for learning, prototyping, and as a reference for real-world industrial or IoT dashboards.
 
+- **Live-Demo:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
+- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
+
 ---
 
 ## Features
