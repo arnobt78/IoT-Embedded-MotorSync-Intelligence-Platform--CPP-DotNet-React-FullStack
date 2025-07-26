@@ -2,7 +2,7 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-COPY . .
+COPY Server/. .
 
 # Install EF tools and build
 RUN dotnet tool install --global dotnet-ef
