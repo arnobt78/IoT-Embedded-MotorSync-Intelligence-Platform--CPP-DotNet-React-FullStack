@@ -13,6 +13,9 @@ import NavBar from './components/NavBar';
 function App() {
   const [readings, setReadings] = useState<MotorReading[]>([]);
   const [alert, setAlert] = useState('');
+
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fastSpinCount, setFastSpinCount] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
