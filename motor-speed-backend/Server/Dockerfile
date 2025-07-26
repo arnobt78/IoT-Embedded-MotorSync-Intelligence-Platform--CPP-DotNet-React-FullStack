@@ -3,8 +3,8 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
-# Copy solution file and Server/ contents
-COPY motor-speed-backend.sln ./
+ # Copy solution file and Server/ contents
+COPY ../motor-speed-backend.sln ./
 COPY Server/. ./Server/
 WORKDIR /app/Server
 
