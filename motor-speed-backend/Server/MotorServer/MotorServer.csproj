@@ -19,10 +19,18 @@
   </ItemGroup>
 
   <!-- Copy the native library for macOS -->
-  <ItemGroup Condition=" '$(OS)' == 'Darwin' OR '$(OS)' == 'Unix' ">
+  <ItemGroup Condition=" '$(OS)' == 'Darwin' ">
     <None Include="../../EngineMock/libmotor_engine.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>libmotor_engine.dylib</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- Copy the native library for Linux (Docker) -->
+  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+    <None Include="../../EngineMock/libmotor_engine.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>libmotor_engine.so</Link>
     </None>
   </ItemGroup>
 

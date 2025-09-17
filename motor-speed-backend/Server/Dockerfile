@@ -1,11 +1,20 @@
 # motor-speed-backend/Server/Dockerfile
 
+# --- Native build stage ---
+FROM gcc:latest AS native-build
+WORKDIR /src
+COPY ../EngineMock/motor_engine.cpp .
+COPY ../EngineMock/motor_engine.hpp .
+RUN g++ -shared -fPIC -o libmotor_engine.so motor_engine.cpp
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 # Copy solution file and Server/ contents
 COPY motor-speed-backend.sln ./
 COPY Server/. ./Server/
+
+# Copy the built .so file from native-build stage
+COPY --from=native-build /src/libmotor_engine.so ./EngineMock/
 
 # Install EF tools and build
 RUN dotnet tool install --global dotnet-ef
@@ -22,13 +31,6 @@ RUN dotnet build MotorServer/MotorServer.csproj -c Release
 # Apply migrations in build stage so motors.db is created
 RUN dotnet ef database update --project MotorServer/MotorServer.csproj --startup-project MotorServer
 RUN dotnet publish MotorServer/MotorServer.csproj -c Release -o out -p:DefineConstants=LINUX
-
-# --- Native build stage ---
-FROM gcc:latest AS native-build
-WORKDIR /src
-COPY ../EngineMock/motor_engine.cpp .
-COPY ../EngineMock/motor_engine.hpp .
-RUN g++ -shared -fPIC -o libmotor_engine.so motor_engine.cpp
 
 # --- Final runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
