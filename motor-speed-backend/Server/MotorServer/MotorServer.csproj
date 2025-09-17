@@ -18,8 +18,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
   </ItemGroup>
 
-  <!-- Only include the macOS dylib on macOS builds -->
-  <ItemGroup Condition=" '$(OS)' == 'OSX' ">
+  <!-- Copy the native library for macOS -->
+  <ItemGroup Condition=" '$(OS)' == 'Darwin' OR '$(OS)' == 'Unix' ">
     <None Include="../../EngineMock/libmotor_engine.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>libmotor_engine.dylib</Link>

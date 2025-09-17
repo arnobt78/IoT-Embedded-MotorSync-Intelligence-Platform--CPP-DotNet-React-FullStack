@@ -8,10 +8,10 @@ static int random_int(int min, int max) {
 
 int GetMotorSpeed() {
     srand(time(nullptr));
-    return random_int(800, 3000);
+    return random_int(0, 5000);
 }
 
 int GetMotorTemperature() {
     srand(time(nullptr));
-    return random_int(30, 90);
+    return random_int(0, 100);
 }
