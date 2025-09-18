@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
 import type { MotorReading } from "../types/types";
+import React, { useState, useEffect } from "react";
 
 interface DailyLifeApplicationsProps {
   reading: MotorReading | null;
 }
 
-export default function DailyLifeApplications({ reading }: DailyLifeApplicationsProps) {
+export default function DailyLifeApplications({
+  reading,
+}: DailyLifeApplicationsProps) {
   const [activeApplication, setActiveApplication] = useState("home");
   const [homeAutomation, setHomeAutomation] = useState({
     hvacEfficiency: 0,
@@ -66,7 +68,8 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
           fuelEfficiency: Math.min(100, reading.efficiency || 0),
         },
         poolPump: {
-          status: reading.status === "normal" ? "Running" : "Maintenance Needed",
+          status:
+            reading.status === "normal" ? "Running" : "Maintenance Needed",
           flowRate: Math.min(100, (reading.coolantFlowRate || 0) * 20),
           energyUsage: Math.min(100, (reading.powerConsumption || 0) * 15),
         },
@@ -146,7 +149,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">HVAC Efficiency</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(homeAutomation.hvacEfficiency)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    homeAutomation.hvacEfficiency
+                  )}`}
+                >
                   {homeAutomation.hvacEfficiency.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Heating/Cooling</div>
@@ -154,7 +161,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Energy Savings</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(homeAutomation.energySavings)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    homeAutomation.energySavings
+                  )}`}
+                >
                   {homeAutomation.energySavings.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Monthly Savings</div>
@@ -162,7 +173,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Comfort Level</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(homeAutomation.comfortLevel)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    homeAutomation.comfortLevel
+                  )}`}
+                >
                   {homeAutomation.comfortLevel.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Temperature</div>
@@ -170,7 +185,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Air Quality</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(homeAutomation.airQuality)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    homeAutomation.airQuality
+                  )}`}
+                >
                   {homeAutomation.airQuality.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Clean Air</div>
@@ -178,7 +197,9 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Smart Devices</div>
-                <div className="text-2xl font-bold">{homeAutomation.smartDevices}</div>
+                <div className="text-2xl font-bold">
+                  {homeAutomation.smartDevices}
+                </div>
                 <div className="text-xs opacity-90">Connected</div>
               </div>
             </div>
@@ -191,16 +212,26 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Thermostat</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Thermostat
+                    </span>
                     <span className="font-medium">Smart Control Active</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Fan Speed</span>
-                    <span className="font-medium">{reading?.speed || 0} RPM</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Fan Speed
+                    </span>
+                    <span className="font-medium">
+                      {reading?.speed || 0} RPM
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Temperature</span>
-                    <span className="font-medium">{reading?.temperature || 0}°C</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Temperature
+                    </span>
+                    <span className="font-medium">
+                      {reading?.temperature || 0}°C
+                    </span>
                   </div>
                 </div>
               </div>
@@ -211,16 +242,28 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Power Usage</span>
-                    <span className="font-medium">{(reading?.powerConsumption || 0).toFixed(1)} kW</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Power Usage
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.powerConsumption || 0).toFixed(1)} kW
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Efficiency</span>
-                    <span className="font-medium">{(reading?.efficiency || 0).toFixed(1)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Efficiency
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.efficiency || 0).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Cost Savings</span>
-                    <span className="font-medium text-green-600">${(homeAutomation.energySavings * 0.5).toFixed(0)}/month</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Cost Savings
+                    </span>
+                    <span className="font-medium text-green-600">
+                      ${(homeAutomation.energySavings * 0.5).toFixed(0)}/month
+                    </span>
                   </div>
                 </div>
               </div>
@@ -238,7 +281,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Fuel Efficiency</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(vehicleMetrics.fuelEfficiency)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    vehicleMetrics.fuelEfficiency
+                  )}`}
+                >
                   {vehicleMetrics.fuelEfficiency.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">MPG Rating</div>
@@ -246,7 +293,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Engine Health</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(vehicleMetrics.engineHealth)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    vehicleMetrics.engineHealth
+                  )}`}
+                >
                   {vehicleMetrics.engineHealth.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Overall Health</div>
@@ -254,7 +305,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Battery Level</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(vehicleMetrics.batteryLevel)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    vehicleMetrics.batteryLevel
+                  )}`}
+                >
                   {vehicleMetrics.batteryLevel.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Charge Status</div>
@@ -262,7 +317,11 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-lg">
                 <div className="text-sm opacity-90">Tire Pressure</div>
-                <div className={`text-2xl font-bold ${getEfficiencyColor(vehicleMetrics.tirePressure)}`}>
+                <div
+                  className={`text-2xl font-bold ${getEfficiencyColor(
+                    vehicleMetrics.tirePressure
+                  )}`}
+                >
                   {vehicleMetrics.tirePressure.toFixed(0)}%
                 </div>
                 <div className="text-xs opacity-90">Optimal Range</div>
@@ -287,20 +346,34 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">RPM</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      RPM
+                    </span>
                     <span className="font-medium">{reading?.speed || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Engine Temp</span>
-                    <span className="font-medium">{reading?.temperature || 0}°C</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Engine Temp
+                    </span>
+                    <span className="font-medium">
+                      {reading?.temperature || 0}°C
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Vibration</span>
-                    <span className="font-medium">{(reading?.vibration || 0).toFixed(2)} mm/s</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Vibration
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.vibration || 0).toFixed(2)} mm/s
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Oil Pressure</span>
-                    <span className="font-medium">{(reading?.oilPressure || 0).toFixed(1)} bar</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Oil Pressure
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.oilPressure || 0).toFixed(1)} bar
+                    </span>
                   </div>
                 </div>
               </div>
@@ -311,20 +384,36 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Power Output</span>
-                    <span className="font-medium">{(reading?.powerConsumption || 0).toFixed(1)} kW</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Power Output
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.powerConsumption || 0).toFixed(1)} kW
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Efficiency</span>
-                    <span className="font-medium">{(reading?.efficiency || 0).toFixed(1)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Efficiency
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.efficiency || 0).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Operating Hours</span>
-                    <span className="font-medium">{(reading?.operatingHours || 0).toFixed(0)}h</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Operating Hours
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.operatingHours || 0).toFixed(0)}h
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">System Health</span>
-                    <span className="font-medium">{(reading?.systemHealth || 0).toFixed(0)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      System Health
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.systemHealth || 0).toFixed(0)}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -347,18 +436,34 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
-                    <span className={`font-medium ${getStatusColor(recreationEquipment.boatEngine.status)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
+                    <span
+                      className={`font-medium ${getStatusColor(
+                        recreationEquipment.boatEngine.status
+                      )}`}
+                    >
                       {recreationEquipment.boatEngine.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Operating Hours</span>
-                    <span className="font-medium">{recreationEquipment.boatEngine.hours}h</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Operating Hours
+                    </span>
+                    <span className="font-medium">
+                      {recreationEquipment.boatEngine.hours}h
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Efficiency</span>
-                    <span className={`font-medium ${getEfficiencyColor(recreationEquipment.boatEngine.efficiency)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Efficiency
+                    </span>
+                    <span
+                      className={`font-medium ${getEfficiencyColor(
+                        recreationEquipment.boatEngine.efficiency
+                      )}`}
+                    >
                       {recreationEquipment.boatEngine.efficiency.toFixed(0)}%
                     </span>
                   </div>
@@ -372,20 +477,38 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
-                    <span className={`font-medium ${getStatusColor(recreationEquipment.lawnMower.status)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
+                    <span
+                      className={`font-medium ${getStatusColor(
+                        recreationEquipment.lawnMower.status
+                      )}`}
+                    >
                       {recreationEquipment.lawnMower.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Blade Sharpness</span>
-                    <span className={`font-medium ${getEfficiencyColor(recreationEquipment.lawnMower.bladeSharpness)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Blade Sharpness
+                    </span>
+                    <span
+                      className={`font-medium ${getEfficiencyColor(
+                        recreationEquipment.lawnMower.bladeSharpness
+                      )}`}
+                    >
                       {recreationEquipment.lawnMower.bladeSharpness.toFixed(0)}%
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Fuel Level</span>
-                    <span className={`font-medium ${getEfficiencyColor(recreationEquipment.lawnMower.fuelLevel)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Fuel Level
+                    </span>
+                    <span
+                      className={`font-medium ${getEfficiencyColor(
+                        recreationEquipment.lawnMower.fuelLevel
+                      )}`}
+                    >
                       {recreationEquipment.lawnMower.fuelLevel.toFixed(0)}%
                     </span>
                   </div>
@@ -399,18 +522,34 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
-                    <span className={`font-medium ${getStatusColor(recreationEquipment.generator.status)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
+                    <span
+                      className={`font-medium ${getStatusColor(
+                        recreationEquipment.generator.status
+                      )}`}
+                    >
                       {recreationEquipment.generator.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Power Output</span>
-                    <span className="font-medium">{recreationEquipment.generator.powerOutput.toFixed(0)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Power Output
+                    </span>
+                    <span className="font-medium">
+                      {recreationEquipment.generator.powerOutput.toFixed(0)}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Fuel Efficiency</span>
-                    <span className={`font-medium ${getEfficiencyColor(recreationEquipment.generator.fuelEfficiency)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Fuel Efficiency
+                    </span>
+                    <span
+                      className={`font-medium ${getEfficiencyColor(
+                        recreationEquipment.generator.fuelEfficiency
+                      )}`}
+                    >
                       {recreationEquipment.generator.fuelEfficiency.toFixed(0)}%
                     </span>
                   </div>
@@ -424,18 +563,32 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
-                    <span className={`font-medium ${getStatusColor(recreationEquipment.poolPump.status)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
+                    <span
+                      className={`font-medium ${getStatusColor(
+                        recreationEquipment.poolPump.status
+                      )}`}
+                    >
                       {recreationEquipment.poolPump.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Flow Rate</span>
-                    <span className="font-medium">{recreationEquipment.poolPump.flowRate.toFixed(0)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Flow Rate
+                    </span>
+                    <span className="font-medium">
+                      {recreationEquipment.poolPump.flowRate.toFixed(0)}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Energy Usage</span>
-                    <span className="font-medium">{recreationEquipment.poolPump.energyUsage.toFixed(0)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Energy Usage
+                    </span>
+                    <span className="font-medium">
+                      {recreationEquipment.poolPump.energyUsage.toFixed(0)}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -498,20 +651,34 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
                     <span className="font-medium text-green-600">Running</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Cycle</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Cycle
+                    </span>
                     <span className="font-medium">Normal Wash</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Energy Usage</span>
-                    <span className="font-medium">{(reading?.powerConsumption || 0).toFixed(1)} kW</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Energy Usage
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.powerConsumption || 0).toFixed(1)} kW
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Efficiency</span>
-                    <span className={`font-medium ${getEfficiencyColor(reading?.efficiency || 0)}`}>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Efficiency
+                    </span>
+                    <span
+                      className={`font-medium ${getEfficiencyColor(
+                        reading?.efficiency || 0
+                      )}`}
+                    >
                       {(reading?.efficiency || 0).toFixed(0)}%
                     </span>
                   </div>
@@ -524,19 +691,31 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
                     <span className="font-medium text-blue-600">Standby</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Water Usage</span>
-                    <span className="font-medium">{(reading?.coolantFlowRate || 0).toFixed(1)} L/min</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Water Usage
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.coolantFlowRate || 0).toFixed(1)} L/min
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Temperature</span>
-                    <span className="font-medium">{reading?.temperature || 0}°C</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Temperature
+                    </span>
+                    <span className="font-medium">
+                      {reading?.temperature || 0}°C
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Cycle Time</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Cycle Time
+                    </span>
                     <span className="font-medium">45 min</span>
                   </div>
                 </div>
@@ -548,20 +727,34 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Status</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Status
+                    </span>
                     <span className="font-medium text-green-600">Cooling</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Temperature</span>
-                    <span className="font-medium">{reading?.temperature || 0}°C</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Temperature
+                    </span>
+                    <span className="font-medium">
+                      {reading?.temperature || 0}°C
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Compressor</span>
-                    <span className="font-medium">{reading?.speed || 0} RPM</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Compressor
+                    </span>
+                    <span className="font-medium">
+                      {reading?.speed || 0} RPM
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Energy Usage</span>
-                    <span className="font-medium">{(reading?.powerConsumption || 0).toFixed(1)} kW</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Energy Usage
+                    </span>
+                    <span className="font-medium">
+                      {(reading?.powerConsumption || 0).toFixed(1)} kW
+                    </span>
                   </div>
                 </div>
               </div>
@@ -569,19 +762,27 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
 
             {/* Appliance Efficiency Summary */}
             <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">📊 Overall Appliance Efficiency</h4>
+              <h4 className="font-semibold mb-4">
+                📊 Overall Appliance Efficiency
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <div className="text-sm opacity-90">Total Energy Usage</div>
-                  <div className="text-2xl font-bold">{(reading?.powerConsumption || 0).toFixed(1)} kW</div>
+                  <div className="text-2xl font-bold">
+                    {(reading?.powerConsumption || 0).toFixed(1)} kW
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm opacity-90">Average Efficiency</div>
-                  <div className="text-2xl font-bold">{(reading?.efficiency || 0).toFixed(0)}%</div>
+                  <div className="text-2xl font-bold">
+                    {(reading?.efficiency || 0).toFixed(0)}%
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm opacity-90">Monthly Savings</div>
-                  <div className="text-2xl font-bold">${((reading?.efficiency || 0) * 0.3).toFixed(0)}</div>
+                  <div className="text-2xl font-bold">
+                    ${((reading?.efficiency || 0) * 0.3).toFixed(0)}
+                  </div>
                 </div>
               </div>
             </div>

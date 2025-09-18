@@ -352,7 +352,10 @@ namespace MotorServer.Services {
                 _ => "🔴"
             };
             
-            return $"{statusEmoji} {healthIndicator} {prefix} Operation - {speed}RPM @ {temperature}°C (Health: {systemHealth}%)";
+            // Add unique identifier to prevent duplicate keys
+            var uniqueId = Guid.NewGuid().ToString("N")[..8];
+            
+            return $"{statusEmoji} {healthIndicator} {prefix} Operation - {speed}RPM @ {temperature}°C (Health: {systemHealth}%) [{uniqueId}]";
         }
 
         // Check for alerts and send if needed

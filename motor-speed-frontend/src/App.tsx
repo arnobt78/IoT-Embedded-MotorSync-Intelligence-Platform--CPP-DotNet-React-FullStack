@@ -7,7 +7,6 @@ import DashboardStatsComponent from "./components/DashboardStats";
 import IndustrialManagementDashboard from "./components/IndustrialManagementDashboard";
 import IoTCloudIntegration from "./components/IoTCloudIntegration";
 import MobileDashboard from "./components/MobileDashboard";
-import Motor3D from "./components/Motor3D";
 import MotorChart from "./components/MotorChart";
 import MotorSpinner from "./components/MotorSpinner";
 import NavBar from "./components/NavBar";
@@ -31,12 +30,13 @@ function App() {
   const [alert, setAlert] = useState("");
   const [loading, setLoading] = useState(true);
   const [signalRConnected, setSignalRConnected] = useState(false);
-
+  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fastSpinCount, setFastSpinCount] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [maxReadings, setMaxReadings] = useState(100);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // CSV export helper
   function exportCsv() {
@@ -129,14 +129,14 @@ function App() {
       .then((res) => {
         console.log("[DEBUG] Readings loaded from backend:", res.data);
         res.data.forEach((r) => {
-          console.log(`[DEBUG] Reading id=${r.id} timestamp=`, r.timestamp);
-        });
-        setReadings(res.data);
-        setLoading(false);
+        console.log(`[DEBUG] Reading id=${r.id} timestamp=`, r.timestamp);
+      });
+      setReadings(res.data);
+      setLoading(false);
       })
       .catch(() => {
-        setLoading(false); // still hide spinner on error
-      });
+      setLoading(false); // still hide spinner on error
+    });
 
     loadDashboardStats();
 
@@ -169,8 +169,22 @@ function App() {
           newReadings[existingIndex] = reading;
           return newReadings;
         } else {
-          // Add new reading to front
-          return [reading, ...r].slice(0, maxReadings);
+          // Add new reading to front, but also check for duplicate timestamps
+          const duplicateTimestamp = r.find(
+            (existing) => existing.timestamp === reading.timestamp
+          );
+          if (duplicateTimestamp) {
+            // If same timestamp, replace the existing one
+            const timestampIndex = r.findIndex(
+              (existing) => existing.timestamp === reading.timestamp
+            );
+            const newReadings = [...r];
+            newReadings[timestampIndex] = reading;
+            return newReadings;
+          } else {
+            // Add new reading to front
+            return [reading, ...r].slice(0, maxReadings);
+          }
         }
       });
 
@@ -240,7 +254,7 @@ function App() {
       <AlertSystem alerts={alerts} onAcknowledge={acknowledgeAlert} />
 
       <div className="max-w-9xl mx-auto">
-        <NavBar />
+      <NavBar />
 
         {/* Header */}
         <div className="mb-8">
@@ -264,20 +278,26 @@ function App() {
               <div className="relative">
                 <button
                   className={`px-6 py-3 rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-3 ${
-                    readings[0]
+                    isGenerating
+                      ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
+                      : readings[0]
                       ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                       : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                   } text-white`}
                   onClick={() => {
+                    if (isGenerating) return; // Prevent rapid clicking
+                    setIsGenerating(true);
                     axios.get(`${API_BASE_URL}/api/motor/sample`);
                     setFastSpinCount((c) => c + 1);
+                    // Reset after 1 second to allow next click
+                    setTimeout(() => setIsGenerating(false), 1000);
                   }}
                 >
                   {/* Motor Icon */}
                   <div className="w-8 h-8 flex items-center justify-center mr-6">
                     {readings[0] ? (
                       <div className="relative">
-                        <AnimatedMotor rpm={readings[0].speed} />
+                        <AnimatedMotor reading={readings[0]} />
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
                       </div>
                     ) : (
@@ -307,14 +327,14 @@ function App() {
                 )}
               </div>
 
-              <button
+            <button
                 className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
-                onClick={() => setSettingsOpen(true)}
-                title="Settings"
-              >
-                ⚙️
-              </button>
-            </div>
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+            >
+              ⚙️
+            </button>
+          </div>
           </div>
 
           {/* Dashboard Stats */}
@@ -324,47 +344,13 @@ function App() {
         {/* 3D Motor Visualization */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            3D Motor Visualization
+            Animated Motor Visualization
           </h2>
-          <Motor3D
+          <AnimatedMotor
             reading={readings[0] || null}
             className="border rounded-lg shadow-lg"
           />
         </div>
-
-        {/* Industrial Sensor Dashboard */}
-        <div className="mb-8">
-          <SensorDashboard reading={readings[0] || null} />
-        </div>
-
-        {/* Advanced Analytics Dashboard */}
-        <div className="mb-8">
-          <AnalyticsDashboard machineId="MOTOR-001" />
-        </div>
-
-        {/* Industrial Management Dashboard */}
-        <div className="mb-8">
-          <IndustrialManagementDashboard facilityId="FACILITY-001" />
-        </div>
-
-        {/* Daily Life Applications */}
-        <div className="mb-8">
-          <DailyLifeApplications reading={readings[0] || null} />
-        </div>
-
-        {/* IoT Cloud Integration */}
-        <div className="mb-8">
-          <IoTCloudIntegration reading={readings[0] || null} />
-        </div>
-
-        {/* Mobile Dashboard */}
-        <MobileDashboard
-          reading={readings[0] || null}
-          onRefresh={() => {
-            axios.get(`${API_BASE_URL}/api/motor/sample`);
-            setFastSpinCount((c) => c + 1);
-          }}
-        />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -521,20 +507,20 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
         </div>
+      </div>
 
         {/* Readings Section */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Motor Readings</h2>
             <div className="flex items-center space-x-3">
-              <button
+        <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
-                onClick={exportCsv}
-              >
-                Export CSV
-              </button>
+          onClick={exportCsv}
+        >
+          Export CSV
+        </button>
               <button
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium"
                 onClick={() =>
@@ -547,23 +533,57 @@ function App() {
                 Export JSON
               </button>
             </div>
-          </div>
+      </div>
 
           {/* Color Legend */}
           <ColorLegend />
 
-          <ReadingList readings={readings} />
+      <ReadingList readings={readings} />
         </div>
 
-        {/* Settings Modal */}
-        <SettingsModal
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          maxReadings={maxReadings}
-          setMaxReadings={setMaxReadings}
+        {/* Industrial Sensor Dashboard */}
+        <div className="mb-8">
+          <SensorDashboard reading={readings[0] || null} />
+        </div>
+
+        {/* Advanced Analytics Dashboard */}
+        <div className="mb-8">
+          <AnalyticsDashboard machineId="MOTOR-001" />
+        </div>
+
+        {/* Industrial Management Dashboard */}
+        <div className="mb-8">
+          <IndustrialManagementDashboard facilityId="FACILITY-001" />
+        </div>
+
+        {/* Daily Life Applications */}
+        <div className="mb-8">
+          <DailyLifeApplications reading={readings[0] || null} />
+        </div>
+
+        {/* IoT Cloud Integration */}
+        <div className="mb-8">
+          <IoTCloudIntegration reading={readings[0] || null} />
+        </div>
+
+        {/* Mobile Dashboard */}
+        <MobileDashboard
+          reading={readings[0] || null}
+          onRefresh={() => {
+            axios.get(`${API_BASE_URL}/api/motor/sample`);
+            setFastSpinCount((c) => c + 1);
+          }}
         />
+
+        {/* Settings Modal */}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+        maxReadings={maxReadings}
+        setMaxReadings={setMaxReadings}
+      />
       </div>
     </div>
   );
