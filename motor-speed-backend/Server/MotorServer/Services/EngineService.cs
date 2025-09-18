@@ -18,26 +18,33 @@ namespace MotorServer.Services {
 #endif
 
         // Basic motor parameters
+        // Motor speed
         [DllImport(LIB_NAME)]
         public static extern int GetMotorSpeed();
 
+        // Motor temperature
         [DllImport(LIB_NAME)]
         public static extern int GetMotorTemperature();
 
         // 3-axis vibration sensors
+        // Vibration X
         [DllImport(LIB_NAME)]
         public static extern double GetVibrationX();
 
+        // Vibration Y
         [DllImport(LIB_NAME)]
         public static extern double GetVibrationY();
 
+        // Vibration Z
         [DllImport(LIB_NAME)]
         public static extern double GetVibrationZ();
 
         // Pressure sensors
+        // Oil pressure
         [DllImport(LIB_NAME)]
         public static extern double GetOilPressure();
 
+        // Air pressure
         [DllImport(LIB_NAME)]
         public static extern double GetAirPressure();
 
@@ -45,76 +52,98 @@ namespace MotorServer.Services {
         public static extern double GetHydraulicPressure();
 
         // Flow rate sensors
+        // Coolant flow rate
         [DllImport(LIB_NAME)]
         public static extern double GetCoolantFlowRate();
 
+        // Fuel flow rate
         [DllImport(LIB_NAME)]
         public static extern double GetFuelFlowRate();
 
         // Electrical monitoring
+        // Voltage
         [DllImport(LIB_NAME)]
         public static extern double GetVoltage();
 
+        // Current
         [DllImport(LIB_NAME)]
         public static extern double GetCurrent();
 
+        // Power factor
         [DllImport(LIB_NAME)]
         public static extern double GetPowerFactor();
 
+        // Power consumption
         [DllImport(LIB_NAME)]
         public static extern double GetPowerConsumption();
 
         // Mechanical measurements
+        // RPM
         [DllImport(LIB_NAME)]
         public static extern int GetRPM();
 
+        // Torque
         [DllImport(LIB_NAME)]
         public static extern double GetTorque();
 
+        // Efficiency
         [DllImport(LIB_NAME)]
         public static extern double GetEfficiency();
 
         // Environmental sensors
+        // Humidity
         [DllImport(LIB_NAME)]
         public static extern double GetHumidity();
 
+        // Ambient temperature
         [DllImport(LIB_NAME)]
         public static extern double GetAmbientTemperature();
 
+        // Ambient pressure
         [DllImport(LIB_NAME)]
         public static extern double GetAmbientPressure();
 
         // Proximity and position sensors
+        // Shaft position
         [DllImport(LIB_NAME)]
         public static extern double GetShaftPosition();
 
+        // Displacement
         [DllImport(LIB_NAME)]
         public static extern double GetDisplacement();
 
         // Strain and stress sensors
+        // Strain gauge 1
         [DllImport(LIB_NAME)]
         public static extern double GetStrainGauge1();
 
+        // Strain gauge 2
         [DllImport(LIB_NAME)]
         public static extern double GetStrainGauge2();
 
+        // Strain gauge 3
         [DllImport(LIB_NAME)]
         public static extern double GetStrainGauge3();
 
         // Acoustic sensors
+        // Sound level
         [DllImport(LIB_NAME)]
         public static extern double GetSoundLevel();
 
+        // Bearing health
         [DllImport(LIB_NAME)]
         public static extern double GetBearingHealth();
 
         // System status
+        // Operating hours
         [DllImport(LIB_NAME)]
         public static extern int GetOperatingHours();
 
+        // Maintenance status
         [DllImport(LIB_NAME)]
         public static extern int GetMaintenanceStatus();
 
+        // System health
         [DllImport(LIB_NAME)]
         public static extern int GetSystemHealth();
 
@@ -260,6 +289,7 @@ namespace MotorServer.Services {
             return reading;
         }
 
+        // Determine status based on readings
         private string DetermineStatus(int speed, int temperature, double vibration, double efficiency) {
             if (temperature > 85 || vibration > 4.5 || efficiency < 80) return "critical";
             if (temperature > 75 || vibration > 3.5 || efficiency < 85) return "warning";
@@ -267,6 +297,7 @@ namespace MotorServer.Services {
             return "normal";
         }
 
+        // Determine advanced status based on readings
         private string DetermineAdvancedStatus(int speed, int temperature, double vibration, double efficiency, 
             double oilPressure, double bearingHealth, int systemHealth) {
             // Critical conditions
@@ -287,6 +318,7 @@ namespace MotorServer.Services {
             return "normal";
         }
 
+        // Generate reading title
         private string GenerateReadingTitle(int speed, int temperature, string status) {
             var prefixes = new[] { "Routine", "Peak", "Standard", "High-load", "Idle", "Optimal" };
             var prefix = prefixes[_random.Next(prefixes.Length)];
@@ -301,6 +333,7 @@ namespace MotorServer.Services {
             return $"{statusEmoji} {prefix} Operation - {speed}RPM @ {temperature}°C";
         }
 
+        // Generate advanced reading title
         private string GenerateAdvancedReadingTitle(int speed, int temperature, string status, int systemHealth) {
             var prefixes = new[] { "Routine", "Peak", "Standard", "High-load", "Idle", "Optimal", "Efficient", "Stable" };
             var prefix = prefixes[_random.Next(prefixes.Length)];
@@ -322,6 +355,7 @@ namespace MotorServer.Services {
             return $"{statusEmoji} {healthIndicator} {prefix} Operation - {speed}RPM @ {temperature}°C (Health: {systemHealth}%)";
         }
 
+        // Check for alerts and send if needed
         private async Task CheckAndSendAlerts(MotorReading reading) {
             var alerts = new List<Alert>();
             
@@ -366,6 +400,7 @@ namespace MotorServer.Services {
             }
         }
 
+        // Check for advanced alerts and send if needed
         private async Task CheckAndSendAdvancedAlerts(MotorReading reading) {
             var alerts = new List<Alert>();
             
@@ -525,6 +560,7 @@ namespace MotorServer.Services {
             }
         }
 
+        // Get dashboard stats
         public async Task<DashboardStats> GetDashboardStats() {
             var totalReadings = await _db.MotorReadings.CountAsync();
             

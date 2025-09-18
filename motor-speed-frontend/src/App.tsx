@@ -1,8 +1,9 @@
 import AlertSystem from "./components/AlertSystem";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AnimatedMotor from "./components/AnimatedMotor";
 import ColorLegend from "./components/ColorLegend";
 import DashboardStatsComponent from "./components/DashboardStats";
-import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import IndustrialManagementDashboard from "./components/IndustrialManagementDashboard";
 import MobileDashboard from "./components/MobileDashboard";
 import Motor3D from "./components/Motor3D";
 import MotorChart from "./components/MotorChart";
@@ -98,6 +99,7 @@ function App() {
     ? readings.reduce((a, b) => (a.speed < b.speed ? a : b))
     : null;
 
+  // Load dashboard stats
   const loadDashboardStats = async () => {
     try {
       const response = await axios.get<DashboardStats>(
@@ -109,6 +111,7 @@ function App() {
     }
   };
 
+  // Acknowledge alert
   const acknowledgeAlert = (alertId: string) => {
     setAlerts((prev) =>
       prev.map((alert) =>
@@ -117,6 +120,7 @@ function App() {
     );
   };
 
+  // Load readings
   useEffect(() => {
     axios
       .get<MotorReading[]>(`${API_BASE_URL}/api/motor`)
@@ -150,6 +154,7 @@ function App() {
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
+    // New reading event
     hub.on("NewReading", (reading: MotorReading) => {
       setReadings((r) => {
         // Check if reading with same ID already exists
@@ -174,6 +179,7 @@ function App() {
         setAlert(`⚠️ High Temp: ${reading.temperature} °C`);
     });
 
+    // New alert event
     hub.on("NewAlert", (alert: Alert) => {
       setAlerts((prev) => [alert, ...prev]);
     });
@@ -332,6 +338,11 @@ function App() {
         {/* Advanced Analytics Dashboard */}
         <div className="mb-8">
           <AnalyticsDashboard machineId="MOTOR-001" />
+        </div>
+
+        {/* Industrial Management Dashboard */}
+        <div className="mb-8">
+          <IndustrialManagementDashboard facilityId="FACILITY-001" />
         </div>
 
         {/* Mobile Dashboard */}

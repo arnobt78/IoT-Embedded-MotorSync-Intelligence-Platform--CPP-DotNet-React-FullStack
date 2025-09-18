@@ -55,6 +55,7 @@ namespace MotorServer.Models
     public class EnergyAnalysis
     {
         public string MachineId { get; set; } = string.Empty;
+        public string FacilityId { get; set; } = string.Empty;
         public string AnalysisPeriod { get; set; } = string.Empty;
         public double TotalEnergyConsumption { get; set; }
         public double AveragePowerFactor { get; set; }

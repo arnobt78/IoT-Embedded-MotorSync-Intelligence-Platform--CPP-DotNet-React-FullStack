@@ -23,6 +23,7 @@ builder.Services.AddSignalR(options =>
 });
 builder.Services.AddScoped<EngineService>();
 builder.Services.AddScoped<PredictiveMaintenanceService>();
+builder.Services.AddScoped<IndustrialManagementService>();
 var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",

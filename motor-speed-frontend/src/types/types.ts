@@ -156,3 +156,122 @@ export interface PerformanceBenchmark {
   performanceRating: string;
   improvementAreas: string[];
 }
+
+// Industrial Management Models
+export interface IndustrialMachine {
+  id: number;
+  machineId: string;
+  name: string;
+  type: string;
+  location: string;
+  status: string;
+  lastSeen: string;
+  totalReadings: number;
+  averageEfficiency: number;
+  maintenanceSchedule?: string;
+  operatingHours: number;
+  energyConsumption: number;
+  powerFactor?: number;
+  costPerHour: number;
+  productionLineId?: string;
+  facilityId?: string;
+  department?: string;
+  manufacturer?: string;
+  model?: string;
+  installationDate?: string;
+  lastMaintenanceDate?: string;
+  nextMaintenanceDate?: string;
+}
+
+export interface ProductionLineAnalysis {
+  lineId: string;
+  analysisTimestamp: string;
+  totalMachines: number;
+  onlineMachines: number;
+  overallEfficiency: number;
+  totalEnergyConsumption: number;
+  totalOperatingCost: number;
+  bottlenecks: string[];
+  recommendations: string[];
+  machineDetails: MachineSummary[];
+}
+
+export interface MachineSummary {
+  machineId: string;
+  name: string;
+  status: string;
+  efficiency: number;
+  energyConsumption: number;
+  lastSeen: string;
+}
+
+export interface MaintenanceSchedule {
+  facilityId: string;
+  generatedAt: string;
+  scheduledTasks: MaintenanceTask[];
+}
+
+export interface MaintenanceTask {
+  taskId: string;
+  machineId: string;
+  machineName: string;
+  taskType: string;
+  priority: string;
+  scheduledDate: string;
+  estimatedDuration: number;
+  requiredSkills: string[];
+  estimatedCost: number;
+  description: string;
+  assignedTechnician?: string;
+  status: string;
+}
+
+export interface FacilityOverview {
+  facilityId: string;
+  name: string;
+  location: string;
+  totalMachines: number;
+  onlineMachines: number;
+  overallEfficiency: number;
+  totalEnergyConsumption: number;
+  totalOperatingCost: number;
+  productionLines: string[];
+  departments: string[];
+  lastUpdated: string;
+}
+
+export interface QualityControlMetrics {
+  machineId: string;
+  analysisTimestamp: string;
+  defectRate: number;
+  qualityScore: number;
+  totalInspections: number;
+  passedInspections: number;
+  failedInspections: number;
+  commonDefects: string[];
+  qualityRecommendations: string[];
+}
+
+export interface SupplyChainOptimization {
+  facilityId: string;
+  analysisTimestamp: string;
+  inventoryTurnover: number;
+  inventoryValue: number;
+  stockouts: number;
+  overstockItems: number;
+  optimizationRecommendations: string[];
+  criticalItems: InventoryItem[];
+}
+
+export interface InventoryItem {
+  itemId: string;
+  name: string;
+  category: string;
+  currentStock: number;
+  minimumStock: number;
+  maximumStock: number;
+  unitCost: number;
+  status: string;
+  lastRestocked?: string;
+  nextRestockDate?: string;
+}
