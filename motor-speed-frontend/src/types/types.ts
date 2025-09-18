@@ -88,3 +88,71 @@ export interface DashboardStats {
   criticalAlerts: number;
   maintenanceDue: number;
 }
+
+// Predictive Maintenance Models
+export interface PredictiveAnalysis {
+  machineId: string;
+  analysisTimestamp: string;
+  overallHealthScore: number;
+  riskLevel: string;
+  predictions: MaintenancePrediction[];
+  recommendations: string[];
+  trendAnalysis: TrendAnalysis;
+  anomalyDetection: AnomalyDetection[];
+}
+
+export interface MaintenancePrediction {
+  component: string;
+  issue: string;
+  severity: string;
+  predictedFailureTime: string;
+  confidence: number;
+  description: string;
+}
+
+export interface TrendAnalysis {
+  temperatureTrend: number;
+  vibrationTrend: number;
+  efficiencyTrend: number;
+  powerTrend: number;
+  analysisPeriod: string;
+}
+
+export interface AnomalyDetection {
+  timestamp: string;
+  sensorType: string;
+  value: number;
+  expectedRange: string;
+  severity: string;
+  description: string;
+}
+
+export interface OEEAnalysis {
+  machineId: string;
+  analysisPeriod: string;
+  availability: number;
+  performance: number;
+  quality: number;
+  overallOEE: number;
+  recommendations: string[];
+}
+
+export interface EnergyAnalysis {
+  machineId: string;
+  analysisPeriod: string;
+  totalEnergyConsumption: number;
+  averagePowerFactor: number;
+  energyEfficiency: number;
+  costSavingsPotential: number;
+  recommendations: string[];
+}
+
+export interface PerformanceBenchmark {
+  machineId: string;
+  benchmarkPeriod: string;
+  currentPerformance: number;
+  industryAverage: number;
+  bestInClass: number;
+  performanceRating: string;
+  improvementAreas: string[];
+}

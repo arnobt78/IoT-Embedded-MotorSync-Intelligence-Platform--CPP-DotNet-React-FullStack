@@ -2,13 +2,15 @@ import AlertSystem from "./components/AlertSystem";
 import AnimatedMotor from "./components/AnimatedMotor";
 import ColorLegend from "./components/ColorLegend";
 import DashboardStatsComponent from "./components/DashboardStats";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import MobileDashboard from "./components/MobileDashboard";
+import Motor3D from "./components/Motor3D";
 import MotorChart from "./components/MotorChart";
 import MotorSpinner from "./components/MotorSpinner";
 import NavBar from "./components/NavBar";
 import ReadingList from "./components/ReadingList";
-import SettingsModal from "./components/SettingsModal";
-import Motor3D from "./components/Motor3D";
 import SensorDashboard from "./components/SensorDashboard";
+import SettingsModal from "./components/SettingsModal";
 import { safeDate } from "./lib/dateUtils";
 import { API_BASE_URL, SIGNALR_URL } from "./services/api";
 import type { MotorReading, Alert, DashboardStats } from "./types";
@@ -52,17 +54,25 @@ function App() {
       (r) =>
         `${r.id},${r.speed},${r.temperature},${r.timestamp},${r.title || ""},${
           r.machineId
-        },${r.status},${r.vibrationX || ""},${r.vibrationY || ""},${r.vibrationZ || ""},${r.vibration || ""},${
-          r.oilPressure || ""
-        },${r.airPressure || ""},${r.hydraulicPressure || ""},${r.coolantFlowRate || ""},${r.fuelFlowRate || ""},${
+        },${r.status},${r.vibrationX || ""},${r.vibrationY || ""},${
+          r.vibrationZ || ""
+        },${r.vibration || ""},${r.oilPressure || ""},${r.airPressure || ""},${
+          r.hydraulicPressure || ""
+        },${r.coolantFlowRate || ""},${r.fuelFlowRate || ""},${
           r.voltage || ""
-        },${r.current || ""},${r.powerFactor || ""},${r.powerConsumption || ""},${r.rpm || ""},${r.torque || ""},${
-          r.efficiency || ""
-        },${r.humidity || ""},${r.ambientTemperature || ""},${r.ambientPressure || ""},${r.shaftPosition || ""},${
-          r.displacement || ""
-        },${r.strainGauge1 || ""},${r.strainGauge2 || ""},${r.strainGauge3 || ""},${r.soundLevel || ""},${
+        },${r.current || ""},${r.powerFactor || ""},${
+          r.powerConsumption || ""
+        },${r.rpm || ""},${r.torque || ""},${r.efficiency || ""},${
+          r.humidity || ""
+        },${r.ambientTemperature || ""},${r.ambientPressure || ""},${
+          r.shaftPosition || ""
+        },${r.displacement || ""},${r.strainGauge1 || ""},${
+          r.strainGauge2 || ""
+        },${r.strainGauge3 || ""},${r.soundLevel || ""},${
           r.bearingHealth || ""
-        },${r.operatingHours || ""},${r.maintenanceStatus || ""},${r.systemHealth || ""}`
+        },${r.operatingHours || ""},${r.maintenanceStatus || ""},${
+          r.systemHealth || ""
+        }`
     );
     const csv = [header, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -305,14 +315,33 @@ function App() {
 
         {/* 3D Motor Visualization */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">3D Motor Visualization</h2>
-          <Motor3D reading={readings[0] || null} className="border rounded-lg shadow-lg" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            3D Motor Visualization
+          </h2>
+          <Motor3D
+            reading={readings[0] || null}
+            className="border rounded-lg shadow-lg"
+          />
         </div>
 
         {/* Industrial Sensor Dashboard */}
         <div className="mb-8">
           <SensorDashboard reading={readings[0] || null} />
         </div>
+
+        {/* Advanced Analytics Dashboard */}
+        <div className="mb-8">
+          <AnalyticsDashboard machineId="MOTOR-001" />
+        </div>
+
+        {/* Mobile Dashboard */}
+        <MobileDashboard
+          reading={readings[0] || null}
+          onRefresh={() => {
+            axios.get(`${API_BASE_URL}/api/motor/sample`);
+            setFastSpinCount((c) => c + 1);
+          }}
+        />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

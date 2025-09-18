@@ -22,6 +22,7 @@ builder.Services.AddSignalR(options =>
     options.HandshakeTimeout = TimeSpan.FromSeconds(15);
 });
 builder.Services.AddScoped<EngineService>();
+builder.Services.AddScoped<PredictiveMaintenanceService>();
 var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",
