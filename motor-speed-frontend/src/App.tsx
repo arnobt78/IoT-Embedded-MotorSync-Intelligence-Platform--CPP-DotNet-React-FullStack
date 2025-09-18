@@ -3,7 +3,9 @@ import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import AnimatedMotor from "./components/AnimatedMotor";
 import ColorLegend from "./components/ColorLegend";
 import DashboardStatsComponent from "./components/DashboardStats";
+import DailyLifeApplications from "./components/DailyLifeApplications";
 import IndustrialManagementDashboard from "./components/IndustrialManagementDashboard";
+import IoTCloudIntegration from "./components/IoTCloudIntegration";
 import MobileDashboard from "./components/MobileDashboard";
 import Motor3D from "./components/Motor3D";
 import MotorChart from "./components/MotorChart";
@@ -343,6 +345,16 @@ function App() {
         {/* Industrial Management Dashboard */}
         <div className="mb-8">
           <IndustrialManagementDashboard facilityId="FACILITY-001" />
+        </div>
+
+        {/* Daily Life Applications */}
+        <div className="mb-8">
+          <DailyLifeApplications reading={readings[0] || null} />
+        </div>
+
+        {/* IoT Cloud Integration */}
+        <div className="mb-8">
+          <IoTCloudIntegration reading={readings[0] || null} />
         </div>
 
         {/* Mobile Dashboard */}
