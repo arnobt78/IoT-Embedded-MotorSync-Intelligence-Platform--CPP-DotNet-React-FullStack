@@ -26,8 +26,8 @@
     </None>
   </ItemGroup>
 
-  <!-- Copy the native library for Linux (Docker) -->
-  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+  <!-- Copy the native library for Linux (Docker) - only when .so file exists -->
+  <ItemGroup Condition=" '$(OS)' == 'Unix' AND Exists('../../EngineMock/libmotor_engine.so') ">
     <None Include="../../EngineMock/libmotor_engine.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>libmotor_engine.so</Link>

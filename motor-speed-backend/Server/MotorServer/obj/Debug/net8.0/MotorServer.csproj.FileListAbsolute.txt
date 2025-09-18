@@ -173,4 +173,3 @@
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/obj/Debug/net8.0/MotorServer.pdb
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/obj/Debug/net8.0/MotorServer.genruntimeconfig.cache
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/obj/Debug/net8.0/ref/MotorServer.dll
-/Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/libmotor_engine.dylib

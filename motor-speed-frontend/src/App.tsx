@@ -7,6 +7,8 @@ import MotorSpinner from "./components/MotorSpinner";
 import NavBar from "./components/NavBar";
 import ReadingList from "./components/ReadingList";
 import SettingsModal from "./components/SettingsModal";
+import Motor3D from "./components/Motor3D";
+import SensorDashboard from "./components/SensorDashboard";
 import { safeDate } from "./lib/dateUtils";
 import { API_BASE_URL, SIGNALR_URL } from "./services/api";
 import type { MotorReading, Alert, DashboardStats } from "./types";
@@ -20,6 +22,7 @@ function App() {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [alert, setAlert] = useState("");
   const [loading, setLoading] = useState(true);
   const [signalRConnected, setSignalRConnected] = useState(false);
@@ -34,14 +37,32 @@ function App() {
   function exportCsv() {
     if (!readings.length) return;
     const header =
-      "ID,Speed (RPM),Temperature (°C),Timestamp,Title,MachineId,Status,Vibration,PowerConsumption,Efficiency,OperatingHours";
+      "ID,Speed (RPM),Temperature (°C),Timestamp,Title,MachineId,Status," +
+      "VibrationX,VibrationY,VibrationZ,Vibration," +
+      "OilPressure,AirPressure,HydraulicPressure," +
+      "CoolantFlowRate,FuelFlowRate," +
+      "Voltage,Current,PowerFactor,PowerConsumption," +
+      "RPM,Torque,Efficiency," +
+      "Humidity,AmbientTemperature,AmbientPressure," +
+      "ShaftPosition,Displacement," +
+      "StrainGauge1,StrainGauge2,StrainGauge3," +
+      "SoundLevel,BearingHealth," +
+      "OperatingHours,MaintenanceStatus,SystemHealth";
     const rows = readings.map(
       (r) =>
         `${r.id},${r.speed},${r.temperature},${r.timestamp},${r.title || ""},${
           r.machineId
-        },${r.status},${r.vibration || ""},${r.powerConsumption || ""},${
+        },${r.status},${r.vibrationX || ""},${r.vibrationY || ""},${r.vibrationZ || ""},${r.vibration || ""},${
+          r.oilPressure || ""
+        },${r.airPressure || ""},${r.hydraulicPressure || ""},${r.coolantFlowRate || ""},${r.fuelFlowRate || ""},${
+          r.voltage || ""
+        },${r.current || ""},${r.powerFactor || ""},${r.powerConsumption || ""},${r.rpm || ""},${r.torque || ""},${
           r.efficiency || ""
-        },${r.operatingHours || ""}`
+        },${r.humidity || ""},${r.ambientTemperature || ""},${r.ambientPressure || ""},${r.shaftPosition || ""},${
+          r.displacement || ""
+        },${r.strainGauge1 || ""},${r.strainGauge2 || ""},${r.strainGauge3 || ""},${r.soundLevel || ""},${
+          r.bearingHealth || ""
+        },${r.operatingHours || ""},${r.maintenanceStatus || ""},${r.systemHealth || ""}`
     );
     const csv = [header, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -280,6 +301,17 @@ function App() {
 
           {/* Dashboard Stats */}
           {dashboardStats && <DashboardStatsComponent stats={dashboardStats} />}
+        </div>
+
+        {/* 3D Motor Visualization */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">3D Motor Visualization</h2>
+          <Motor3D reading={readings[0] || null} className="border rounded-lg shadow-lg" />
+        </div>
+
+        {/* Industrial Sensor Dashboard */}
+        <div className="mb-8">
+          <SensorDashboard reading={readings[0] || null} />
         </div>
 
         {/* Main Content */}

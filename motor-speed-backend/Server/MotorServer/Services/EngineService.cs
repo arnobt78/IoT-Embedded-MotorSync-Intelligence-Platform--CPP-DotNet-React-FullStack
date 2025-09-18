@@ -17,11 +17,106 @@ namespace MotorServer.Services {
             "libmotor_engine.dylib";
 #endif
 
+        // Basic motor parameters
         [DllImport(LIB_NAME)]
         public static extern int GetMotorSpeed();
 
         [DllImport(LIB_NAME)]
         public static extern int GetMotorTemperature();
+
+        // 3-axis vibration sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetVibrationX();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetVibrationY();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetVibrationZ();
+
+        // Pressure sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetOilPressure();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetAirPressure();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetHydraulicPressure();
+
+        // Flow rate sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetCoolantFlowRate();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetFuelFlowRate();
+
+        // Electrical monitoring
+        [DllImport(LIB_NAME)]
+        public static extern double GetVoltage();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetCurrent();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetPowerFactor();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetPowerConsumption();
+
+        // Mechanical measurements
+        [DllImport(LIB_NAME)]
+        public static extern int GetRPM();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetTorque();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetEfficiency();
+
+        // Environmental sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetHumidity();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetAmbientTemperature();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetAmbientPressure();
+
+        // Proximity and position sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetShaftPosition();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetDisplacement();
+
+        // Strain and stress sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetStrainGauge1();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetStrainGauge2();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetStrainGauge3();
+
+        // Acoustic sensors
+        [DllImport(LIB_NAME)]
+        public static extern double GetSoundLevel();
+
+        [DllImport(LIB_NAME)]
+        public static extern double GetBearingHealth();
+
+        // System status
+        [DllImport(LIB_NAME)]
+        public static extern int GetOperatingHours();
+
+        [DllImport(LIB_NAME)]
+        public static extern int GetMaintenanceStatus();
+
+        [DllImport(LIB_NAME)]
+        public static extern int GetSystemHealth();
 
         private readonly AppDbContext _db;
         private readonly IHubContext<MotorHub> _hub;
@@ -35,32 +130,122 @@ namespace MotorServer.Services {
         public async Task<MotorReading> Sample() {
             _readingCounter++;
             
+            // Collect all sensor data from C++ engine
             var speed = GetMotorSpeed();
             var temperature = GetMotorTemperature();
             
-            // Generate additional realistic data
-            var vibration = Math.Round(_random.NextDouble() * 5.0 + 0.5, 2); // 0.5-5.5 mm/s
-            var powerConsumption = Math.Round(speed * 0.8 + _random.NextDouble() * 200 + 100, 2); // kW
-            var efficiency = Math.Round(85 + _random.NextDouble() * 10, 1); // 85-95%
-            var operatingHours = Math.Round(_readingCounter * 0.1, 1); // Simulate operating hours
+            // 3-axis vibration sensors
+            var vibrationX = Math.Round(GetVibrationX(), 2);
+            var vibrationY = Math.Round(GetVibrationY(), 2);
+            var vibrationZ = Math.Round(GetVibrationZ(), 2);
+            var vibration = Math.Round(Math.Sqrt(vibrationX * vibrationX + vibrationY * vibrationY + vibrationZ * vibrationZ), 2); // RMS vibration
+            
+            // Pressure sensors
+            var oilPressure = Math.Round(GetOilPressure(), 2);
+            var airPressure = Math.Round(GetAirPressure(), 2);
+            var hydraulicPressure = Math.Round(GetHydraulicPressure(), 2);
+            
+            // Flow rate sensors
+            var coolantFlowRate = Math.Round(GetCoolantFlowRate(), 2);
+            var fuelFlowRate = Math.Round(GetFuelFlowRate(), 2);
+            
+            // Electrical monitoring
+            var voltage = Math.Round(GetVoltage(), 2);
+            var current = Math.Round(GetCurrent(), 2);
+            var powerFactor = Math.Round(GetPowerFactor(), 3);
+            var powerConsumption = Math.Round(GetPowerConsumption(), 2);
+            
+            // Mechanical measurements
+            var rpm = GetRPM();
+            var torque = Math.Round(GetTorque(), 2);
+            var efficiency = Math.Round(GetEfficiency(), 1);
+            
+            // Environmental sensors
+            var humidity = Math.Round(GetHumidity(), 1);
+            var ambientTemperature = Math.Round(GetAmbientTemperature(), 1);
+            var ambientPressure = Math.Round(GetAmbientPressure(), 2);
+            
+            // Proximity and position sensors
+            var shaftPosition = Math.Round(GetShaftPosition(), 2);
+            var displacement = Math.Round(GetDisplacement(), 3);
+            
+            // Strain and stress sensors
+            var strainGauge1 = Math.Round(GetStrainGauge1(), 1);
+            var strainGauge2 = Math.Round(GetStrainGauge2(), 1);
+            var strainGauge3 = Math.Round(GetStrainGauge3(), 1);
+            
+            // Acoustic sensors
+            var soundLevel = Math.Round(GetSoundLevel(), 1);
+            var bearingHealth = Math.Round(GetBearingHealth(), 1);
+            
+            // System status
+            var operatingHours = GetOperatingHours();
+            var maintenanceStatus = GetMaintenanceStatus();
+            var systemHealth = GetSystemHealth();
             
             // Determine status based on readings
-            var status = DetermineStatus(speed, temperature, vibration, efficiency);
+            var status = DetermineAdvancedStatus(speed, temperature, vibration, efficiency, oilPressure, bearingHealth, systemHealth);
             
             // Generate a descriptive title
-            var title = GenerateReadingTitle(speed, temperature, status);
+            var title = GenerateAdvancedReadingTitle(speed, temperature, status, systemHealth);
 
             var reading = new MotorReading {
+                // Basic motor parameters
                 Speed = speed,
                 Temperature = temperature,
                 Timestamp = DateTime.UtcNow,
                 Title = title,
                 MachineId = "MOTOR-001",
                 Status = status,
-                Vibration = vibration,
+                
+                // 3-axis vibration sensors
+                VibrationX = vibrationX,
+                VibrationY = vibrationY,
+                VibrationZ = vibrationZ,
+                Vibration = vibration, // Legacy field for backward compatibility
+                
+                // Pressure sensors
+                OilPressure = oilPressure,
+                AirPressure = airPressure,
+                HydraulicPressure = hydraulicPressure,
+                
+                // Flow rate sensors
+                CoolantFlowRate = coolantFlowRate,
+                FuelFlowRate = fuelFlowRate,
+                
+                // Electrical monitoring
+                Voltage = voltage,
+                Current = current,
+                PowerFactor = powerFactor,
                 PowerConsumption = powerConsumption,
+                
+                // Mechanical measurements
+                RPM = rpm,
+                Torque = torque,
                 Efficiency = efficiency,
-                OperatingHours = operatingHours
+                
+                // Environmental sensors
+                Humidity = humidity,
+                AmbientTemperature = ambientTemperature,
+                AmbientPressure = ambientPressure,
+                
+                // Proximity and position sensors
+                ShaftPosition = shaftPosition,
+                Displacement = displacement,
+                
+                // Strain and stress sensors
+                StrainGauge1 = strainGauge1,
+                StrainGauge2 = strainGauge2,
+                StrainGauge3 = strainGauge3,
+                
+                // Acoustic sensors
+                SoundLevel = soundLevel,
+                BearingHealth = bearingHealth,
+                
+                // System status
+                OperatingHours = operatingHours,
+                MaintenanceStatus = maintenanceStatus,
+                SystemHealth = systemHealth
             };
             
             _db.MotorReadings.Add(reading);
@@ -70,7 +255,7 @@ namespace MotorServer.Services {
             await _hub.Clients.All.SendAsync("NewReading", reading);
             
             // Check for alerts and send if needed
-            await CheckAndSendAlerts(reading);
+            await CheckAndSendAdvancedAlerts(reading);
             
             return reading;
         }
@@ -79,6 +264,26 @@ namespace MotorServer.Services {
             if (temperature > 85 || vibration > 4.5 || efficiency < 80) return "critical";
             if (temperature > 75 || vibration > 3.5 || efficiency < 85) return "warning";
             if (_readingCounter % 100 == 0) return "maintenance"; // Simulate maintenance needed
+            return "normal";
+        }
+
+        private string DetermineAdvancedStatus(int speed, int temperature, double vibration, double efficiency, 
+            double oilPressure, double bearingHealth, int systemHealth) {
+            // Critical conditions
+            if (temperature > 90 || vibration > 5.0 || efficiency < 75 || oilPressure < 2.0 || bearingHealth < 70 || systemHealth < 60) {
+                return "critical";
+            }
+            
+            // Warning conditions
+            if (temperature > 80 || vibration > 4.0 || efficiency < 85 || oilPressure < 2.5 || bearingHealth < 80 || systemHealth < 75) {
+                return "warning";
+            }
+            
+            // Maintenance conditions
+            if (_readingCounter % 50 == 0 || systemHealth < 85) {
+                return "maintenance";
+            }
+            
             return "normal";
         }
 
@@ -94,6 +299,27 @@ namespace MotorServer.Services {
             };
             
             return $"{statusEmoji} {prefix} Operation - {speed}RPM @ {temperature}°C";
+        }
+
+        private string GenerateAdvancedReadingTitle(int speed, int temperature, string status, int systemHealth) {
+            var prefixes = new[] { "Routine", "Peak", "Standard", "High-load", "Idle", "Optimal", "Efficient", "Stable" };
+            var prefix = prefixes[_random.Next(prefixes.Length)];
+            
+            var statusEmoji = status switch {
+                "critical" => "🚨",
+                "warning" => "⚠️",
+                "maintenance" => "🔧",
+                _ => "✅"
+            };
+            
+            var healthIndicator = systemHealth switch {
+                >= 90 => "🟢",
+                >= 75 => "🟡",
+                >= 60 => "🟠",
+                _ => "🔴"
+            };
+            
+            return $"{statusEmoji} {healthIndicator} {prefix} Operation - {speed}RPM @ {temperature}°C (Health: {systemHealth}%)";
         }
 
         private async Task CheckAndSendAlerts(MotorReading reading) {
@@ -129,6 +355,165 @@ namespace MotorServer.Services {
                     Type = "efficiency",
                     Severity = "medium",
                     Message = $"Low efficiency detected: {reading.Efficiency}%",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            foreach (var alert in alerts) {
+                await _hub.Clients.All.SendAsync("NewAlert", alert);
+            }
+        }
+
+        private async Task CheckAndSendAdvancedAlerts(MotorReading reading) {
+            var alerts = new List<Alert>();
+            
+            // Temperature alerts
+            if (reading.Temperature > 90) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "temperature",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: Temperature {reading.Temperature}°C exceeds safe limits!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.Temperature > 80) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "temperature",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: High temperature {reading.Temperature}°C detected",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // Vibration alerts
+            if (reading.Vibration > 5.0) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "vibration",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: Excessive vibration {reading.Vibration} mm/s detected!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.Vibration > 4.0) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "vibration",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: High vibration {reading.Vibration} mm/s detected",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // Oil pressure alerts
+            if (reading.OilPressure < 2.0) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "pressure",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: Low oil pressure {reading.OilPressure} bar!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.OilPressure < 2.5) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "pressure",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: Low oil pressure {reading.OilPressure} bar",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // Bearing health alerts
+            if (reading.BearingHealth < 70) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "bearing",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: Bearing health {reading.BearingHealth}% - immediate attention required!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.BearingHealth < 80) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "bearing",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: Bearing health {reading.BearingHealth}% - monitor closely",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // System health alerts
+            if (reading.SystemHealth < 60) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "system",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: System health {reading.SystemHealth}% - shutdown recommended!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.SystemHealth < 75) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "system",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: System health {reading.SystemHealth}% - performance degraded",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // Efficiency alerts
+            if (reading.Efficiency < 75) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "efficiency",
+                    Severity = "critical",
+                    Message = $"🚨 CRITICAL: Low efficiency {reading.Efficiency}% - energy waste detected!",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            } else if (reading.Efficiency < 85) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "efficiency",
+                    Severity = "warning",
+                    Message = $"⚠️ WARNING: Low efficiency {reading.Efficiency}% - optimization needed",
+                    Timestamp = DateTime.UtcNow,
+                    MachineId = reading.MachineId,
+                    Acknowledged = false
+                });
+            }
+            
+            // Maintenance alerts
+            if (reading.MaintenanceStatus == 3) {
+                alerts.Add(new Alert {
+                    Id = Guid.NewGuid().ToString(),
+                    Type = "maintenance",
+                    Severity = "info",
+                    Message = $"🔧 MAINTENANCE: Scheduled maintenance due - {reading.OperatingHours} operating hours",
                     Timestamp = DateTime.UtcNow,
                     MachineId = reading.MachineId,
                     Acknowledged = false
