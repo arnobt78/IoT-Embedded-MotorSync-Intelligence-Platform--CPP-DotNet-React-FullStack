@@ -319,7 +319,7 @@ export default function DailyLifeApplications({ reading }: DailyLifeApplications
                     <span className="font-medium">{(reading?.efficiency || 0).toFixed(1)}%</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Operating Hours</div>
+                    <span className="text-gray-600 dark:text-gray-300">Operating Hours</span>
                     <span className="font-medium">{(reading?.operatingHours || 0).toFixed(0)}h</span>
                   </div>
                   <div className="flex items-center justify-between">

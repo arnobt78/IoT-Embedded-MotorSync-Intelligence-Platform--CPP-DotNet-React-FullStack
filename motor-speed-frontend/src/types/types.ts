@@ -1,6 +1,6 @@
 export interface MotorReading {
   id: number;
-  
+
   // Basic motor parameters
   speed: number;
   temperature: number;
@@ -8,57 +8,58 @@ export interface MotorReading {
   title?: string;
   machineId: string;
   status: "normal" | "warning" | "critical" | "maintenance";
-  
+
   // 3-axis vibration sensors (mm/s)
   vibrationX?: number;
   vibrationY?: number;
   vibrationZ?: number;
   vibration?: number; // Legacy field for backward compatibility
-  
+
   // Pressure sensors (bar)
   oilPressure?: number;
   airPressure?: number;
   hydraulicPressure?: number;
-  
+
   // Flow rate sensors (L/min)
   coolantFlowRate?: number;
   fuelFlowRate?: number;
-  
+
   // Electrical monitoring
   voltage?: number;
   current?: number;
   powerFactor?: number;
   powerConsumption?: number;
-  
+
   // Mechanical measurements
   rpm?: number;
   torque?: number;
   efficiency?: number;
-  
+
   // Environmental sensors
   humidity?: number;
   ambientTemperature?: number;
   ambientPressure?: number;
-  
+
   // Proximity and position sensors
   shaftPosition?: number;
   displacement?: number;
-  
+
   // Strain and stress sensors (microstrain)
   strainGauge1?: number;
   strainGauge2?: number;
   strainGauge3?: number;
-  
+
   // Acoustic sensors
   soundLevel?: number;
   bearingHealth?: number;
-  
+
   // System status
   operatingHours?: number;
   maintenanceStatus?: number;
   systemHealth?: number;
 }
 
+// Machine Models
 export interface Machine {
   id: string;
   name: string;
@@ -70,9 +71,19 @@ export interface Machine {
   averageEfficiency: number;
 }
 
+// Alert Models
 export interface Alert {
   id: string;
-  type: "temperature" | "speed" | "vibration" | "efficiency" | "maintenance" | "pressure" | "bearing" | "system" | "electrical";
+  type:
+    | "temperature"
+    | "speed"
+    | "vibration"
+    | "efficiency"
+    | "maintenance"
+    | "pressure"
+    | "bearing"
+    | "system"
+    | "electrical";
   severity: "low" | "medium" | "high" | "critical" | "warning" | "info";
   message: string;
   timestamp: string;
@@ -80,6 +91,7 @@ export interface Alert {
   acknowledged: boolean;
 }
 
+// Dashboard Stats Models
 export interface DashboardStats {
   totalMachines: number;
   onlineMachines: number;
@@ -101,6 +113,7 @@ export interface PredictiveAnalysis {
   anomalyDetection: AnomalyDetection[];
 }
 
+// Maintenance Prediction Models
 export interface MaintenancePrediction {
   component: string;
   issue: string;
@@ -110,6 +123,7 @@ export interface MaintenancePrediction {
   description: string;
 }
 
+// Trend Analysis Models
 export interface TrendAnalysis {
   temperatureTrend: number;
   vibrationTrend: number;
@@ -118,6 +132,7 @@ export interface TrendAnalysis {
   analysisPeriod: string;
 }
 
+// Anomaly Detection Models
 export interface AnomalyDetection {
   timestamp: string;
   sensorType: string;
@@ -127,6 +142,7 @@ export interface AnomalyDetection {
   description: string;
 }
 
+// OEE Analysis Models
 export interface OEEAnalysis {
   machineId: string;
   analysisPeriod: string;
@@ -137,6 +153,7 @@ export interface OEEAnalysis {
   recommendations: string[];
 }
 
+// Energy Analysis Models
 export interface EnergyAnalysis {
   machineId: string;
   analysisPeriod: string;
@@ -147,6 +164,7 @@ export interface EnergyAnalysis {
   recommendations: string[];
 }
 
+// Performance Benchmark Models
 export interface PerformanceBenchmark {
   machineId: string;
   benchmarkPeriod: string;
@@ -157,7 +175,7 @@ export interface PerformanceBenchmark {
   improvementAreas: string[];
 }
 
-// Industrial Management Models
+// Industrial Management Models - Machine
 export interface IndustrialMachine {
   id: number;
   machineId: string;
@@ -183,6 +201,7 @@ export interface IndustrialMachine {
   nextMaintenanceDate?: string;
 }
 
+// Industrial Management Models - Production Line Analysis
 export interface ProductionLineAnalysis {
   lineId: string;
   analysisTimestamp: string;
@@ -196,6 +215,7 @@ export interface ProductionLineAnalysis {
   machineDetails: MachineSummary[];
 }
 
+// Industrial Management Models - Machine Summary
 export interface MachineSummary {
   machineId: string;
   name: string;
@@ -205,12 +225,14 @@ export interface MachineSummary {
   lastSeen: string;
 }
 
+// Industrial Management Models - Maintenance Schedule
 export interface MaintenanceSchedule {
   facilityId: string;
   generatedAt: string;
   scheduledTasks: MaintenanceTask[];
 }
 
+// Industrial Management Models - Maintenance Task
 export interface MaintenanceTask {
   taskId: string;
   machineId: string;
@@ -226,6 +248,7 @@ export interface MaintenanceTask {
   status: string;
 }
 
+// Industrial Management Models - Facility Overview
 export interface FacilityOverview {
   facilityId: string;
   name: string;
@@ -240,6 +263,7 @@ export interface FacilityOverview {
   lastUpdated: string;
 }
 
+// Industrial Management Models - Quality Control Metrics
 export interface QualityControlMetrics {
   machineId: string;
   analysisTimestamp: string;
@@ -252,6 +276,7 @@ export interface QualityControlMetrics {
   qualityRecommendations: string[];
 }
 
+// Industrial Management Models - Supply Chain Optimization
 export interface SupplyChainOptimization {
   facilityId: string;
   analysisTimestamp: string;
@@ -263,6 +288,7 @@ export interface SupplyChainOptimization {
   criticalItems: InventoryItem[];
 }
 
+// Industrial Management Models - Inventory Item
 export interface InventoryItem {
   itemId: string;
   name: string;

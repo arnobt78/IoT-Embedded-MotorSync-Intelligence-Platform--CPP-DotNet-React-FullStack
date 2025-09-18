@@ -166,7 +166,7 @@ function DataPoints({ reading }: { reading: MotorReading | null }) {
   return (
     <>
       {dataPoints.map((point, index) => (
-        <group key={index} position={point.position}>
+        <group key={index} position={point.position as [number, number, number]}>
           <Sphere args={[0.1]}>
             <meshStandardMaterial color={point.color} emissive={point.color} emissiveIntensity={0.5} />
           </Sphere>
