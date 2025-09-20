@@ -83,7 +83,10 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               : reading.operatingMinutes !== undefined &&
                 reading.operatingMinutes > 0
               ? `${reading.operatingMinutes}m`
-              : "Starting..."}
+              : reading.operatingSeconds !== undefined &&
+                reading.operatingSeconds > 0
+              ? `${Math.floor(reading.operatingSeconds)}s`
+              : "0s"}
           </div>
           <div className="text-xs opacity-75 mt-1">
             {reading.operatingHours !== undefined && reading.operatingHours > 0
@@ -93,7 +96,10 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               : reading.operatingMinutes !== undefined &&
                 reading.operatingMinutes > 0
               ? `${Math.floor(reading.operatingSeconds || 0)}s total runtime`
-              : "Motor starting up..."}
+              : reading.operatingSeconds !== undefined &&
+                reading.operatingSeconds > 0
+              ? `${Math.floor(reading.operatingSeconds)}s total runtime`
+              : "Session just started"}
           </div>
           <div className="text-xs opacity-60 mt-1 border-t border-purple-400 pt-1">
             💡 Real-time tracking from session start
