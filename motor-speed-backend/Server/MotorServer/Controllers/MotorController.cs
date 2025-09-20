@@ -17,6 +17,11 @@ namespace MotorServer.Controllers {
         [HttpGet("sample")]
         public async Task<MotorReading> GetSample() => await _svc.Sample();
 
+        [HttpGet("test")]
+        public IActionResult GetTest() {
+            return Ok(new { message = "Backend is working!", timestamp = DateTime.UtcNow });
+        }
+
         [HttpGet]
         public async Task<List<MotorReading>> GetAll()
         {

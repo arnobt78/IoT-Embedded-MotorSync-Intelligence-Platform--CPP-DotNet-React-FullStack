@@ -173,12 +173,19 @@ namespace MotorServer.Services {
         public EngineService(AppDbContext db, IHubContext<MotorHub> hub) {
             _db = db; _hub = hub;
             
-            // Reset motor state to ensure clean start
+            // Test C++ library loading
             try {
+                // Try a simple function call first
+                var testSpeed = GetMotorSpeed();
+                Console.WriteLine($"C++ library loaded successfully. Test speed: {testSpeed}");
+                
+                // Reset motor state to ensure clean start
                 ResetMotorState();
+                Console.WriteLine("Motor state reset successfully");
             } catch (Exception ex) {
                 // Log error but don't fail service creation
-                Console.WriteLine($"Warning: Could not reset motor state: {ex.Message}");
+                Console.WriteLine($"ERROR: C++ library failed to load: {ex.Message}");
+                Console.WriteLine($"ERROR: Stack trace: {ex.StackTrace}");
             }
         }
 
