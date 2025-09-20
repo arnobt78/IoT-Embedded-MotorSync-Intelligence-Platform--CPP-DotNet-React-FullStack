@@ -243,7 +243,7 @@ namespace MotorServer.Services {
             
             var operatingHours = (int)totalElapsed.TotalHours;
             var operatingMinutes = (int)totalElapsed.TotalMinutes % 60;
-            var operatingSeconds = totalElapsed.TotalSeconds % 60;
+            var operatingSeconds = totalElapsed.TotalSeconds;
             
             // Debug: Log the calculated values
             Console.WriteLine($"DEBUG: _sessionStartTime: {_sessionStartTime:yyyy-MM-dd HH:mm:ss}");

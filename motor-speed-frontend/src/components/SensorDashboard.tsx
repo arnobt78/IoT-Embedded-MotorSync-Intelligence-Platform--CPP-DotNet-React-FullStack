@@ -88,7 +88,12 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               ? `${Math.floor(reading.operatingSeconds)}s`
               : "0s"}
           </div>
-          <div className="text-xs opacity-75 mt-1">
+          {/* Debug info - remove after fixing */}
+          <div className="text-xs text-white opacity-50">
+            Debug: h={reading.operatingHours}, m={reading.operatingMinutes}, s=
+            {reading.operatingSeconds}
+          </div>
+          <div className="text-xs opacity-75 mt-1 text-white">
             {reading.operatingHours !== undefined && reading.operatingHours > 0
               ? `${reading.operatingMinutes}m ${Math.floor(
                   reading.operatingSeconds || 0
@@ -101,7 +106,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               ? `${Math.floor(reading.operatingSeconds)}s total runtime`
               : "Session just started"}
           </div>
-          <div className="text-xs opacity-60 mt-1 border-t border-purple-400 pt-1">
+          <div className="text-xs opacity-60 mt-1 border-t border-purple-400 pt-1 text-white">
             💡 Real-time tracking from session start
           </div>
         </div>
@@ -123,7 +128,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 X-Axis:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.vibrationX?.toFixed(2) || "N/A"} mm/s
               </span>
             </div>
@@ -131,7 +136,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Y-Axis:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.vibrationY?.toFixed(2) || "N/A"} mm/s
               </span>
             </div>
@@ -139,7 +144,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Z-Axis:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.vibrationZ?.toFixed(2) || "N/A"} mm/s
               </span>
             </div>
@@ -147,7 +152,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 RMS:
               </span>
-              <span className="font-bold text-white">
+              <span className="font-bold text-gray-900 dark:text-white">
                 {reading.vibration?.toFixed(2) || "N/A"} mm/s
               </span>
             </div>
@@ -168,7 +173,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Oil:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.oilPressure?.toFixed(2) || "N/A"} bar
               </span>
             </div>
@@ -176,7 +181,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Air:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.airPressure?.toFixed(2) || "N/A"} bar
               </span>
             </div>
@@ -184,7 +189,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Hydraulic:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.hydraulicPressure?.toFixed(1) || "N/A"} bar
               </span>
             </div>
@@ -205,7 +210,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Voltage:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.voltage?.toFixed(1) || "N/A"} V
               </span>
             </div>
@@ -213,7 +218,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Current:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.current?.toFixed(1) || "N/A"} A
               </span>
             </div>
@@ -221,7 +226,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Power Factor:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.powerFactor?.toFixed(3) || "N/A"}
               </span>
             </div>
@@ -229,7 +234,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Power:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.powerConsumption?.toFixed(1) || "N/A"} kW
               </span>
             </div>
@@ -250,7 +255,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 RPM:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.rpm || "N/A"}
               </span>
             </div>
@@ -258,7 +263,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Torque:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.torque?.toFixed(1) || "N/A"} Nm
               </span>
             </div>
@@ -266,7 +271,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Shaft Position:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.shaftPosition?.toFixed(1) || "N/A"}°
               </span>
             </div>
@@ -274,7 +279,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Displacement:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.displacement?.toFixed(3) || "N/A"} mm
               </span>
             </div>
@@ -295,7 +300,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Motor Temp:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.temperature}°C
               </span>
             </div>
@@ -303,7 +308,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Ambient Temp:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.ambientTemperature?.toFixed(1) || "N/A"}°C
               </span>
             </div>
@@ -311,7 +316,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Humidity:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.humidity?.toFixed(1) || "N/A"}%
               </span>
             </div>
@@ -319,7 +324,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Pressure:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.ambientPressure?.toFixed(1) || "N/A"} kPa
               </span>
             </div>
@@ -340,7 +345,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Sound Level:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.soundLevel?.toFixed(1) || "N/A"} dB
               </span>
             </div>
@@ -360,7 +365,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Strain Gauge 1:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.strainGauge1?.toFixed(1) || "N/A"} με
               </span>
             </div>
@@ -368,7 +373,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Strain Gauge 2:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.strainGauge2?.toFixed(1) || "N/A"} με
               </span>
             </div>
@@ -389,7 +394,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Coolant:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.coolantFlowRate?.toFixed(1) || "N/A"} L/min
               </span>
             </div>
@@ -397,7 +402,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               <span className="text-sm text-gray-600 dark:text-gray-300">
                 Fuel:
               </span>
-              <span className="font-medium text-white">
+              <span className="font-medium text-gray-900 dark:text-white">
                 {reading.fuelFlowRate?.toFixed(1) || "N/A"} L/min
               </span>
             </div>

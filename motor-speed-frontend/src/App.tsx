@@ -35,6 +35,15 @@ function App() {
   const [fastSpinCount, setFastSpinCount] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Apply dark class to document element for Tailwind dark mode
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
   const [maxReadings, setMaxReadings] = useState(100);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -235,11 +244,7 @@ function App() {
   }, []); // Remove maxReadings from dependency array
 
   return (
-    <div
-      className={`min-h-screen bg-gray-50 p-6${
-        darkMode ? " dark bg-gray-900 text-white" : ""
-      }`}
-    >
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-6`}>
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
           <MotorSpinner />
@@ -255,7 +260,7 @@ function App() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
                 Industrial IoT Platform for Motor Speed Monitoring
               </h1>
               <div
@@ -623,7 +628,7 @@ function App() {
         {/* Readings Section */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
               Motor Readings
             </h2>
             <div className="flex items-center space-x-3">
