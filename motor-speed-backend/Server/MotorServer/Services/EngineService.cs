@@ -231,7 +231,21 @@ namespace MotorServer.Services {
             
             // System status - implement real-time tracking
             var now = DateTime.UtcNow;
-            var motorStartTime = new DateTime(2025, 9, 20, 0, 30, 0); // Motor installation time
+            
+            // Get the first reading timestamp to calculate actual runtime
+            var firstReading = await _db.MotorReadings
+                .OrderBy(r => r.Timestamp)
+                .FirstOrDefaultAsync();
+            
+            DateTime motorStartTime;
+            if (firstReading == null) {
+                // This is the first reading - start timer now
+                motorStartTime = now;
+            } else {
+                // Use the first reading timestamp as start time
+                motorStartTime = firstReading.Timestamp;
+            }
+            
             var totalElapsed = now - motorStartTime;
             
             var operatingHours = (int)totalElapsed.TotalHours;
