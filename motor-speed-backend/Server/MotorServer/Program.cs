@@ -27,6 +27,7 @@ builder.Services.AddScoped<IndustrialManagementService>();
 var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",
+    "https://motor-speed-temperature.netlify.app/",
     Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "https://your-frontend.onrender.com"
 };
 builder.Services.AddCors(opt =>
@@ -58,6 +59,15 @@ app.UseSwaggerUI();
 
 // Use CORS before authentication/authorization
 app.UseCors();
+
+// Add CORS debugging
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"Request from origin: {context.Request.Headers.Origin}");
+    Console.WriteLine($"Request method: {context.Request.Method}");
+    Console.WriteLine($"Request path: {context.Request.Path}");
+    await next();
+});
 
 // Add authentication/authorization middleware
 app.UseAuthentication();
