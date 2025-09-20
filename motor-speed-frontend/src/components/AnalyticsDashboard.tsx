@@ -10,19 +10,50 @@ interface AnalyticsDashboardProps {
 export default function AnalyticsDashboard({
   machineId = "MOTOR-001",
 }: AnalyticsDashboardProps) {
+  // Add CSS for spin animation
+  React.useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .spin-icon {
+        animation: spin 1s linear infinite;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
   const [predictiveAnalysis, setPredictiveAnalysis] =
     useState<PredictiveAnalysis | null>(null);
   const [oeeAnalysis, setOeeAnalysis] = useState<OEEAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     loadAnalytics();
   }, [machineId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        console.log("Starting refresh animation...");
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Add minimum delay for refresh to show animation
+      const startTime = Date.now();
+      const minDelay = isRefresh ? 1000 : 0; // 1 second minimum for refresh
+
       const [predictiveResponse, oeeResponse] = await Promise.all([
         axios.get<PredictiveAnalysis>(
           `${API_BASE_URL}/api/predictive/analysis/${machineId}`
@@ -34,10 +65,24 @@ export default function AnalyticsDashboard({
 
       setPredictiveAnalysis(predictiveResponse.data);
       setOeeAnalysis(oeeResponse.data);
+
+      // Ensure minimum delay for refresh animation
+      if (isRefresh) {
+        const elapsed = Date.now() - startTime;
+        const remainingDelay = Math.max(0, minDelay - elapsed);
+        if (remainingDelay > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+        }
+      }
     } catch (error) {
       console.error("Failed to load analytics:", error);
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        console.log("Stopping refresh animation...");
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -86,16 +131,24 @@ export default function AnalyticsDashboard({
             Advanced Analytics Dashboard
           </h2>
           <button
-            onClick={loadAnalytics}
-            disabled={loading}
-            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
+            onClick={() => loadAnalytics(true)}
+            disabled={refreshing || loading}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 ${
+              refreshing || loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
-            <span className={`text-lg ${loading ? "animate-spin" : ""}`}>
-              🔄
+            <div className="relative">
+              <span
+                className={`text-lg inline-block ${
+                  refreshing ? "spin-icon" : ""
+                }`}
+              >
+                🔄
+              </span>
+            </div>
+            <span className="transition-opacity duration-200">
+              {refreshing ? "Refreshing..." : "Refresh"}
             </span>
-            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
