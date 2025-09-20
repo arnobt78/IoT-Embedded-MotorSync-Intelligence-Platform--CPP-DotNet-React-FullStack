@@ -78,12 +78,13 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
           <div className="text-sm opacity-90">Operating Time</div>
           <div className="text-2xl font-bold text-white">
-            {reading.operatingHours
+            {reading.operatingHours !== undefined
               ? `${Math.floor(reading.operatingHours)}h`
               : "N/A"}
           </div>
           <div className="text-xs opacity-75 mt-1">
-            {reading.operatingMinutes && reading.operatingSeconds
+            {reading.operatingMinutes !== undefined &&
+            reading.operatingSeconds !== undefined
               ? `${reading.operatingMinutes}m ${Math.floor(
                   reading.operatingSeconds
                 )}s total runtime`

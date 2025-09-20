@@ -233,13 +233,14 @@ namespace MotorServer.Services {
             var soundLevel = Math.Round(GetSoundLevel(), 1);
             var bearingHealth = Math.Round(GetBearingHealth(), 1);
             
-            // System status
-            var operatingHours = 0; // GetOperatingHours();
-            var operatingMinutes = 0; // GetOperatingMinutes();
-            var operatingSeconds = 0.0; // GetOperatingSeconds();
+            // System status - implement real-time tracking
+            var now = DateTime.UtcNow;
+            var motorStartTime = new DateTime(2025, 9, 20, 0, 30, 0); // Motor installation time
+            var totalElapsed = now - motorStartTime;
             
-            // Debug: log the operating hours value
-            Console.WriteLine($"[DEBUG] Setting operatingHours to: {operatingHours}");
+            var operatingHours = (int)totalElapsed.TotalHours;
+            var operatingMinutes = (int)totalElapsed.TotalMinutes % 60;
+            var operatingSeconds = totalElapsed.TotalSeconds % 60;
             var maintenanceStatus = GetMaintenanceStatus();
             var systemHealth = GetSystemHealth();
             

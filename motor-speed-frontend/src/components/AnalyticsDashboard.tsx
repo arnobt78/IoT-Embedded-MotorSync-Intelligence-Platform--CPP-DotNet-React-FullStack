@@ -87,9 +87,15 @@ export default function AnalyticsDashboard({
           </h2>
           <button
             onClick={loadAnalytics}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            disabled={loading}
+            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2 ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            🔄 Refresh
+            <span className={`text-lg ${loading ? "animate-spin" : ""}`}>
+              🔄
+            </span>
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
