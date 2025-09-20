@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MotorServer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+72e1f3df5deb9bf9c817af535930e260799348a8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d3f6e0ba1f259f1557daf595ac08ada8cd2d42e")]
 [assembly: System.Reflection.AssemblyProductAttribute("MotorServer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MotorServer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

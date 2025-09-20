@@ -50,6 +50,10 @@ extern "C" {
     
     // System status
     __attribute__((visibility("default"))) int GetOperatingHours();
+    __attribute__((visibility("default"))) int GetOperatingMinutes();
+    __attribute__((visibility("default"))) double GetOperatingSeconds();
+    __attribute__((visibility("default"))) void StartMotor();
+    __attribute__((visibility("default"))) void StopMotor();
     __attribute__((visibility("default"))) int GetMaintenanceStatus();
     __attribute__((visibility("default"))) int GetSystemHealth();
 }

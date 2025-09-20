@@ -139,6 +139,21 @@ namespace MotorServer.Services {
         [DllImport(LIB_NAME)]
         public static extern int GetOperatingHours();
 
+        // Operating minutes (for more precision)
+        [DllImport(LIB_NAME)]
+        public static extern int GetOperatingMinutes();
+
+        // Operating seconds (most precise)
+        [DllImport(LIB_NAME)]
+        public static extern double GetOperatingSeconds();
+
+        // Motor control functions
+        [DllImport(LIB_NAME)]
+        public static extern void StartMotor();
+
+        [DllImport(LIB_NAME)]
+        public static extern void StopMotor();
+
         // Maintenance status
         [DllImport(LIB_NAME)]
         public static extern int GetMaintenanceStatus();
@@ -209,6 +224,8 @@ namespace MotorServer.Services {
             
             // System status
             var operatingHours = GetOperatingHours();
+            var operatingMinutes = GetOperatingMinutes();
+            var operatingSeconds = GetOperatingSeconds();
             var maintenanceStatus = GetMaintenanceStatus();
             var systemHealth = GetSystemHealth();
             
@@ -273,6 +290,8 @@ namespace MotorServer.Services {
                 
                 // System status
                 OperatingHours = operatingHours,
+                OperatingMinutes = operatingMinutes,
+                OperatingSeconds = Math.Round(operatingSeconds, 2),
                 MaintenanceStatus = maintenanceStatus,
                 SystemHealth = systemHealth
             };

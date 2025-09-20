@@ -76,12 +76,21 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
           </div>
         </div>
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
-          <div className="text-sm opacity-90">Operating Hours</div>
+          <div className="text-sm opacity-90">Operating Time</div>
           <div className="text-2xl font-bold text-white">
-            {reading.operatingHours || "N/A"}h
+            {reading.operatingHours
+              ? `${Math.floor(reading.operatingHours)}h`
+              : "N/A"}
           </div>
           <div className="text-xs opacity-75 mt-1">
-            Total runtime since installation
+            {reading.operatingMinutes && reading.operatingSeconds
+              ? `${reading.operatingMinutes}m ${Math.floor(
+                  reading.operatingSeconds
+                )}s total runtime`
+              : "Total runtime since installation"}
+          </div>
+          <div className="text-xs opacity-60 mt-1 border-t border-purple-400 pt-1">
+            💡 Real-time tracking from motor installation
           </div>
         </div>
       </div>

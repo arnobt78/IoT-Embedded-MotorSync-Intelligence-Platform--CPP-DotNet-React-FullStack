@@ -3,10 +3,18 @@
 #include <ctime>
 #include <cmath>
 #include <random>
+#include <chrono>
 
 // Global random number generator for better randomness
 static std::random_device rd;
 static std::mt19937 gen(rd());
+
+// Motor installation timestamp and runtime tracking
+static std::chrono::steady_clock::time_point motorInstallationTime;
+static std::chrono::steady_clock::time_point lastReadingTime;
+static bool isMotorRunning = false;
+static double totalRuntimeSeconds = 0.0;
+static bool isInitialized = false;
 
 static int random_int(int min, int max) {
     std::uniform_int_distribution<> dis(min, max);
@@ -16,6 +24,39 @@ static int random_int(int min, int max) {
 static double random_double(double min, double max) {
     std::uniform_real_distribution<> dis(min, max);
     return dis(gen);
+}
+
+// Initialize motor runtime tracking
+static void initializeMotorTracking() {
+    if (!isInitialized) {
+        motorInstallationTime = std::chrono::steady_clock::now();
+        lastReadingTime = motorInstallationTime;
+        isMotorRunning = true; // Assume motor starts running when first reading is taken
+        totalRuntimeSeconds = 0.0;
+        isInitialized = true;
+    }
+}
+
+// Update runtime based on actual time passage
+static void updateRuntime() {
+    initializeMotorTracking();
+    
+    auto currentTime = std::chrono::steady_clock::now();
+    
+    // Calculate time elapsed since last reading
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        currentTime - lastReadingTime
+    ).count();
+    
+    // Convert milliseconds to seconds and add to total runtime
+    double elapsedSeconds = elapsed / 1000.0;
+    
+    // Only count runtime when motor is "running" (when readings are being taken)
+    if (isMotorRunning && elapsedSeconds > 0) {
+        totalRuntimeSeconds += elapsedSeconds;
+    }
+    
+    lastReadingTime = currentTime;
 }
 
 // Basic motor parameters
@@ -177,11 +218,44 @@ double GetBearingHealth() {
 }
 
 // System status
-// Operating hours
+// Operating hours - now tracks real runtime
 int GetOperatingHours() {
-    static int hours = 1250;
-    hours += random_int(0, 2);
-    return hours;
+    updateRuntime();
+    
+    // Convert total runtime seconds to hours
+    double totalHours = totalRuntimeSeconds / 3600.0;
+    
+    // Return as integer hours (rounded down)
+    return static_cast<int>(totalHours);
+}
+
+// Get operating minutes (for more precision)
+int GetOperatingMinutes() {
+    updateRuntime();
+    
+    // Convert total runtime seconds to minutes
+    double totalMinutes = totalRuntimeSeconds / 60.0;
+    
+    return static_cast<int>(totalMinutes);
+}
+
+// Get total runtime in seconds (most precise)
+double GetOperatingSeconds() {
+    updateRuntime();
+    return totalRuntimeSeconds;
+}
+
+// Start motor (optional function for more realistic control)
+void StartMotor() {
+    initializeMotorTracking();
+    isMotorRunning = true;
+    lastReadingTime = std::chrono::steady_clock::now();
+}
+
+// Stop motor (optional function for more realistic control)
+void StopMotor() {
+    updateRuntime(); // Update runtime before stopping
+    isMotorRunning = false;
 }
 
 // System status

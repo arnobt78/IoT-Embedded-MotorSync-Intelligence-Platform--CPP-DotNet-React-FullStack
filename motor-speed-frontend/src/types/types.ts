@@ -55,6 +55,8 @@ export interface MotorReading {
 
   // System status
   operatingHours?: number;
+  operatingMinutes?: number;
+  operatingSeconds?: number;
   maintenanceStatus?: number;
   systemHealth?: number;
 }

@@ -56,6 +56,8 @@ namespace MotorServer.Models {
         
         // System status
         public double? OperatingHours { get; set; }
+        public int? OperatingMinutes { get; set; }
+        public double? OperatingSeconds { get; set; }
         public int? MaintenanceStatus { get; set; }
         public int? SystemHealth { get; set; }
     }
