@@ -27,7 +27,6 @@ builder.Services.AddScoped<IndustrialManagementService>();
 var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",
-    "https://motor-speed-temperature.netlify.app/",
     Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "https://your-frontend.onrender.com"
 };
 builder.Services.AddCors(opt =>
