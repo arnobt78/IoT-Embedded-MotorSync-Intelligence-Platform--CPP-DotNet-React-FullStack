@@ -16,10 +16,58 @@ export default function AlertSystem({
   onAcknowledge,
 }: AlertSystemProps) {
   const [visibleAlerts, setVisibleAlerts] = useState<Alert[]>([]);
+  const [dismissingAlerts, setDismissingAlerts] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     setVisibleAlerts(alerts.filter((alert) => !alert.acknowledged));
   }, [alerts]);
+
+  // Auto-dismiss alerts after 5 seconds
+  useEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+
+    visibleAlerts.forEach((alert) => {
+      if (!dismissingAlerts.has(alert.id)) {
+        const timer = setTimeout(() => {
+          // Start dismissing animation
+          setDismissingAlerts((prev) => new Set(prev).add(alert.id));
+
+          // Actually dismiss after animation completes
+          setTimeout(() => {
+            onAcknowledge(alert.id);
+            setDismissingAlerts((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(alert.id);
+              return newSet;
+            });
+          }, 300); // Animation duration
+        }, 5000); // Auto-dismiss after 5 seconds
+
+        timers.push(timer);
+      }
+    });
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [visibleAlerts, dismissingAlerts, onAcknowledge]);
+
+  const handleDismiss = (alertId: string) => {
+    // Start dismissing animation
+    setDismissingAlerts((prev) => new Set(prev).add(alertId));
+
+    // Actually dismiss after animation completes
+    setTimeout(() => {
+      onAcknowledge(alertId);
+      setDismissingAlerts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(alertId);
+        return newSet;
+      });
+    }, 300); // Animation duration
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -61,40 +109,68 @@ export default function AlertSystem({
 
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
-      {visibleAlerts.map((alert) => (
-        <div
-          key={alert.id}
-          className={`border rounded-lg p-4 shadow-lg ${getSeverityColor(
-            alert.severity
-          )} animate-in slide-in-from-right duration-300`}
-        >
-          <div className="flex items-start space-x-3">
-            {getSeverityIcon(alert.severity)}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium capitalize">
-                  {alert.type} Alert
-                </p>
-                <button
-                  onClick={() => onAcknowledge(alert.id)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XMarkIcon className="w-4 h-4" />
-                </button>
-              </div>
-              <p className="text-sm mt-1">{alert.message}</p>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-gray-500">
-                  Machine: {alert.machineId}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {formatTime(alert.timestamp)}
-                </p>
+      {visibleAlerts.map((alert) => {
+        const isDismissing = dismissingAlerts.has(alert.id);
+        return (
+          <div
+            key={alert.id}
+            className={`border rounded-lg p-4 shadow-lg ${getSeverityColor(
+              alert.severity
+            )} transform transition-all duration-300 ease-in-out ${
+              isDismissing
+                ? "translate-x-full opacity-0 scale-95"
+                : "translate-x-0 opacity-100 scale-100"
+            }`}
+            style={{
+              animation: isDismissing
+                ? "none"
+                : "slideInFromRight 0.3s ease-out",
+            }}
+          >
+            <div className="flex items-start space-x-3">
+              {getSeverityIcon(alert.severity)}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium capitalize">
+                    {alert.type} Alert
+                  </p>
+                  <button
+                    onClick={() => handleDismiss(alert.id)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm mt-1">{alert.message}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-gray-500">
+                    Machine: {alert.machineId}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatTime(alert.timestamp)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+            scale: 0.95;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+            scale: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

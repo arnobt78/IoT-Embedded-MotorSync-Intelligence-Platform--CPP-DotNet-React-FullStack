@@ -30,7 +30,7 @@ function App() {
   const [alert, setAlert] = useState("");
   const [loading, setLoading] = useState(true);
   const [signalRConnected, setSignalRConnected] = useState(false);
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fastSpinCount, setFastSpinCount] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -127,16 +127,12 @@ function App() {
     axios
       .get<MotorReading[]>(`${API_BASE_URL}/api/motor`)
       .then((res) => {
-        console.log("[DEBUG] Readings loaded from backend:", res.data);
-        res.data.forEach((r) => {
-        console.log(`[DEBUG] Reading id=${r.id} timestamp=`, r.timestamp);
-      });
-      setReadings(res.data);
-      setLoading(false);
+        setReadings(res.data);
+        setLoading(false);
       })
       .catch(() => {
-      setLoading(false); // still hide spinner on error
-    });
+        setLoading(false); // still hide spinner on error
+      });
 
     loadDashboardStats();
 
@@ -197,42 +193,41 @@ function App() {
 
     // New alert event
     hub.on("NewAlert", (alert: Alert) => {
-      setAlerts((prev) => [alert, ...prev]);
+      setAlerts((prev) => {
+        // Check if alert with same ID already exists
+        const existingAlert = prev.find((a) => a.id === alert.id);
+        if (existingAlert) {
+          return prev; // Don't add duplicate
+        }
+
+        return [alert, ...prev];
+      });
     });
 
-    // Add connection event handlers for better debugging
-    hub.onclose((error) => {
+    // Add connection event handlers
+    hub.onclose(() => {
       setSignalRConnected(false);
-      if (error) {
-        console.log("[SignalR] Connection closed with error:", error);
-      } else {
-        console.log("[SignalR] Connection closed");
-      }
     });
 
-    hub.onreconnecting((error) => {
+    hub.onreconnecting(() => {
       setSignalRConnected(false);
-      console.log("[SignalR] Reconnecting...", error);
     });
 
-    hub.onreconnected((connectionId) => {
+    hub.onreconnected(() => {
       setSignalRConnected(true);
-      console.log("[SignalR] Reconnected with connection ID:", connectionId);
     });
 
-    // Start connection with error handling and small delay
+    // Start connection
     setTimeout(() => {
       hub
         .start()
         .then(() => {
           setSignalRConnected(true);
-          console.log("[SignalR] Connected successfully");
         })
-        .catch((error) => {
+        .catch(() => {
           setSignalRConnected(false);
-          console.log("[SignalR] Failed to start connection:", error);
         });
-    }, 100); // Small delay to ensure backend is ready
+    }, 100);
 
     return () => {
       hub.stop().catch(console.error);
@@ -254,14 +249,14 @@ function App() {
       <AlertSystem alerts={alerts} onAcknowledge={acknowledgeAlert} />
 
       <div className="max-w-9xl mx-auto">
-      <NavBar />
+        <NavBar />
 
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <h1 className="text-3xl font-bold text-gray-900">
-                Motor Dashboard
+                Industrial IoT Platform for Motor Speed Monitoring
               </h1>
               <div
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -274,82 +269,197 @@ function App() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {/* Motor Control Button */}
-              <div className="relative">
-                <button
-                  className={`px-6 py-3 rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-3 ${
-                    isGenerating
-                      ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
-                      : readings[0]
-                      ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                      : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                  } text-white`}
-                  onClick={() => {
-                    if (isGenerating) return; // Prevent rapid clicking
-                    setIsGenerating(true);
-                    axios.get(`${API_BASE_URL}/api/motor/sample`);
-                    setFastSpinCount((c) => c + 1);
-                    // Reset after 1 second to allow next click
-                    setTimeout(() => setIsGenerating(false), 1000);
-                  }}
-                >
-                  {/* Motor Icon */}
-                  <div className="w-8 h-8 flex items-center justify-center mr-6">
-                    {readings[0] ? (
-                      <div className="relative">
-                        <AnimatedMotor reading={readings[0]} />
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 border-2 border-white rounded-full">
-                        <div className="w-1 h-1 bg-white rounded-full absolute top-0 left-1/2 transform -translate-x-1/2"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm font-semibold">
-                      {readings[0] ? "Generate Reading" : "Start Motor"}
-                    </span>
-                    {readings[0] && (
-                      <span className="text-xs opacity-90">
-                        Current: {readings[0].speed} RPM
-                      </span>
-                    )}
-                  </div>
-                </button>
-
-                {/* Status Indicator */}
-                {readings[0] && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium animate-pulse">
-                    LIVE
-                  </div>
-                )}
-              </div>
-
-            <button
+              <button
                 className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
-              onClick={() => setSettingsOpen(true)}
-              title="Settings"
-            >
-              ⚙️
-            </button>
-          </div>
+                onClick={() => setSettingsOpen(true)}
+                title="Settings"
+              >
+                ⚙️
+              </button>
+            </div>
           </div>
 
           {/* Dashboard Stats */}
           {dashboardStats && <DashboardStatsComponent stats={dashboardStats} />}
         </div>
 
-        {/* 3D Motor Visualization */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Animated Motor Visualization
-          </h2>
-          <AnimatedMotor
-            reading={readings[0] || null}
-            className="border rounded-lg shadow-lg"
-          />
+        {/* Hero Section - Motor Status Dashboard */}
+        <div className="mb-8 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 shadow-xl border border-blue-200 dark:border-gray-700">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Motor Speed Monitoring Dashboard
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Real-time monitoring and control
+              </p>
+            </div>
+
+            {/* Motor Control Button - Redesigned */}
+            <div className="relative">
+              <button
+                className={`px-8 py-4 rounded-2xl transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center space-x-4 ${
+                  isGenerating
+                    ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
+                    : readings[0]
+                    ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                } text-white`}
+                onClick={() => {
+                  if (isGenerating) return;
+                  setIsGenerating(true);
+                  axios.get(`${API_BASE_URL}/api/motor/sample`);
+                  setFastSpinCount((c) => c + 1);
+                  setTimeout(() => setIsGenerating(false), 1000);
+                }}
+              >
+                {/* Gear Icon */}
+                <div className="w-10 h-10 flex items-center justify-center">
+                  {readings[0] ? (
+                    <div className="relative">
+                      <div className="w-8 h-8 border-4 border-white rounded-full animate-spin">
+                        <div className="w-2 h-2 bg-white rounded-full absolute top-0 left-1/2 transform -translate-x-1/2"></div>
+                        <div className="w-2 h-2 bg-white rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2"></div>
+                        <div className="w-2 h-2 bg-white rounded-full absolute left-0 top-1/2 transform -translate-y-1/2"></div>
+                        <div className="w-2 h-2 bg-white rounded-full absolute right-0 top-1/2 transform -translate-y-1/2"></div>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-400 rounded-full animate-pulse"></div>
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 border-4 border-white rounded-full">
+                      <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-start">
+                  <span className="text-lg font-bold">
+                    {readings[0] ? "Generate Reading" : "Start Motor"}
+                  </span>
+                  {readings[0] && (
+                    <span className="text-sm opacity-90">
+                      Current: {readings[0].speed} RPM
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {/* Status Indicator */}
+              {readings[0] && (
+                <div className="absolute -top-3 -right-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold animate-pulse shadow-lg">
+                  LIVE
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Main Motor Visualization */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            {/* Left: Motor Status Card */}
+            <div className="lg:col-span-1">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="text-center">
+                  <div className="mb-4">
+                    <AnimatedMotor
+                      reading={readings[0] || null}
+                      className="mx-auto"
+                    />
+                  </div>
+                  <div className="text-2xl font-bold mb-2">
+                    <span
+                      className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                        readings[0]?.status === "critical"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          : readings[0]?.status === "warning"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : readings[0]?.status === "maintenance"
+                          ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                          : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      }`}
+                    >
+                      {readings[0]?.status?.toUpperCase() || "OFFLINE"}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">
+                    Motor Speed Monitoring
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Center: Key Metrics */}
+            <div className="lg:col-span-2">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Speed */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">⚡</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Motor Speed
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {readings[0]?.speed || 0} RPM
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Temperature */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">🌡️</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Motor Temperature
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {readings[0]?.temperature || 0}°C
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vibration */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">📳</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Motor Vibration
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {readings[0]?.vibration || 0} mm/s
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Efficiency */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                      <span className="text-2xl">⚙️</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Motor Efficiency
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {readings[0]?.efficiency || 0}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -507,20 +617,20 @@ function App() {
                 </div>
               )}
             </div>
+          </div>
         </div>
-      </div>
 
         {/* Readings Section */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Motor Readings</h2>
             <div className="flex items-center space-x-3">
-        <button
+              <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
-          onClick={exportCsv}
-        >
-          Export CSV
-        </button>
+                onClick={exportCsv}
+              >
+                Export CSV
+              </button>
               <button
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium"
                 onClick={() =>
@@ -533,12 +643,15 @@ function App() {
                 Export JSON
               </button>
             </div>
-      </div>
+          </div>
 
           {/* Color Legend */}
           <ColorLegend />
 
-      <ReadingList readings={readings} />
+          {/* Reading List */}
+          <div className="mb-8">
+            <ReadingList readings={readings} />
+          </div>
         </div>
 
         {/* Industrial Sensor Dashboard */}
@@ -576,14 +689,14 @@ function App() {
         />
 
         {/* Settings Modal */}
-      <SettingsModal
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        maxReadings={maxReadings}
-        setMaxReadings={setMaxReadings}
-      />
+        <SettingsModal
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          maxReadings={maxReadings}
+          setMaxReadings={setMaxReadings}
+        />
       </div>
     </div>
   );

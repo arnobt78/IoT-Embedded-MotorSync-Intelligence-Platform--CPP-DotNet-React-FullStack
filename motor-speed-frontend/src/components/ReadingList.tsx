@@ -52,19 +52,6 @@ export default function ReadingList({
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "critical":
-        return "🚨";
-      case "warning":
-        return "⚠️";
-      case "maintenance":
-        return "🔧";
-      default:
-        return "✅";
-    }
-  };
-
   return (
     <div className="space-y-4">
       {sortedDates.map((dateKey) => {
@@ -131,39 +118,25 @@ export default function ReadingList({
                         r.status
                       )}`}
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg">
-                            {getStatusIcon(r.status)}
-                          </span>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              r.status === "critical"
+                                ? "bg-red-500"
+                                : r.status === "warning"
+                                ? "bg-yellow-500"
+                                : r.status === "maintenance"
+                                ? "bg-blue-500"
+                                : "bg-green-500"
+                            }`}
+                          ></div>
                           <div>
-                            <h4 className="font-semibold text-sm">
+                            <h4 className="font-semibold text-base">
                               {r.title || `Reading #${r.id}`}
                             </h4>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-sm text-gray-600">
                               Machine: {r.machineId}
-                            </p>
-                            <p className="text-xs mt-1">
-                              {r.status === "critical" && (
-                                <span className="text-red-700 font-medium">
-                                  🚨 Critical: Immediate attention required
-                                </span>
-                              )}
-                              {r.status === "warning" && (
-                                <span className="text-orange-600 font-medium">
-                                  ⚠️ Warning: Monitor closely
-                                </span>
-                              )}
-                              {r.status === "maintenance" && (
-                                <span className="text-blue-600 font-medium">
-                                  🔧 Maintenance: Schedule service
-                                </span>
-                              )}
-                              {r.status === "normal" && (
-                                <span className="text-green-600 font-medium">
-                                  ✅ Normal: Operating within limits
-                                </span>
-                              )}
                             </p>
                           </div>
                         </div>
@@ -175,47 +148,113 @@ export default function ReadingList({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <div className="bg-white bg-opacity-50 px-3 py-2 rounded">
-                          <span className="text-xs text-gray-600">Speed: </span>
-                          <span className="font-semibold">{r.speed} RPM</span>
+                      {/* Status Message */}
+                      <div className="mb-4">
+                        {r.status === "critical" && (
+                          <div className="bg-red-100 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-800 text-sm font-medium">
+                              Critical: Immediate attention required
+                            </p>
+                          </div>
+                        )}
+                        {r.status === "warning" && (
+                          <div className="bg-yellow-100 border border-yellow-200 rounded-lg p-3">
+                            <p className="text-yellow-800 text-sm font-medium">
+                              Warning: Monitor closely
+                            </p>
+                          </div>
+                        )}
+                        {r.status === "maintenance" && (
+                          <div className="bg-blue-100 border border-blue-200 rounded-lg p-3">
+                            <p className="text-blue-800 text-sm font-medium">
+                              Maintenance: Schedule service
+                            </p>
+                          </div>
+                        )}
+                        {r.status === "normal" && (
+                          <div className="bg-green-100 border border-green-200 rounded-lg p-3">
+                            <p className="text-green-800 text-sm font-medium">
+                              Normal: Operating within limits
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Key Metrics Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                        <div className="bg-white bg-opacity-80 px-4 py-3 rounded-lg border border-gray-200">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-blue-500">⚡</span>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">
+                                Speed
+                              </p>
+                              <p className="text-lg font-bold text-gray-900">
+                                {r.speed} RPM
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="bg-white bg-opacity-50 px-3 py-2 rounded">
-                          <span className="text-xs text-gray-600">
-                            Temperature:{" "}
-                          </span>
-                          <span className="font-semibold">
-                            {r.temperature}°C
-                          </span>
+
+                        <div className="bg-white bg-opacity-80 px-4 py-3 rounded-lg border border-gray-200">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-orange-500">🌡️</span>
+                            <div>
+                              <p className="text-xs text-gray-600 font-medium">
+                                Temperature
+                              </p>
+                              <p className="text-lg font-bold text-gray-900">
+                                {r.temperature}°C
+                              </p>
+                            </div>
+                          </div>
                         </div>
+
                         {r.vibration && (
-                          <div className="bg-white bg-opacity-50 px-3 py-2 rounded">
-                            <span className="text-xs text-gray-600">
-                              Vibration:{" "}
-                            </span>
-                            <span className="font-semibold">
-                              {r.vibration} mm/s
-                            </span>
+                          <div className="bg-white bg-opacity-80 px-4 py-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-purple-500">📳</span>
+                              <div>
+                                <p className="text-xs text-gray-600 font-medium">
+                                  Vibration
+                                </p>
+                                <p className="text-lg font-bold text-gray-900">
+                                  {r.vibration} mm/s
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
+
                         {r.efficiency && (
-                          <div className="bg-white bg-opacity-50 px-3 py-2 rounded">
-                            <span className="text-xs text-gray-600">
-                              Efficiency:{" "}
-                            </span>
-                            <span className="font-semibold">
-                              {r.efficiency}%
-                            </span>
+                          <div className="bg-white bg-opacity-80 px-4 py-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-green-500">⚙️</span>
+                              <div>
+                                <p className="text-xs text-gray-600 font-medium">
+                                  Efficiency
+                                </p>
+                                <p className="text-lg font-bold text-gray-900">
+                                  {r.efficiency}%
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
+
                         {r.powerConsumption && (
-                          <div className="bg-white bg-opacity-50 px-3 py-2 rounded">
-                            <span className="text-xs text-gray-600">
-                              Power:{" "}
-                            </span>
-                            <span className="font-semibold">
-                              {r.powerConsumption} kW
-                            </span>
+                          <div className="bg-white bg-opacity-80 px-4 py-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-red-500">⚡</span>
+                              <div>
+                                <p className="text-xs text-gray-600 font-medium">
+                                  Power
+                                </p>
+                                <p className="text-lg font-bold text-gray-900">
+                                  {r.powerConsumption} kW
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

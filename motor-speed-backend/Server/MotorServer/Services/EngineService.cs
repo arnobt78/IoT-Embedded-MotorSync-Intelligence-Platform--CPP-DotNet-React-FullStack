@@ -578,18 +578,16 @@ namespace MotorServer.Services {
                 }
             }
             
-            // Count critical alerts from recent readings (last 24 hours)
+            // Count critical alerts from recent readings (last 24 hours) - more accurate
             var criticalAlerts = await _db.MotorReadings
                 .Where(r => r.Timestamp >= DateTime.UtcNow.AddHours(-24) && 
-                           (r.Status == "critical" || 
-                            r.Temperature > 85 || 
-                            r.Vibration > 4.5 || 
-                            r.Efficiency < 80))
+                           (r.Status == "critical"))
                 .CountAsync();
             
-            // Count maintenance due (readings with maintenance status)
+            // Count maintenance due - readings with maintenance status in last 7 days
             var maintenanceDue = await _db.MotorReadings
-                .Where(r => r.Status == "maintenance")
+                .Where(r => r.Timestamp >= DateTime.UtcNow.AddDays(-7) && 
+                           r.Status == "maintenance")
                 .CountAsync();
             
             return new DashboardStats {

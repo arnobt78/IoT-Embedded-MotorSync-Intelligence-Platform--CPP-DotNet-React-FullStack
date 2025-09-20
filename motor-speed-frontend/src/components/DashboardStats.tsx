@@ -12,43 +12,57 @@ export default function DashboardStatsComponent({
       title: "Total Machines",
       value: stats.totalMachines,
       icon: "🏭",
-      color: "bg-blue-500",
-      textColor: "text-blue-600",
+      bgColor: "bg-blue-50",
+      iconBg: "bg-blue-100",
+      textColor: "text-blue-700",
+      iconColor: "text-blue-600",
     },
     {
       title: "Online Machines",
       value: stats.onlineMachines,
       icon: "🟢",
-      color: "bg-green-500",
-      textColor: "text-green-600",
+      bgColor: "bg-green-50",
+      iconBg: "bg-green-100",
+      textColor: "text-green-700",
+      iconColor: "text-green-600",
     },
     {
       title: "Total Readings",
       value: stats.totalReadings.toLocaleString(),
       icon: "📊",
-      color: "bg-purple-500",
-      textColor: "text-purple-600",
+      bgColor: "bg-purple-50",
+      iconBg: "bg-purple-100",
+      textColor: "text-purple-700",
+      iconColor: "text-purple-600",
     },
     {
       title: "Avg Efficiency",
       value: `${stats.averageEfficiency}%`,
       icon: "⚡",
-      color: "bg-yellow-500",
-      textColor: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      iconBg: "bg-yellow-100",
+      textColor: "text-yellow-700",
+      iconColor: "text-yellow-600",
     },
     {
       title: "Critical Alerts",
       value: stats.criticalAlerts,
       icon: "🚨",
-      color: "bg-red-500",
-      textColor: "text-red-600",
+      bgColor: "bg-red-50",
+      iconBg: "bg-red-100",
+      textColor: "text-red-700",
+      iconColor: "text-red-600",
+      hint: "Last 24 hours",
     },
     {
       title: "Maintenance Due",
       value: stats.maintenanceDue,
       icon: "🔧",
-      color: "bg-orange-500",
-      textColor: "text-orange-600",
+      bgColor: "bg-orange-50",
+      iconBg: "bg-orange-100",
+      textColor: "text-orange-700",
+      iconColor: "text-orange-600",
+      hint: "Last 7 days",
     },
   ];
 
@@ -57,21 +71,24 @@ export default function DashboardStatsComponent({
       {statCards.map((card, index) => (
         <div
           key={index}
-          className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow duration-200"
+          className={`${card.bgColor} rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:scale-105`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">
                 {card.title}
               </p>
               <p className={`text-2xl font-bold ${card.textColor}`}>
                 {card.value}
               </p>
+              {card.hint && (
+                <p className="text-xs text-gray-500 mt-1">{card.hint}</p>
+              )}
             </div>
             <div
-              className={`w-12 h-12 rounded-full ${card.color} flex items-center justify-center`}
+              className={`w-12 h-12 rounded-full ${card.iconBg} flex items-center justify-center shadow-sm`}
             >
-              <span className="text-white text-xl">{card.icon}</span>
+              <span className={`text-xl ${card.iconColor}`}>{card.icon}</span>
             </div>
           </div>
         </div>
