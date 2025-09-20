@@ -54,6 +54,7 @@ extern "C" {
     __attribute__((visibility("default"))) double GetOperatingSeconds();
     __attribute__((visibility("default"))) void StartMotor();
     __attribute__((visibility("default"))) void StopMotor();
+    __attribute__((visibility("default"))) void ResetMotorState();
     __attribute__((visibility("default"))) int GetMaintenanceStatus();
     __attribute__((visibility("default"))) int GetSystemHealth();
 }

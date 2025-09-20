@@ -86,6 +86,7 @@ namespace MotorServer.Controllers {
             return Ok(new { message = $"Cleared {count} readings from database", clearedCount = count });
         }
 
+
         private string GenerateCsv(List<MotorReading> readings)
         {
             var csv = new System.Text.StringBuilder();

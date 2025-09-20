@@ -140,12 +140,12 @@ namespace MotorServer.Services {
         public static extern int GetOperatingHours();
 
         // Operating minutes (for more precision)
-        [DllImport(LIB_NAME)]
-        public static extern int GetOperatingMinutes();
+        // [DllImport(LIB_NAME)]
+        // public static extern int GetOperatingMinutes();
 
         // Operating seconds (most precise)
-        [DllImport(LIB_NAME)]
-        public static extern double GetOperatingSeconds();
+        // [DllImport(LIB_NAME)]
+        // public static extern double GetOperatingSeconds();
 
         // Motor control functions
         [DllImport(LIB_NAME)]
@@ -153,6 +153,9 @@ namespace MotorServer.Services {
 
         [DllImport(LIB_NAME)]
         public static extern void StopMotor();
+        
+        [DllImport(LIB_NAME)]
+        public static extern void ResetMotorState();
 
         // Maintenance status
         [DllImport(LIB_NAME)]
@@ -169,6 +172,14 @@ namespace MotorServer.Services {
 
         public EngineService(AppDbContext db, IHubContext<MotorHub> hub) {
             _db = db; _hub = hub;
+            
+            // Reset motor state to ensure clean start
+            try {
+                ResetMotorState();
+            } catch (Exception ex) {
+                // Log error but don't fail service creation
+                Console.WriteLine($"Warning: Could not reset motor state: {ex.Message}");
+            }
         }
 
         public async Task<MotorReading> Sample() {
@@ -223,9 +234,12 @@ namespace MotorServer.Services {
             var bearingHealth = Math.Round(GetBearingHealth(), 1);
             
             // System status
-            var operatingHours = GetOperatingHours();
-            var operatingMinutes = GetOperatingMinutes();
-            var operatingSeconds = GetOperatingSeconds();
+            var operatingHours = 0; // GetOperatingHours();
+            var operatingMinutes = 0; // GetOperatingMinutes();
+            var operatingSeconds = 0.0; // GetOperatingSeconds();
+            
+            // Debug: log the operating hours value
+            Console.WriteLine($"[DEBUG] Setting operatingHours to: {operatingHours}");
             var maintenanceStatus = GetMaintenanceStatus();
             var systemHealth = GetSystemHealth();
             
@@ -316,7 +330,7 @@ namespace MotorServer.Services {
             return "normal";
         }
 
-        // Determine advanced status based on readings
+        // Determine advanced status based on readings - now purely condition-based
         private string DetermineAdvancedStatus(int speed, int temperature, double vibration, double efficiency, 
             double oilPressure, double bearingHealth, int systemHealth) {
             // Critical conditions
@@ -329,8 +343,8 @@ namespace MotorServer.Services {
                 return "warning";
             }
             
-            // Maintenance conditions
-            if (_readingCounter % 50 == 0 || systemHealth < 85) {
+            // Maintenance conditions - now based on actual system health only
+            if (systemHealth < 85) {
                 return "maintenance";
             }
             
@@ -352,10 +366,16 @@ namespace MotorServer.Services {
             return $"{statusEmoji} {prefix} Operation - {speed}RPM @ {temperature}°C";
         }
 
-        // Generate advanced reading title
+        // Generate advanced reading title - now based on actual motor conditions
         private string GenerateAdvancedReadingTitle(int speed, int temperature, string status, int systemHealth) {
-            var prefixes = new[] { "Routine", "Peak", "Standard", "High-load", "Idle", "Optimal", "Efficient", "Stable" };
-            var prefix = prefixes[_random.Next(prefixes.Length)];
+            // Determine prefix based on actual motor conditions
+            string prefix = "Standard";
+            if (speed > 2800) prefix = "High-speed";
+            else if (speed < 2200) prefix = "Low-speed";
+            else if (temperature > 80) prefix = "High-temp";
+            else if (temperature < 50) prefix = "Cool";
+            else if (systemHealth >= 95) prefix = "Optimal";
+            else if (systemHealth < 75) prefix = "Degraded";
             
             var statusEmoji = status switch {
                 "critical" => "🚨",
