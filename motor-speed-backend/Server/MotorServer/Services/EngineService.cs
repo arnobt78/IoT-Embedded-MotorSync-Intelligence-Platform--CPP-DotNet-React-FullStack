@@ -169,7 +169,7 @@ namespace MotorServer.Services {
         private readonly IHubContext<MotorHub> _hub;
         private readonly Random _random = new Random();
         private static int _readingCounter = 0;
-        private static DateTime _sessionStartTime = DateTime.UtcNow;
+        private static readonly DateTime _sessionStartTime = DateTime.UtcNow;
 
         public EngineService(AppDbContext db, IHubContext<MotorHub> hub) {
             _db = db; _hub = hub;
@@ -177,7 +177,9 @@ namespace MotorServer.Services {
         }
 
         public async Task<MotorReading> Sample() {
-            _readingCounter++;
+            try {
+                Console.WriteLine("DEBUG: Sample() method called!");
+                _readingCounter++;
             
             // Debug: Check current reading count
             var currentCount = await _db.MotorReadings.CountAsync();
@@ -188,6 +190,7 @@ namespace MotorServer.Services {
             try {
                 // Test if C++ library is working
                 GetMotorSpeed();
+                Console.WriteLine("DEBUG: C++ library test successful");
             } catch (Exception ex) {
                 Console.WriteLine($"C++ library failed, using mock data: {ex.Message}");
                 useCppLibrary = false;
@@ -241,6 +244,12 @@ namespace MotorServer.Services {
             var operatingHours = (int)totalElapsed.TotalHours;
             var operatingMinutes = (int)totalElapsed.TotalMinutes % 60;
             var operatingSeconds = totalElapsed.TotalSeconds % 60;
+            
+            // Debug: Log the calculated values
+            Console.WriteLine($"DEBUG: _sessionStartTime: {_sessionStartTime:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"DEBUG: now: {now:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"DEBUG: totalElapsed.TotalSeconds: {totalElapsed.TotalSeconds}");
+            Console.WriteLine($"DEBUG: operatingHours: {operatingHours}, operatingMinutes: {operatingMinutes}, operatingSeconds: {operatingSeconds}");
             var maintenanceStatus = useCppLibrary ? GetMaintenanceStatus() : _random.Next(0, 4);
             var systemHealth = useCppLibrary ? GetSystemHealth() : 85 + _random.Next(0, 15);
             
@@ -321,6 +330,11 @@ namespace MotorServer.Services {
             await CheckAndSendAdvancedAlerts(reading);
             
             return reading;
+            } catch (Exception ex) {
+                Console.WriteLine($"DEBUG: Exception in Sample() method: {ex.Message}");
+                Console.WriteLine($"DEBUG: Stack trace: {ex.StackTrace}");
+                throw; // Re-throw the exception
+            }
         }
 
         // Determine status based on readings

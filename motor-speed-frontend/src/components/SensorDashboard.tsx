@@ -78,20 +78,25 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
           <div className="text-sm opacity-90">Operating Time</div>
           <div className="text-2xl font-bold text-white">
-            {reading.operatingHours !== undefined
+            {reading.operatingHours !== undefined && reading.operatingHours > 0
               ? `${Math.floor(reading.operatingHours)}h`
-              : "N/A"}
+              : reading.operatingMinutes !== undefined &&
+                reading.operatingMinutes > 0
+              ? `${reading.operatingMinutes}m`
+              : "Starting..."}
           </div>
           <div className="text-xs opacity-75 mt-1">
-            {reading.operatingMinutes !== undefined &&
-            reading.operatingSeconds !== undefined
+            {reading.operatingHours !== undefined && reading.operatingHours > 0
               ? `${reading.operatingMinutes}m ${Math.floor(
-                  reading.operatingSeconds
+                  reading.operatingSeconds || 0
                 )}s total runtime`
-              : "Total runtime since installation"}
+              : reading.operatingMinutes !== undefined &&
+                reading.operatingMinutes > 0
+              ? `${Math.floor(reading.operatingSeconds || 0)}s total runtime`
+              : "Motor starting up..."}
           </div>
           <div className="text-xs opacity-60 mt-1 border-t border-purple-400 pt-1">
-            💡 Real-time tracking from motor installation
+            💡 Real-time tracking from session start
           </div>
         </div>
       </div>

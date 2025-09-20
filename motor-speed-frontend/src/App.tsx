@@ -232,7 +232,7 @@ function App() {
     return () => {
       hub.stop().catch(console.error);
     };
-  }, [maxReadings]);
+  }, []); // Remove maxReadings from dependency array
 
   return (
     <div
@@ -255,7 +255,7 @@ function App() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Industrial IoT Platform for Motor Speed Monitoring
               </h1>
               <div
@@ -623,7 +623,9 @@ function App() {
         {/* Readings Section */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Motor Readings</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Motor Readings
+            </h2>
             <div className="flex items-center space-x-3">
               <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
