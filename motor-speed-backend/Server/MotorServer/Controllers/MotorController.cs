@@ -22,6 +22,11 @@ namespace MotorServer.Controllers {
             return Ok(new { message = "Backend is working!", timestamp = DateTime.UtcNow });
         }
 
+        [HttpGet("simple")]
+        public IActionResult GetSimple() {
+            return Ok(new { status = "OK", data = "Simple endpoint working" });
+        }
+
         [HttpGet]
         public async Task<List<MotorReading>> GetAll()
         {
