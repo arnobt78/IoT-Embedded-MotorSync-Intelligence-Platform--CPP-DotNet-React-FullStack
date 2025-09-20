@@ -169,6 +169,7 @@ namespace MotorServer.Services {
         private readonly IHubContext<MotorHub> _hub;
         private readonly Random _random = new Random();
         private static int _readingCounter = 0;
+        private static DateTime _sessionStartTime = DateTime.UtcNow;
 
         public EngineService(AppDbContext db, IHubContext<MotorHub> hub) {
             _db = db; _hub = hub;
@@ -177,6 +178,10 @@ namespace MotorServer.Services {
 
         public async Task<MotorReading> Sample() {
             _readingCounter++;
+            
+            // Debug: Check current reading count
+            var currentCount = await _db.MotorReadings.CountAsync();
+            Console.WriteLine($"Current reading count in database: {currentCount}");
             
             // Try to use C++ library, fallback to mock data if it fails
             bool useCppLibrary = true;
@@ -229,24 +234,9 @@ namespace MotorServer.Services {
             var soundLevel = useCppLibrary ? Math.Round(GetSoundLevel(), 1) : Math.Round(60.0 + _random.NextDouble() * 20.0, 1);
             var bearingHealth = useCppLibrary ? Math.Round(GetBearingHealth(), 1) : Math.Round(90.0 + _random.NextDouble() * 10.0, 1);
             
-            // System status - implement real-time tracking
+            // System status - implement real-time tracking from current session
             var now = DateTime.UtcNow;
-            
-            // Get the first reading timestamp to calculate actual runtime
-            var firstReading = await _db.MotorReadings
-                .OrderBy(r => r.Timestamp)
-                .FirstOrDefaultAsync();
-            
-            DateTime motorStartTime;
-            if (firstReading == null) {
-                // This is the first reading - start timer now
-                motorStartTime = now;
-            } else {
-                // Use the first reading timestamp as start time
-                motorStartTime = firstReading.Timestamp;
-            }
-            
-            var totalElapsed = now - motorStartTime;
+            var totalElapsed = now - _sessionStartTime;
             
             var operatingHours = (int)totalElapsed.TotalHours;
             var operatingMinutes = (int)totalElapsed.TotalMinutes % 60;
