@@ -11,7 +11,6 @@ This frontend is the UI for the Motor Dashboard, visualizing real-time motor dat
 - Real-time charts and notifications
 - Modern, responsive UI
 - CSV export, settings, and dark mode
-- Modular, reusable components
 
 - **Live-Demo:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
 - **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
@@ -76,16 +75,18 @@ motor-speed-frontend/
 
 ## How It Works: C++ → C# → React
 
-1. **C++ EngineMock:**  
+1. **C++ EngineMock:**
+
    - Simulates a real motor controller, exporting `GetMotorSpeed()` and `GetMotorTemperature()` via a shared library (DLL/SO/DYLIB).
    - In a real project, this could be replaced with a library that reads from CAN, USB, EtherCAT, or other industrial protocols.
 
-2. **.NET Backend:**  
+2. **.NET Backend:**
+
    - Uses P/Invoke (`[DllImport]`) to call the C++ functions directly from C#.
    - `EngineService` samples the engine, stores readings in SQLite (via EF Core), and broadcasts new readings to all clients using SignalR.
    - API endpoints allow fetching all readings, sampling new data, and health checks.
 
-3. **React Frontend:**  
+3. **React Frontend:**
    - Connects to the backend SignalR hub for real-time updates.
    - Fetches historical data via REST API (using axios).
    - Displays readings in charts, lists, and notifications, with CSV export and settings.
@@ -106,14 +107,16 @@ motor-speed-frontend/
 
 - Frontend uses `@microsoft/signalr` to subscribe to backend updates and update UI in real time.
 - Example usage:
-  
+
   ```tsx
-  import * as signalR from '@microsoft/signalr';
+  import * as signalR from "@microsoft/signalr";
   const hub = new signalR.HubConnectionBuilder()
-    .withUrl('http://localhost:5001/motorHub')
+    .withUrl("http://localhost:5001/motorHub")
     .withAutomaticReconnect()
     .build();
-  hub.on('NewReading', (reading) => { /* update state */ });
+  hub.on("NewReading", (reading) => {
+    /* update state */
+  });
   hub.start();
   ```
 
@@ -126,11 +129,11 @@ motor-speed-frontend/
   - `GET /api/motor/sample` — trigger a new reading
   - `GET /health` — health check
 - Example:
-  
+
   ```tsx
-  import axios from 'axios';
+  import axios from "axios";
   useEffect(() => {
-    axios.get('/api/motor').then(res => setReadings(res.data));
+    axios.get("/api/motor").then((res) => setReadings(res.data));
   }, []);
   ```
 
@@ -144,10 +147,12 @@ motor-speed-frontend/
 - **NotificationSidebar:** Highest/lowest temp & RPM
 - **SettingsModal:** Dark mode, max readings, etc.
 - **CSV Export:**
-  
+
   ```tsx
   function exportCsv() {
-    const csv = readings.map(r => `${r.id},${r.speed},${r.temperature},${r.timestamp}`).join('\n');
+    const csv = readings
+      .map((r) => `${r.id},${r.speed},${r.temperature},${r.timestamp}`)
+      .join("\n");
     // ...download logic
   }
   ```
@@ -160,13 +165,14 @@ motor-speed-frontend/
 - **Max Readings to Keep:** Adjustable in settings modal
 - **CSV Export:** Exports all readings as CSV
 - **Local Date Handling:**
+
   - All timestamps are UTC from backend, displayed in user's local time using `toLocaleString()`
   - Example:
-  
+
   ```tsx
-    const d = new Date(r.timestamp);
-    const time = d.toLocaleTimeString();
-    ```
+  const d = new Date(r.timestamp);
+  const time = d.toLocaleTimeString();
+  ```
 
 ---
 
@@ -192,7 +198,7 @@ npm run dev
 - Frontend has its own `Dockerfile` for containerization.
 - Use `docker-compose.yml` at project root to orchestrate backend, frontend, and Nginx.
 - Example frontend Dockerfile:
-  
+
   ```dockerfile
   FROM node:20-alpine AS build
   WORKDIR /app
@@ -208,17 +214,17 @@ npm run dev
 
 - Tests are in `src/components/__tests__/`.
 - To run all frontend tests:
-  
+
   ```sh
   npm test
   ```
 
 - Example test:
-  
+
   ```tsx
-  import { render } from '@testing-library/react';
-  import AnimatedMotor from '../AnimatedMotor';
-  test('renders without crashing', () => {
+  import { render } from "@testing-library/react";
+  import AnimatedMotor from "../AnimatedMotor";
+  test("renders without crashing", () => {
     render(<AnimatedMotor rpm={1200} />);
   });
   ```
