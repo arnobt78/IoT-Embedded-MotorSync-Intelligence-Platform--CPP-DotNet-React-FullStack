@@ -108,7 +108,7 @@ export default function AlertSystem({
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+    <div className="fixed top-4 right-4 z-[60] space-y-2 max-w-sm">
       {visibleAlerts.map((alert) => {
         const isDismissing = dismissingAlerts.has(alert.id);
         return (

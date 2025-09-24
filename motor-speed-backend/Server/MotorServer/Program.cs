@@ -7,9 +7,6 @@ using MotorServer.Hubs;
 using MotorServer.Services;
 
 
-// ...existing code...
-
-// --- Top-level code starts here ---
 // --- Top-level code starts here ---
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(opt =>
@@ -22,8 +19,8 @@ builder.Services.AddSignalR(options =>
     options.HandshakeTimeout = TimeSpan.FromSeconds(15);
 });
 builder.Services.AddScoped<EngineService>();
+builder.Services.AddScoped<EnhancedEngineService>();
 builder.Services.AddScoped<PredictiveMaintenanceService>();
-builder.Services.AddScoped<IndustrialManagementService>();
 var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",

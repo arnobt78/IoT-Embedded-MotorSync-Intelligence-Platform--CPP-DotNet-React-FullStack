@@ -166,21 +166,29 @@ export default function AnimatedMotor({
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
-            <div className="font-semibold text-white">Speed</div>
+            <div className="font-semibold text-gray-800 dark:text-white">
+              Speed
+            </div>
             <div className="text-blue-400">{speed} RPM</div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
-            <div className="font-semibold text-white">Temp</div>
+            <div className="font-semibold text-gray-800 dark:text-white">
+              Temperature
+            </div>
             <div className={getTemperatureColor(temperature)}>
               {temperature}°C
             </div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
-            <div className="font-semibold text-white">Vibration</div>
+            <div className="font-semibold text-gray-800 dark:text-white">
+              Vibration
+            </div>
             <div className="text-purple-400">{vibration.toFixed(2)} mm/s</div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
-            <div className="font-semibold text-white">Efficiency</div>
+            <div className="font-semibold text-gray-800 dark:text-white">
+              Efficiency
+            </div>
             <div className={getEfficiencyColor(efficiency)}>
               {efficiency.toFixed(1)}%
             </div>
