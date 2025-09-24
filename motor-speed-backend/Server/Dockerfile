@@ -5,7 +5,10 @@ FROM gcc:latest AS native-build
 WORKDIR /src
 COPY ../EngineMock/motor_engine.cpp .
 COPY ../EngineMock/motor_engine.hpp .
+COPY ../EngineMock/enhanced_motor_engine.cpp .
+COPY ../EngineMock/enhanced_motor_engine.hpp .
 RUN g++ -shared -fPIC -o libmotor_engine.so motor_engine.cpp
+RUN g++ -shared -fPIC -o enhanced_motor_engine.so enhanced_motor_engine.cpp
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
@@ -38,6 +41,7 @@ WORKDIR /app
 COPY --from=build /app/Server/out .
 COPY --from=build /app/Server/MotorServer/motors.db ./motors.db
 COPY --from=native-build /src/libmotor_engine.so .
+COPY --from=native-build /src/enhanced_motor_engine.so .
 COPY Server/MotorServer/appsettings.json ./appsettings.json
 COPY Server/MotorServer/appsettings.Development.json ./appsettings.Development.json
 

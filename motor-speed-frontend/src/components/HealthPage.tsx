@@ -68,7 +68,10 @@ export default function HealthPage() {
   const toast = useToast();
 
   const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.PROD
+      ? "https://embedded-motor-engine-speed-temperature.onrender.com"
+      : "http://localhost:5001");
 
   const loadHealthData = async (showToast = false) => {
     try {
