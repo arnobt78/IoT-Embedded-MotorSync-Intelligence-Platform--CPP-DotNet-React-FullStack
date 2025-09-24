@@ -221,7 +221,7 @@ namespace MotorServer.Controllers
         }
 
         // Get production line analysis
-        [HttpGet("production-line/{lineId}/analysis")]
+        [HttpGet("production-line/{lineId}/business-insights")]
         public async Task<ActionResult<ProductionLineAnalysis>> GetProductionLineAnalysis(string lineId)
         {
             try

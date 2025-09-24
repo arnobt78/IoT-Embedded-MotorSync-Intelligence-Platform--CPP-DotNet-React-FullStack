@@ -1,7 +1,8 @@
 # motor-speed-backend/Server/Dockerfile
 
 # --- Native build stage ---
-FROM gcc:latest AS native-build
+FROM ubuntu:20.04 AS native-build
+RUN apt-get update && apt-get install -y g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ../EngineMock/motor_engine.cpp .
 COPY ../EngineMock/motor_engine.hpp .
@@ -16,8 +17,9 @@ WORKDIR /app
 COPY motor-speed-backend.sln ./
 COPY Server/. ./Server/
 
-# Copy the built .so file from native-build stage
+# Copy the built .so files from native-build stage
 COPY --from=native-build /src/libmotor_engine.so ./EngineMock/
+COPY --from=native-build /src/enhanced_motor_engine.so ./EngineMock/
 
 # Install EF tools and build
 RUN dotnet tool install --global dotnet-ef
@@ -38,6 +40,10 @@ RUN dotnet publish MotorServer/MotorServer.csproj -c Release -o out -p:DefineCon
 # --- Final runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
+
+# Install runtime dependencies for the C++ libraries
+RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/Server/out .
 COPY --from=build /app/Server/MotorServer/motors.db ./motors.db
 COPY --from=native-build /src/libmotor_engine.so .

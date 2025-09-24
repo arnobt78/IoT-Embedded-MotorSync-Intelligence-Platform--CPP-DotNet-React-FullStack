@@ -355,7 +355,7 @@ export class EnhancedApiService {
   ): Promise<ProductionLineAnalysis> {
     try {
       const response = await axios.get<ProductionLineAnalysis>(
-        `${this.baseURL}/api/EnhancedIndustrial/production-line/${lineId}/analysis`
+        `${this.baseURL}/api/EnhancedIndustrial/production-line/${lineId}/business-insights`
       );
       return response.data;
     } catch (error) {
