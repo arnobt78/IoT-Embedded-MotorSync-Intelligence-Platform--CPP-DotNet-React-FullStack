@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <cstring>
 #include <random>
 #include <chrono>
 #include <vector>
