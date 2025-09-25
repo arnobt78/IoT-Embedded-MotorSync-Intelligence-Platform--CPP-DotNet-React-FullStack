@@ -33,8 +33,7 @@ WORKDIR /app/Server
 
 # Build the project to surface errors
 RUN dotnet build MotorServer/MotorServer.csproj -c Release
-# Apply migrations in build stage so motors.db is created
-RUN dotnet ef database update --project MotorServer/MotorServer.csproj --startup-project MotorServer
+# Publish the application
 RUN dotnet publish MotorServer/MotorServer.csproj -c Release -o out -p:DefineConstants=LINUX
 
 # --- Final runtime stage ---
