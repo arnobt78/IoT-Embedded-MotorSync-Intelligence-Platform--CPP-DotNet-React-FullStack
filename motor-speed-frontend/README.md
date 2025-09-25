@@ -9,7 +9,6 @@
 This frontend is the UI for the Motor Dashboard, visualizing real-time motor data from a .NET backend (with C++ engine integration) using React, Vite, Tailwind CSS, and shadcn/ui. It demonstrates:
 
 - Real-time charts and notifications
-- Modern, responsive UI
 - CSV export, settings, and dark mode
 
 - **Live-Demo:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
