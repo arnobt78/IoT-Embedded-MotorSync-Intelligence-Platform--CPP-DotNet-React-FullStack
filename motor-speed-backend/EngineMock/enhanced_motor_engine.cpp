@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <algorithm>
+#include <mutex>
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,7 +80,6 @@ static std::vector<MachineState> industrialMachines;
 static std::vector<EdgeNode> edgeNodes;
 static std::vector<MLModel> mlModels;
 static std::chrono::steady_clock::time_point systemStartTime;
-static bool systemInitialized = false;
 static int totalReadings = 0;
 
 // Working Hours Simulation (8 AM to 6 PM, Monday to Friday)
@@ -108,12 +108,14 @@ static double getSeasonalFactor() {
 
 // Initialize Industrial System
 static void initializeIndustrialSystem() {
-    if (systemInitialized) return;
+    static std::mutex initMutex;
+    static std::once_flag initFlag;
     
-    systemStartTime = std::chrono::steady_clock::now();
-    
-    // Initialize Industrial Machines
-    industrialMachines.clear();
+    std::call_once(initFlag, []() {
+        systemStartTime = std::chrono::steady_clock::now();
+        
+        // Initialize Industrial Machines
+        industrialMachines.clear();
     
     // Main Motor (existing)
     MachineState mainMotor;
@@ -537,8 +539,7 @@ static void initializeIndustrialSystem() {
     faultModel.lastTraining = systemStartTime;
     faultModel.predictionCount = 0;
     mlModels.push_back(faultModel);
-    
-    systemInitialized = true;
+    });
 }
 
 // Update Machine Physics (Enhanced Realism)
