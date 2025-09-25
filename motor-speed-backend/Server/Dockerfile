@@ -1,7 +1,7 @@
 # motor-speed-backend/Server/Dockerfile
 
 # --- Native build stage ---
-FROM ubuntu:20.04 AS native-build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS native-build
 RUN apt-get update && apt-get install -y g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY ../EngineMock/motor_engine.cpp .
@@ -42,7 +42,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 # Install runtime dependencies for the C++ libraries
-RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libc6 build-essential && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/Server/out .
 COPY --from=build /app/Server/MotorServer/motors.db ./motors.db
