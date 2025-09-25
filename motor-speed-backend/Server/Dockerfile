@@ -29,7 +29,7 @@ ENV ASPNETCORE_ENVIRONMENT=Development
 
 WORKDIR /app/Server
 
-RUN dotnet ef migrations add DockerInit --project MotorServer/MotorServer.csproj --startup-project MotorServer || echo "Migrations already exist"
+# Skip creating new migrations during build - just apply existing ones
 
 # Build the project to surface errors
 RUN dotnet build MotorServer/MotorServer.csproj -c Release
