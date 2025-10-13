@@ -39,6 +39,7 @@ var allowedOrigins = new[] {
     "http://localhost:5173",
     "https://motor-speed-temperature.netlify.app",
     "https://motor-speed-temperature.netlify.app/",
+    "https://embedded-motor-engine-speed-temperature.onrender.com",
     Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "https://your-frontend.onrender.com"
 };
 

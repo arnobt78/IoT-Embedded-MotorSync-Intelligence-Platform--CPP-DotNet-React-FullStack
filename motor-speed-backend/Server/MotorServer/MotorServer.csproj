@@ -31,8 +31,8 @@
     <!-- SignalR for real-time updates -->
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     
-    <!-- JSON serialization -->
-    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+    <!-- JSON serialization - Updated to fix security vulnerabilities -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
   <!-- ======================================================================== -->
