@@ -47,19 +47,20 @@ if (!string.IsNullOrEmpty(postgresConnection))
     var cleanConnectionString = postgresConnection.Trim();
     
     // Fix case sensitivity issues in password (some systems lowercase env vars)
-    if (cleanConnectionString.Contains("npg_kq8giictef2d"))
+    // Current password: npg_VOPFv0acdAm5
+    if (cleanConnectionString.Contains("npg_vopfv0acdam5"))
     {
-        cleanConnectionString = cleanConnectionString.Replace("npg_kq8giictef2d", "npg_Kq8giIcTEf2D");
+        cleanConnectionString = cleanConnectionString.Replace("npg_vopfv0acdam5", "npg_VOPFv0acdAm5");
         Console.WriteLine($"🔧 Fixed connection string - corrected password case");
     }
     
     // Additional check for any lowercase password variations
     var passwordPattern = @"npg_[a-z0-9]+";
     var match = System.Text.RegularExpressions.Regex.Match(cleanConnectionString, passwordPattern);
-    if (match.Success && match.Value != "npg_Kq8giIcTEf2D")
+    if (match.Success && match.Value != "npg_VOPFv0acdAm5")
     {
-        cleanConnectionString = cleanConnectionString.Replace(match.Value, "npg_Kq8giIcTEf2D");
-        Console.WriteLine($"🔧 Fixed connection string - corrected password from {match.Value} to npg_Kq8giIcTEf2D");
+        cleanConnectionString = cleanConnectionString.Replace(match.Value, "npg_VOPFv0acdAm5");
+        Console.WriteLine($"🔧 Fixed connection string - corrected password from {match.Value} to npg_VOPFv0acdAm5");
     }
     
     // Ensure proper SSL and channel binding parameters
