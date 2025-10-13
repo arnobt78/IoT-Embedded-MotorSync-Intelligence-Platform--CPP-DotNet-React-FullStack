@@ -40,6 +40,21 @@ if (!string.IsNullOrEmpty(postgresConnection))
         Console.WriteLine($"🔧 Fixed connection string - corrected password case");
     }
     
+    // Ensure proper SSL and channel binding parameters
+    if (!cleanConnectionString.Contains("channel_binding"))
+    {
+        if (cleanConnectionString.EndsWith("?sslmode=require"))
+        {
+            cleanConnectionString += "&channel_binding=require";
+            Console.WriteLine($"🔧 Fixed connection string - added channel_binding=require");
+        }
+        else if (cleanConnectionString.Contains("?sslmode=require"))
+        {
+            cleanConnectionString += "&channel_binding=require";
+            Console.WriteLine($"🔧 Fixed connection string - added channel_binding=require");
+        }
+    }
+    
     if (!cleanConnectionString.EndsWith("=require"))
     {
         // If it's missing the =require part, add it
@@ -51,8 +66,8 @@ if (!string.IsNullOrEmpty(postgresConnection))
         else if (!cleanConnectionString.Contains("sslmode"))
         {
             // If sslmode is completely missing, add it
-            cleanConnectionString += "?sslmode=require";
-            Console.WriteLine($"🔧 Fixed connection string - added sslmode=require");
+            cleanConnectionString += "?sslmode=require&channel_binding=require";
+            Console.WriteLine($"🔧 Fixed connection string - added sslmode=require&channel_binding=require");
         }
     }
     
