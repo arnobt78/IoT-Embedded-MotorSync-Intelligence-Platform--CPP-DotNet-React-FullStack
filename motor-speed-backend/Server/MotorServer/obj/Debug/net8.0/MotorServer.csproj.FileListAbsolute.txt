@@ -134,3 +134,5 @@
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/motor_engine.dylib
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/appsettings.Production.json
 /Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/motor_engine.so
+/Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/Npgsql.dll
+/Users/arnob_t78/Projects/CSharp/motor-dashboard/motor-speed-backend/Server/MotorServer/bin/Debug/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
