@@ -20,9 +20,12 @@ var builder = WebApplication.CreateBuilder(args);
 // SERVICES CONFIGURATION
 // ========================================================================
 
+Console.WriteLine("🚀 Starting database configuration...");
+
 // Add Entity Framework with SQLite or PostgreSQL
 // Check if PostgreSQL connection string is provided (for production with NeonDB)
 var postgresConnection = Environment.GetEnvironmentVariable("DATABASE_URL");
+Console.WriteLine($"🔍 Raw DATABASE_URL from environment: {(string.IsNullOrEmpty(postgresConnection) ? "NULL/EMPTY" : "FOUND")}");
 Console.WriteLine($"🔍 DATABASE_URL environment variable: {(string.IsNullOrEmpty(postgresConnection) ? "NOT SET" : "SET")}");
 if (!string.IsNullOrEmpty(postgresConnection))
 {
