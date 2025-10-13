@@ -29,10 +29,31 @@ if (!string.IsNullOrEmpty(postgresConnection))
     Console.WriteLine($"🔍 Connection string preview: {postgresConnection.Substring(0, Math.Min(50, postgresConnection.Length))}...");
     Console.WriteLine($"🔍 Connection string ends with: ...{postgresConnection.Substring(Math.Max(0, postgresConnection.Length - 20))}");
     
+    // Fix: Ensure the connection string is properly formatted
+    // Sometimes environment variables get truncated or malformed
+    var cleanConnectionString = postgresConnection.Trim();
+    if (!cleanConnectionString.EndsWith("=require"))
+    {
+        // If it's missing the =require part, add it
+        if (cleanConnectionString.EndsWith("?sslmode"))
+        {
+            cleanConnectionString += "=require";
+            Console.WriteLine($"🔧 Fixed connection string - added missing =require");
+        }
+        else if (!cleanConnectionString.Contains("sslmode"))
+        {
+            // If sslmode is completely missing, add it
+            cleanConnectionString += "?sslmode=require";
+            Console.WriteLine($"🔧 Fixed connection string - added sslmode=require");
+        }
+    }
+    
+    Console.WriteLine($"🔍 Final connection string ends with: ...{cleanConnectionString.Substring(Math.Max(0, cleanConnectionString.Length - 20))}");
+    
     // Use PostgreSQL (NeonDB or other provider)
     Console.WriteLine("🐘 Using PostgreSQL database");
     builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(postgresConnection));
+        opt.UseNpgsql(cleanConnectionString));
 }
 else
 {
