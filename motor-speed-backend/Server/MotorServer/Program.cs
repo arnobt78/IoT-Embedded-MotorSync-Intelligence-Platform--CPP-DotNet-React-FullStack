@@ -4,17 +4,35 @@
 // Supports both localhost and production (Render)
 // ========================================================================
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MotorServer.Data;
 using MotorServer.Services;
 using MotorServer.Hubs;
 using Npgsql;
+using DotNetEnv;
 
 // --- Top-level code starts here ---
+
+// Load .env file if it exists (for local development)
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envPath))
+{
+    Console.WriteLine($"📄 Loading environment variables from: {envPath}");
+    Env.Load(envPath);
+    Console.WriteLine("✅ .env file loaded successfully");
+}
+else
+{
+    Console.WriteLine($"⚠️  No .env file found at: {envPath}");
+    Console.WriteLine("💡 Using environment variables from system/hosting platform");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ========================================================================
@@ -23,101 +41,95 @@ var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine("🚀 Starting database configuration...");
 
-// Add Entity Framework with SQLite or PostgreSQL
-// Check if PostgreSQL connection string is provided (for production with NeonDB)
-var postgresConnection = Environment.GetEnvironmentVariable("DATABASE_URL");
-Console.WriteLine($"🔍 Raw DATABASE_URL from environment: {(string.IsNullOrEmpty(postgresConnection) ? "NULL/EMPTY" : "FOUND")}");
+// Add Entity Framework with PostgreSQL ONLY
+// Check if PostgreSQL connection string is provided
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+Console.WriteLine($"🔍 DATABASE_URL from environment: {(string.IsNullOrEmpty(databaseUrl) ? "NOT SET" : "FOUND")}");
 
-// Debug: Let's also check ALL environment variables
-Console.WriteLine("🔍 All environment variables containing 'DATABASE':");
-foreach (var envVar in Environment.GetEnvironmentVariables().Keys.Cast<string>().Where(k => k.ToUpper().Contains("DATABASE")))
+if (string.IsNullOrEmpty(databaseUrl))
 {
-    var value = Environment.GetEnvironmentVariable(envVar);
-    Console.WriteLine($"  {envVar} = {(string.IsNullOrEmpty(value) ? "NULL" : $"{value.Substring(0, Math.Min(20, value.Length))}...")}");
+    Console.WriteLine("❌ ERROR: DATABASE_URL environment variable is required!");
+    Console.WriteLine("💡 Please set DATABASE_URL in your .env file or environment variables");
+    throw new InvalidOperationException("DATABASE_URL environment variable is required");
 }
-Console.WriteLine($"🔍 DATABASE_URL environment variable: {(string.IsNullOrEmpty(postgresConnection) ? "NOT SET" : "SET")}");
-if (!string.IsNullOrEmpty(postgresConnection))
+
+// Parse PostgreSQL connection string manually to avoid NpgsqlConnectionStringBuilder corruption
+// Format: postgresql://username:password@host:port/database?params
+Console.WriteLine($"🔍 Parsing connection string (length: {databaseUrl.Length})");
+
+try
 {
-    Console.WriteLine($"🔍 Connection string length: {postgresConnection.Length} characters");
-    Console.WriteLine($"🔍 Connection string preview: {postgresConnection.Substring(0, Math.Min(50, postgresConnection.Length))}...");
-    Console.WriteLine($"🔍 Connection string ends with: ...{postgresConnection.Substring(Math.Max(0, postgresConnection.Length - 20))}");
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    var username = userInfo[0];
+    var password = userInfo.Length > 1 ? userInfo[1] : "";
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
     
-    // Fix: Ensure the connection string is properly formatted
-    // Sometimes environment variables get truncated, malformed, or case-changed
-    var cleanConnectionString = postgresConnection.Trim();
-    
-    // Fix case sensitivity issues in password (some systems lowercase env vars)
-    // Current password: npg_VOPFv0acdAm5
-    if (cleanConnectionString.Contains("npg_vopfv0acdam5"))
+    // Parse query parameters
+    var queryParams = new Dictionary<string, string>();
+    if (!string.IsNullOrEmpty(uri.Query))
     {
-        cleanConnectionString = cleanConnectionString.Replace("npg_vopfv0acdam5", "npg_VOPFv0acdAm5");
-        Console.WriteLine($"🔧 Fixed connection string - corrected password case");
-    }
-    
-    // Additional check for any lowercase password variations
-    var passwordPattern = @"npg_[a-z0-9]+";
-    var match = System.Text.RegularExpressions.Regex.Match(cleanConnectionString, passwordPattern);
-    if (match.Success && match.Value != "npg_VOPFv0acdAm5")
-    {
-        cleanConnectionString = cleanConnectionString.Replace(match.Value, "npg_VOPFv0acdAm5");
-        Console.WriteLine($"🔧 Fixed connection string - corrected password from {match.Value} to npg_VOPFv0acdAm5");
-    }
-    
-    // Ensure proper SSL and channel binding parameters
-    if (!cleanConnectionString.Contains("channel_binding"))
-    {
-        if (cleanConnectionString.EndsWith("?sslmode=require"))
+        var query = uri.Query.TrimStart('?');
+        foreach (var param in query.Split('&'))
         {
-            cleanConnectionString += "&channel_binding=require";
-            Console.WriteLine($"🔧 Fixed connection string - added channel_binding=require");
-        }
-        else if (cleanConnectionString.Contains("?sslmode=require"))
-        {
-            cleanConnectionString += "&channel_binding=require";
-            Console.WriteLine($"🔧 Fixed connection string - added channel_binding=require");
+            var parts = param.Split('=');
+            if (parts.Length == 2)
+            {
+                queryParams[parts[0]] = parts[1];
+            }
         }
     }
     
-    if (!cleanConnectionString.EndsWith("=require"))
+    // Build Npgsql connection string using proper parameter format
+    var npgsqlBuilder = new NpgsqlConnectionStringBuilder
     {
-        // If it's missing the =require part, add it
-        if (cleanConnectionString.EndsWith("?sslmode"))
-        {
-            cleanConnectionString += "=require";
-            Console.WriteLine($"🔧 Fixed connection string - added missing =require");
-        }
-        else if (!cleanConnectionString.Contains("sslmode"))
-        {
-            // If sslmode is completely missing, add it
-            cleanConnectionString += "?sslmode=require&channel_binding=require";
-            Console.WriteLine($"🔧 Fixed connection string - added sslmode=require&channel_binding=require");
-        }
-    }
+        Host = host,
+        Port = port,
+        Username = username,
+        Password = password,
+        Database = database,
+        SslMode = SslMode.Require,
+        Pooling = true,
+        MinPoolSize = 1,
+        MaxPoolSize = 20,
+        ConnectionLifetime = 300,
+        Timeout = 30,
+        CommandTimeout = 30
+    };
     
-    Console.WriteLine($"🔍 Final connection string ends with: ...{cleanConnectionString.Substring(Math.Max(0, cleanConnectionString.Length - 20))}");
+    var connectionString = npgsqlBuilder.ConnectionString;
     
-    // Use PostgreSQL (NeonDB or other provider)
-    Console.WriteLine("🐘 Using PostgreSQL database");
+    Console.WriteLine($"✅ Successfully parsed connection string:");
+    Console.WriteLine($"   Host: {host}:{port}");
+    Console.WriteLine($"   Database: {database}");
+    Console.WriteLine($"   Username: {username}");
+    Console.WriteLine($"   SSL Mode: Require");
     
-    // Final verification before passing to EF Core
-    Console.WriteLine($"🔍 Final connection string being passed to EF Core:");
-    Console.WriteLine($"  Length: {cleanConnectionString.Length}");
-    Console.WriteLine($"  Ends with: ...{cleanConnectionString.Substring(Math.Max(0, cleanConnectionString.Length - 30))}");
-    
-    // Skip NpgsqlConnectionStringBuilder - it's corrupting our connection string!
-    Console.WriteLine("🔧 Using direct connection string (bypassing NpgsqlConnectionStringBuilder)");
+    Console.WriteLine("🐘 Configuring PostgreSQL database with Entity Framework");
     
     builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(cleanConnectionString));
+    {
+        opt.UseNpgsql(connectionString, npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorCodesToAdd: null);
+            npgsqlOptions.CommandTimeout(30);
+        });
+        opt.EnableSensitiveDataLogging(false);
+        opt.EnableDetailedErrors(true);
+    });
+    
+    Console.WriteLine("✅ Database context configured successfully");
 }
-else
+catch (Exception ex)
 {
-    // Use SQLite with persistent disk path if available (Render), otherwise use local path
-    var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "motors.db";
-    var connectionString = $"Data Source={dbPath}";
-    Console.WriteLine($"📁 Using SQLite database: {dbPath}");
-    builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseSqlite(connectionString));
+    Console.WriteLine($"❌ Failed to parse DATABASE_URL: {ex.Message}");
+    Console.WriteLine($"📋 Connection string format should be: postgresql://username:password@host:port/database?sslmode=require");
+    throw;
 }
 
 // Add SignalR with optimized settings for production
@@ -244,7 +256,7 @@ var engineLibrary = OperatingSystem.IsWindows() ? "motor_engine.dll"
     : OperatingSystem.IsMacOS() ? "motor_engine.dylib" 
     : "motor_engine.so";
 Console.WriteLine($"📊 C++ Engine: {engineLibrary}");
-Console.WriteLine("🗄️  Database: SQLite (motors.db)");
+Console.WriteLine("🗄️  Database: PostgreSQL (NeonDB)");
 Console.WriteLine("🔄 SignalR: Real-time motor data updates");
 Console.WriteLine("🌐 CORS: Enabled for localhost and production");
 Console.WriteLine("📡 API Endpoints: /api/motor/*");
