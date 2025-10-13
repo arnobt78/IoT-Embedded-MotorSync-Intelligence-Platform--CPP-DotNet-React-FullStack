@@ -141,7 +141,10 @@ using (var scope = app.Services.CreateScope())
 // ========================================================================
 
 Console.WriteLine("🚀 Real Industrial Motor Physics Engine Backend Starting...");
-Console.WriteLine("📊 C++ Engine: motor_engine.dylib");
+var engineLibrary = OperatingSystem.IsWindows() ? "motor_engine.dll" 
+    : OperatingSystem.IsMacOS() ? "motor_engine.dylib" 
+    : "motor_engine.so";
+Console.WriteLine($"📊 C++ Engine: {engineLibrary}");
 Console.WriteLine("🗄️  Database: SQLite (motors.db)");
 Console.WriteLine("🔄 SignalR: Real-time motor data updates");
 Console.WriteLine("🌐 CORS: Enabled for localhost and production");

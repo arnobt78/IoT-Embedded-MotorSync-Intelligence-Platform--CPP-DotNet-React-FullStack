@@ -61,7 +61,7 @@ COPY --from=build /src/EngineMock/motor_engine.so .
 
 # Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:10000
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 # Create non-root user for security
