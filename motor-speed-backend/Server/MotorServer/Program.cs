@@ -19,8 +19,12 @@ var builder = WebApplication.CreateBuilder(args);
 // ========================================================================
 
 // Add Entity Framework with SQLite
+// Use persistent disk path if available (Render), otherwise use local path
+var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "motors.db";
+var connectionString = $"Data Source={dbPath}";
+Console.WriteLine($"📁 Database path: {dbPath}");
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite("Data Source=motors.db"));
+    opt.UseSqlite(connectionString));
 
 // Add SignalR with optimized settings for production
 builder.Services.AddSignalR(options =>
