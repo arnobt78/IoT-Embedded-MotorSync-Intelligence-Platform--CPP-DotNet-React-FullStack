@@ -211,7 +211,7 @@ export default function MainDashboard({
 
       // Refresh dashboard stats
       await loadDashboardStats();
-      
+
       // Show success message (you can replace with a toast notification if you prefer)
       alert(
         `✅ Successfully deleted ${result.clearedCount} readings from database.`
