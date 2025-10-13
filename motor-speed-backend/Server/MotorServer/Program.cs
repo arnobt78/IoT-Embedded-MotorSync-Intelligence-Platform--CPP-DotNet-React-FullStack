@@ -7,6 +7,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MotorServer.Data;
 using MotorServer.Services;
@@ -26,6 +27,14 @@ Console.WriteLine("🚀 Starting database configuration...");
 // Check if PostgreSQL connection string is provided (for production with NeonDB)
 var postgresConnection = Environment.GetEnvironmentVariable("DATABASE_URL");
 Console.WriteLine($"🔍 Raw DATABASE_URL from environment: {(string.IsNullOrEmpty(postgresConnection) ? "NULL/EMPTY" : "FOUND")}");
+
+// Debug: Let's also check ALL environment variables
+Console.WriteLine("🔍 All environment variables containing 'DATABASE':");
+foreach (var envVar in Environment.GetEnvironmentVariables().Keys.Cast<string>().Where(k => k.ToUpper().Contains("DATABASE")))
+{
+    var value = Environment.GetEnvironmentVariable(envVar);
+    Console.WriteLine($"  {envVar} = {(string.IsNullOrEmpty(value) ? "NULL" : $"{value.Substring(0, Math.Min(20, value.Length))}...")}");
+}
 Console.WriteLine($"🔍 DATABASE_URL environment variable: {(string.IsNullOrEmpty(postgresConnection) ? "NOT SET" : "SET")}");
 if (!string.IsNullOrEmpty(postgresConnection))
 {
