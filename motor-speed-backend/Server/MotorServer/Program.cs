@@ -97,8 +97,36 @@ if (!string.IsNullOrEmpty(postgresConnection))
     
     // Use PostgreSQL (NeonDB or other provider)
     Console.WriteLine("🐘 Using PostgreSQL database");
-    builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(cleanConnectionString));
+    
+    // Final verification before passing to EF Core
+    Console.WriteLine($"🔍 Final connection string being passed to EF Core:");
+    Console.WriteLine($"  Length: {cleanConnectionString.Length}");
+    Console.WriteLine($"  Ends with: ...{cleanConnectionString.Substring(Math.Max(0, cleanConnectionString.Length - 30))}");
+    
+    // Try using NpgsqlConnectionStringBuilder to ensure proper parsing
+    try
+    {
+        var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder(cleanConnectionString);
+        Console.WriteLine($"🔍 NpgsqlConnectionStringBuilder parsed successfully:");
+        Console.WriteLine($"  Host: {connBuilder.Host}");
+        Console.WriteLine($"  Database: {connBuilder.Database}");
+        Console.WriteLine($"  Username: {connBuilder.Username}");
+        Console.WriteLine($"  SSL Mode: {connBuilder.SslMode}");
+        Console.WriteLine($"  Channel Binding: {connBuilder.ChannelBinding}");
+        
+        var validatedConnectionString = connBuilder.ConnectionString;
+        Console.WriteLine($"🔍 Validated connection string length: {validatedConnectionString.Length}");
+        
+        builder.Services.AddDbContext<AppDbContext>(opt =>
+            opt.UseNpgsql(validatedConnectionString));
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ NpgsqlConnectionStringBuilder failed: {ex.Message}");
+        Console.WriteLine("🔄 Falling back to direct connection string");
+        builder.Services.AddDbContext<AppDbContext>(opt =>
+            opt.UseNpgsql(cleanConnectionString));
+    }
 }
 else
 {
