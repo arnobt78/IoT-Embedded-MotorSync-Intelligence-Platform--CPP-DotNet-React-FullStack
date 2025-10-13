@@ -4,6 +4,7 @@ import AnimatedMotor from "./AnimatedMotor";
 // import ColorLegend from "./ColorLegend";
 import DailyLifeApplications from "./DailyLifeApplications";
 import DashboardStatsComponent from "./DashboardStats";
+import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
 import EdgeComputingDashboard from "./EdgeComputingDashboard";
 import IndustrialManagementDashboard from "./IndustrialManagementDashboard";
 import IoTCloudIntegration from "./IoTCloudIntegration";
@@ -81,6 +82,9 @@ export default function MainDashboard({
 
   // Force re-render counter
   const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Get latest reading for display - use useMemo to ensure it updates
   const latestReading = useMemo(() => {
@@ -194,39 +198,8 @@ export default function MainDashboard({
     }
   }, [setDashboardStats]);
 
-  // Delete all data function with passkey protection
-  const deleteAllData = async () => {
-    // First confirmation
-    if (
-      !confirm(
-        "⚠️ WARNING: This will delete ALL motor readings permanently!\n\nAre you sure you want to continue?"
-      )
-    ) {
-      return;
-    }
-
-    // Passkey protection
-    const passkey = prompt(
-      "🔒 Security Check Required\n\nEnter the admin passkey to delete all data:"
-    );
-    
-    // Check passkey (you can change this to any secure passkey you want)
-    const ADMIN_PASSKEY = import.meta.env.VITE_ADMIN_PASSKEY || "motor2025";
-    
-    if (passkey !== ADMIN_PASSKEY) {
-      alert("❌ Invalid passkey. Data deletion cancelled.");
-      return;
-    }
-
-    // Final confirmation with passkey verified
-    if (
-      !confirm(
-        "🔐 Passkey verified.\n\nThis is your FINAL confirmation. Delete ALL motor readings?"
-      )
-    ) {
-      return;
-    }
-
+  // Delete all data function with Shadcn dialog
+  const handleDeleteConfirm = async () => {
     try {
       setLoading(true);
       const response = await axios.post(`${API_BASE_URL}/api/motor/clear`);
@@ -236,13 +209,13 @@ export default function MainDashboard({
       setReadings([]);
       setDashboardStats(null);
 
-      // Show success message
+      // Refresh dashboard stats
+      await loadDashboardStats();
+      
+      // Show success message (you can replace with a toast notification if you prefer)
       alert(
         `✅ Successfully deleted ${result.clearedCount} readings from database.`
       );
-
-      // Refresh dashboard stats
-      await loadDashboardStats();
     } catch (error) {
       console.error("Failed to delete all data:", error);
       alert("❌ Failed to delete all data. Please try again.");
@@ -951,7 +924,7 @@ export default function MainDashboard({
               </button>
               <button
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
-                onClick={deleteAllData}
+                onClick={() => setDeleteDialogOpen(true)}
                 disabled={loading}
               >
                 {loading ? "Deleting..." : "Delete All Data"}
@@ -1066,6 +1039,14 @@ export default function MainDashboard({
           setDarkMode={setDarkMode}
           maxReadings={maxReadings}
           setMaxReadings={setMaxReadings}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          readingsCount={readings.length}
         />
       </div>
     </div>
