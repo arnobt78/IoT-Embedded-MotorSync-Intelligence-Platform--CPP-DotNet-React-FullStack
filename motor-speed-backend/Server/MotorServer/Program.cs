@@ -30,8 +30,16 @@ if (!string.IsNullOrEmpty(postgresConnection))
     Console.WriteLine($"🔍 Connection string ends with: ...{postgresConnection.Substring(Math.Max(0, postgresConnection.Length - 20))}");
     
     // Fix: Ensure the connection string is properly formatted
-    // Sometimes environment variables get truncated or malformed
+    // Sometimes environment variables get truncated, malformed, or case-changed
     var cleanConnectionString = postgresConnection.Trim();
+    
+    // Fix case sensitivity issues in password (some systems lowercase env vars)
+    if (cleanConnectionString.Contains("npg_kq8giictef2d"))
+    {
+        cleanConnectionString = cleanConnectionString.Replace("npg_kq8giictef2d", "npg_Kq8giIcTEf2D");
+        Console.WriteLine($"🔧 Fixed connection string - corrected password case");
+    }
+    
     if (!cleanConnectionString.EndsWith("=require"))
     {
         // If it's missing the =require part, add it
