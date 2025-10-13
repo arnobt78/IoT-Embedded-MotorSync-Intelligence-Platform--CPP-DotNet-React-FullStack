@@ -6,6 +6,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using MotorServer.Data;
 using MotorServer.Services;
@@ -38,6 +39,15 @@ if (!string.IsNullOrEmpty(postgresConnection))
     {
         cleanConnectionString = cleanConnectionString.Replace("npg_kq8giictef2d", "npg_Kq8giIcTEf2D");
         Console.WriteLine($"🔧 Fixed connection string - corrected password case");
+    }
+    
+    // Additional check for any lowercase password variations
+    var passwordPattern = @"npg_[a-z0-9]+";
+    var match = System.Text.RegularExpressions.Regex.Match(cleanConnectionString, passwordPattern);
+    if (match.Success && match.Value != "npg_Kq8giIcTEf2D")
+    {
+        cleanConnectionString = cleanConnectionString.Replace(match.Value, "npg_Kq8giIcTEf2D");
+        Console.WriteLine($"🔧 Fixed connection string - corrected password from {match.Value} to npg_Kq8giIcTEf2D");
     }
     
     // Ensure proper SSL and channel binding parameters
