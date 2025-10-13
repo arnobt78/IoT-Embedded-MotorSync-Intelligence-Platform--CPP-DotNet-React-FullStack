@@ -17,7 +17,15 @@ namespace MotorServer.Services
         // ========================================================================
         // C++ LIBRARY IMPORTS - REAL INDUSTRIAL MOTOR PHYSICS ENGINE
         // ========================================================================
-        private const string LIB_NAME = "motor_engine.dylib";
+        // Platform-specific library name
+        private const string LIB_NAME = 
+#if WINDOWS
+            "motor_engine.dll";
+#elif OSX
+            "motor_engine.dylib";
+#else
+            "motor_engine.so";  // Linux
+#endif
 
         // Basic motor parameters
         [DllImport(LIB_NAME)]
