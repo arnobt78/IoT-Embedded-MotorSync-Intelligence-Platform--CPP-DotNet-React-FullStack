@@ -22,8 +22,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Entity Framework with SQLite or PostgreSQL
 // Check if PostgreSQL connection string is provided (for production with NeonDB)
 var postgresConnection = Environment.GetEnvironmentVariable("DATABASE_URL");
+Console.WriteLine($"🔍 DATABASE_URL environment variable: {(string.IsNullOrEmpty(postgresConnection) ? "NOT SET" : "SET")}");
 if (!string.IsNullOrEmpty(postgresConnection))
 {
+    Console.WriteLine($"🔍 Connection string length: {postgresConnection.Length} characters");
+    Console.WriteLine($"🔍 Connection string preview: {postgresConnection.Substring(0, Math.Min(50, postgresConnection.Length))}...");
+    Console.WriteLine($"🔍 Connection string ends with: ...{postgresConnection.Substring(Math.Max(0, postgresConnection.Length - 20))}");
+    
     // Use PostgreSQL (NeonDB or other provider)
     Console.WriteLine("🐘 Using PostgreSQL database");
     builder.Services.AddDbContext<AppDbContext>(opt =>
