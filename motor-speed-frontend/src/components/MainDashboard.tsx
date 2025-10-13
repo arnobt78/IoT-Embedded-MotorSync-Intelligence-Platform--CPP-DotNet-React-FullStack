@@ -194,11 +194,34 @@ export default function MainDashboard({
     }
   }, [setDashboardStats]);
 
-  // Delete all data function
+  // Delete all data function with passkey protection
   const deleteAllData = async () => {
+    // First confirmation
     if (
       !confirm(
-        "Are you sure you want to delete ALL motor readings? This action cannot be undone."
+        "⚠️ WARNING: This will delete ALL motor readings permanently!\n\nAre you sure you want to continue?"
+      )
+    ) {
+      return;
+    }
+
+    // Passkey protection
+    const passkey = prompt(
+      "🔒 Security Check Required\n\nEnter the admin passkey to delete all data:"
+    );
+    
+    // Check passkey (you can change this to any secure passkey you want)
+    const ADMIN_PASSKEY = import.meta.env.VITE_ADMIN_PASSKEY || "motor2025";
+    
+    if (passkey !== ADMIN_PASSKEY) {
+      alert("❌ Invalid passkey. Data deletion cancelled.");
+      return;
+    }
+
+    // Final confirmation with passkey verified
+    if (
+      !confirm(
+        "🔐 Passkey verified.\n\nThis is your FINAL confirmation. Delete ALL motor readings?"
       )
     ) {
       return;

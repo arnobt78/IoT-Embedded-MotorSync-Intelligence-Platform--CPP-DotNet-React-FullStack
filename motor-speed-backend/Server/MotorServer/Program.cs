@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using MotorServer.Data;
 using MotorServer.Services;
 using MotorServer.Hubs;
+using Npgsql;
 
 // --- Top-level code starts here ---
 var builder = WebApplication.CreateBuilder(args);
@@ -18,13 +19,25 @@ var builder = WebApplication.CreateBuilder(args);
 // SERVICES CONFIGURATION
 // ========================================================================
 
-// Add Entity Framework with SQLite
-// Use persistent disk path if available (Render), otherwise use local path
-var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "motors.db";
-var connectionString = $"Data Source={dbPath}";
-Console.WriteLine($"📁 Database path: {dbPath}");
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite(connectionString));
+// Add Entity Framework with SQLite or PostgreSQL
+// Check if PostgreSQL connection string is provided (for production with NeonDB)
+var postgresConnection = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrEmpty(postgresConnection))
+{
+    // Use PostgreSQL (NeonDB or other provider)
+    Console.WriteLine("🐘 Using PostgreSQL database");
+    builder.Services.AddDbContext<AppDbContext>(opt =>
+        opt.UseNpgsql(postgresConnection));
+}
+else
+{
+    // Use SQLite with persistent disk path if available (Render), otherwise use local path
+    var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "motors.db";
+    var connectionString = $"Data Source={dbPath}";
+    Console.WriteLine($"📁 Using SQLite database: {dbPath}");
+    builder.Services.AddDbContext<AppDbContext>(opt =>
+        opt.UseSqlite(connectionString));
+}
 
 // Add SignalR with optimized settings for production
 builder.Services.AddSignalR(options =>
