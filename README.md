@@ -1,4 +1,4 @@
-# Embedded Motor Engine Speed Temperature Measurement Dashboard C++, .Net, React Project
+# IoT Dashboard - Embedded Motor Engine Speed Temperature Measurement Dashboard C++, .Net, React Project
 
 ![Screenshot 2025-07-25 at 23 11 13](https://github.com/user-attachments/assets/7eb6ad46-73a4-4170-a10e-75ff6b4b9966)
 ![Screenshot 2025-07-25 at 23 11 36](https://github.com/user-attachments/assets/7d0562ee-b9f7-4655-a486-c8e4c49a06b9)
@@ -137,7 +137,7 @@ motor-dashboard/
 - `EngineMock/enhanced_motor_engine.cpp` and `enhanced_motor_engine.hpp` define and export mock functions.
 - Compiled as a shared library (`enhanced_motor_engine.dylib`, `.so`, or `.dll`).
 
-### P/Invoke in C#
+### P/Invoke in C
 
 - `EngineService.cs` uses `[DllImport]` to call C++ functions.
 - Example:
