@@ -60,11 +60,11 @@ export default function MainDashboard({
   dashboardStats,
   setDashboardStats,
   //fastSpinCount,
-  setAlert: _setAlert, // eslint-disable-line @typescript-eslint/no-unused-vars
+  // setAlert is not used in this component
   loading,
   setLoading,
   signalRConnected,
-  _setSignalRConnected, // eslint-disable-line @typescript-eslint/no-unused-vars
+  // setSignalRConnected is not used in this component (managed in App.tsx)
   //fastSpinCount2,
   setFastSpinCount,
   settingsOpen,
@@ -253,42 +253,8 @@ export default function MainDashboard({
         setLoading(false);
       });
 
-    // Fetch live C++ data for real-time calculations
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _fetchLiveData = async () => {
-      try {
-        const response = await axios.get<MotorReading>(
-          `${API_BASE_URL}/api/motor/sample`
-        );
-        const liveReading = response.data;
-
-        // Add live reading to the beginning of readings array
-        setReadings((prevReadings) => {
-          // Check if we already have this reading (by timestamp)
-          const existingIndex = prevReadings.findIndex(
-            (r) => r.timestamp === liveReading.timestamp
-          );
-
-          if (existingIndex !== -1) {
-            // Replace existing reading with live data
-            const newReadings = [...prevReadings];
-            newReadings[existingIndex] = liveReading;
-            return newReadings;
-          } else {
-            // Add new live reading to front
-            return [liveReading, ...prevReadings].slice(0, maxReadings);
-          }
-        });
-      } catch (error) {
-        console.error("Failed to fetch live C++ data:", error);
-      }
-    };
-
-    // Removed automatic data fetching - user will manually generate readings
-    // fetchLiveData(); // This was automatically generating data on component mount
-    // Removed automatic polling - user will manually generate readings
-    // const interval = setInterval(fetchLiveData, 2000);
-    // return () => clearInterval(interval);
+    // Note: Automatic data fetching has been removed - users will manually generate readings
+    // This prevents automatic data generation on component mount
   }, [maxReadings, loadDashboardStats, setLoading, setReadings]);
 
   return (
