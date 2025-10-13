@@ -21,14 +21,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project file and restore dependencies
-COPY ["MotorServer/MotorServer.csproj", "MotorServer/"]
+COPY ["Server/MotorServer/MotorServer.csproj", "MotorServer/"]
 RUN dotnet restore "MotorServer/MotorServer.csproj"
 
 # Copy all source code from Server directory
-COPY . .
+COPY Server/ .
 
-# Copy C++ engine from parent directory
-COPY ../EngineMock/ ./EngineMock/
+# Copy C++ engine from EngineMock directory
+COPY EngineMock/ ./EngineMock/
 
 WORKDIR "/src/MotorServer"
 
