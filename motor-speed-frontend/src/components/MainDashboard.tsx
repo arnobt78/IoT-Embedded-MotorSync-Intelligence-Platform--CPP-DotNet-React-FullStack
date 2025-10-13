@@ -1,7 +1,7 @@
 import AlertSystem from "./AlertSystem";
 import AdvancedAnalyticsDashboard from "./AdvancedAnalyticsDashboard";
 import AnimatedMotor from "./AnimatedMotor";
-import ColorLegend from "./ColorLegend";
+// import ColorLegend from "./ColorLegend";
 import DailyLifeApplications from "./DailyLifeApplications";
 import DashboardStatsComponent from "./DashboardStats";
 import EdgeComputingDashboard from "./EdgeComputingDashboard";
@@ -17,12 +17,12 @@ import ReadingList from "./ReadingList";
 import SensorDashboard from "./SensorDashboard";
 import SettingsModal from "./SettingsModal";
 import AnimatedGearIcon from "./ui/AnimatedGearIcon";
-import { safeDate } from "../lib/dateUtils";
-import { API_BASE_URL, SIGNALR_URL } from "../services/api";
+import { PhysicsFormulaTooltip } from "./ui/PhysicsFormulaTooltip";
+import { formatTimestamp } from "../lib/dateUtils";
+import { API_BASE_URL } from "../services/api";
 import type { MotorReading, Alert, DashboardStats } from "../types";
-import * as signalR from "@microsoft/signalr";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 interface MainDashboardProps {
   // Props that will be passed from App.tsx
@@ -39,7 +39,7 @@ interface MainDashboardProps {
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   signalRConnected: boolean;
-  setSignalRConnected: React.Dispatch<React.SetStateAction<boolean>>;
+  _setSignalRConnected: React.Dispatch<React.SetStateAction<boolean>>;
   _fastSpinCount2: number;
   setFastSpinCount: React.Dispatch<React.SetStateAction<number>>;
   settingsOpen: boolean;
@@ -60,11 +60,11 @@ export default function MainDashboard({
   dashboardStats,
   setDashboardStats,
   //fastSpinCount,
-  setAlert,
+  setAlert: _setAlert, // eslint-disable-line @typescript-eslint/no-unused-vars
   loading,
   setLoading,
   signalRConnected,
-  setSignalRConnected,
+  _setSignalRConnected, // eslint-disable-line @typescript-eslint/no-unused-vars
   //fastSpinCount2,
   setFastSpinCount,
   settingsOpen,
@@ -76,6 +76,49 @@ export default function MainDashboard({
   isGenerating,
   setIsGenerating,
 }: MainDashboardProps) {
+  // Backend status tracking - based on SignalR connection
+  const backendStatus = signalRConnected ? "connected" : "offline";
+
+  // Force re-render counter
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Get latest reading for display - use useMemo to ensure it updates
+  const latestReading = useMemo(() => {
+    console.log(
+      "🔄 latestReading useMemo recalculating:",
+      readings.length,
+      readings[0]?.id
+    );
+    return readings.length > 0 ? readings[0] : null;
+  }, [readings]);
+
+  // Determine data source status for status indicators
+  const dataSource =
+    latestReading && signalRConnected && backendStatus === "connected"
+      ? "backend"
+      : "offline";
+
+  // Debug: Log readings state changes
+  useEffect(() => {
+    console.log(
+      "🔄 Readings state changed:",
+      readings.length,
+      readings[0]?.id,
+      readings[0]?.speed
+    );
+    console.log(
+      "🔄 Full readings array:",
+      readings.map((r) => ({ id: r.id, speed: r.speed }))
+    );
+    console.log(
+      "🔄 latestReading variable:",
+      latestReading?.id,
+      latestReading?.speed
+    );
+  }, [readings, latestReading]);
+
+  // SignalR connection is now handled at App level
+
   // CSV export helper
   function exportCsv() {
     if (!readings.length) return;
@@ -140,7 +183,7 @@ export default function MainDashboard({
     : null;
 
   // Load dashboard stats
-  const loadDashboardStats = async () => {
+  const loadDashboardStats = useCallback(async () => {
     try {
       const response = await axios.get<DashboardStats>(
         `${API_BASE_URL}/api/motor/stats`
@@ -148,6 +191,40 @@ export default function MainDashboard({
       setDashboardStats(response.data);
     } catch (error) {
       console.error("Failed to load dashboard stats:", error);
+    }
+  }, [setDashboardStats]);
+
+  // Delete all data function
+  const deleteAllData = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete ALL motor readings? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_BASE_URL}/api/motor/clear`);
+      const result = response.data;
+
+      // Clear local state
+      setReadings([]);
+      setDashboardStats(null);
+
+      // Show success message
+      alert(
+        `✅ Successfully deleted ${result.clearedCount} readings from database.`
+      );
+
+      // Refresh dashboard stats
+      await loadDashboardStats();
+    } catch (error) {
+      console.error("Failed to delete all data:", error);
+      alert("❌ Failed to delete all data. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,8 +237,12 @@ export default function MainDashboard({
     );
   };
 
-  // Load readings
+  // Load readings - only real C++ data or offline
   useEffect(() => {
+    // Load dashboard stats
+    loadDashboardStats();
+
+    // Load historical readings from database
     axios
       .get<MotorReading[]>(`${API_BASE_URL}/api/motor`)
       .then((res) => {
@@ -169,109 +250,46 @@ export default function MainDashboard({
         setLoading(false);
       })
       .catch(() => {
-        setLoading(false); // still hide spinner on error
+        setLoading(false);
       });
 
-    loadDashboardStats();
-
-    const hub = new signalR.HubConnectionBuilder()
-      .withUrl(SIGNALR_URL)
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) => {
-          if (retryContext.previousRetryCount === 0) {
-            return 0; // Start immediately on first retry
-          }
-          return Math.min(
-            1000 * Math.pow(2, retryContext.previousRetryCount),
-            30000
-          ); // Exponential backoff, max 30s
-        },
-      })
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
-
-    // New reading event
-    hub.on("NewReading", (reading: MotorReading) => {
-      setReadings((r) => {
-        // Check if reading with same ID already exists
-        const existingIndex = r.findIndex(
-          (existing) => existing.id === reading.id
+    // Fetch live C++ data for real-time calculations
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _fetchLiveData = async () => {
+      try {
+        const response = await axios.get<MotorReading>(
+          `${API_BASE_URL}/api/motor/sample`
         );
-        if (existingIndex !== -1) {
-          // Replace existing reading with same ID
-          const newReadings = [...r];
-          newReadings[existingIndex] = reading;
-          return newReadings;
-        } else {
-          // Add new reading to front, but also check for duplicate timestamps
-          const duplicateTimestamp = r.find(
-            (existing) => existing.timestamp === reading.timestamp
+        const liveReading = response.data;
+
+        // Add live reading to the beginning of readings array
+        setReadings((prevReadings) => {
+          // Check if we already have this reading (by timestamp)
+          const existingIndex = prevReadings.findIndex(
+            (r) => r.timestamp === liveReading.timestamp
           );
-          if (duplicateTimestamp) {
-            // If same timestamp, replace the existing one
-            const timestampIndex = r.findIndex(
-              (existing) => existing.timestamp === reading.timestamp
-            );
-            const newReadings = [...r];
-            newReadings[timestampIndex] = reading;
+
+          if (existingIndex !== -1) {
+            // Replace existing reading with live data
+            const newReadings = [...prevReadings];
+            newReadings[existingIndex] = liveReading;
             return newReadings;
           } else {
-            // Add new reading to front
-            return [reading, ...r].slice(0, maxReadings);
+            // Add new live reading to front
+            return [liveReading, ...prevReadings].slice(0, maxReadings);
           }
-        }
-      });
-
-      // Refresh dashboard stats when new reading is added
-      loadDashboardStats();
-
-      if (reading.temperature > 80)
-        setAlert(`⚠️ High Temp: ${reading.temperature} °C`);
-    });
-
-    // New alert event
-    hub.on("NewAlert", (alert: Alert) => {
-      setAlerts((prev) => {
-        // Check if alert with same ID already exists
-        const existingAlert = prev.find((a) => a.id === alert.id);
-        if (existingAlert) {
-          return prev; // Don't add duplicate
-        }
-
-        return [alert, ...prev];
-      });
-    });
-
-    // Add connection event handlers
-    hub.onclose(() => {
-      setSignalRConnected(false);
-    });
-
-    hub.onreconnecting(() => {
-      setSignalRConnected(false);
-    });
-
-    hub.onreconnected(() => {
-      setSignalRConnected(true);
-    });
-
-    // Start connection
-    setTimeout(() => {
-      hub
-        .start()
-        .then(() => {
-          setSignalRConnected(true);
-        })
-        .catch(() => {
-          setSignalRConnected(false);
         });
-    }, 100);
-
-    return () => {
-      hub.stop().catch(console.error);
+      } catch (error) {
+        console.error("Failed to fetch live C++ data:", error);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxReadings]); // Include maxReadings in dependency array
+
+    // Removed automatic data fetching - user will manually generate readings
+    // fetchLiveData(); // This was automatically generating data on component mount
+    // Removed automatic polling - user will manually generate readings
+    // const interval = setInterval(fetchLiveData, 2000);
+    // return () => clearInterval(interval);
+  }, [maxReadings, loadDashboardStats, setLoading, setReadings]);
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-6`}>
@@ -281,7 +299,12 @@ export default function MainDashboard({
         </div>
       )}
 
-      <AlertSystem alerts={alerts} onAcknowledge={acknowledgeAlert} />
+      <AlertSystem
+        alerts={alerts}
+        onAcknowledge={acknowledgeAlert}
+        signalRConnected={signalRConnected}
+        backendStatus={backendStatus}
+      />
 
       <div className="max-w-9xl mx-auto">
         <NavBar darkMode={darkMode} />
@@ -290,9 +313,100 @@ export default function MainDashboard({
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                xmlnsXlink="http://www.w3.org/1999/xlink"
+                height="40px"
+                width="40px"
+                version="1.1"
+                id="Layer_1"
+                viewBox="0 0 512 512"
+                xmlSpace="preserve"
+              >
+                <g transform="translate(1 1)">
+                  <g>
+                    <path
+                      style={{ fill: "#FFDD09" }}
+                      d="M45.933,319c-2.56,0-4.267-0.853-5.973-2.56c-3.413-3.413-3.413-8.533,0-11.947l217.6-217.6    c3.413-3.413,8.533-3.413,11.947,0s3.413,8.533,0,11.947L52.76,316.44C51.053,318.147,48.493,319,45.933,319z"
+                    />
+                    <path
+                      style={{ fill: "#FFDD09" }}
+                      d="M493.933,451.267c-5.12,0-8.533-3.413-8.533-8.533v-307.2c0-5.12,3.413-8.533,8.533-8.533    c5.12,0,8.533,3.413,8.533,8.533v307.2C502.467,447.853,499.053,451.267,493.933,451.267z"
+                    />
+                    <path
+                      style={{ fill: "#FFDD09" }}
+                      d="M442.733,502.467h-0.853l-358.4-51.2c-4.267-0.853-7.68-5.12-6.827-9.387s5.12-7.68,9.387-6.827    l358.4,51.2c4.267,0.853,7.68,5.12,6.827,9.387C450.413,499.053,447,502.467,442.733,502.467z"
+                    />
+                    <path
+                      style={{ fill: "#FFDD09" }}
+                      d="M502.467,442.733c0,33.28-26.453,59.733-59.733,59.733S383,476.013,383,442.733    S409.453,383,442.733,383S502.467,409.453,502.467,442.733"
+                    />
+                  </g>
+                  <path
+                    style={{ fill: "#FD9808" }}
+                    d="M442.733,383c-4.267,0-8.533,0.853-12.8,1.707c26.453,5.973,46.933,29.867,46.933,58.027   c0,28.16-20.48,52.053-46.933,58.027c4.267,0.853,8.533,1.707,12.8,1.707c33.28,0,59.733-26.453,59.733-59.733   S476.013,383,442.733,383"
+                  />
+                  <path
+                    style={{ fill: "#FFDD09" }}
+                    d="M92.867,280.6c-46.933,0-85.333,38.4-85.333,85.333s38.4,85.333,85.333,85.333   s85.333-38.4,85.333-85.333S139.8,280.6,92.867,280.6"
+                  />
+                  <path
+                    style={{ fill: "#FD9808" }}
+                    d="M92.867,280.6c-4.267,0-8.533,0.853-12.8,0.853c40.96,5.973,72.533,41.813,72.533,84.48   s-31.573,78.507-72.533,84.48c4.267,0,8.533,0.853,12.8,0.853c46.933,0,85.333-38.4,85.333-85.333S139.8,280.6,92.867,280.6"
+                  />
+                  <path
+                    style={{ fill: "#54C9FD" }}
+                    d="M92.867,400.067c-18.773,0-34.133-15.36-34.133-34.133S74.093,331.8,92.867,331.8   S127,347.16,127,365.933S111.64,400.067,92.867,400.067"
+                  />
+                  <path
+                    style={{ fill: "#33A9F8" }}
+                    d="M92.867,331.8c-4.267,0-8.533,0.853-12.8,2.56c12.8,5.12,21.333,17.067,21.333,31.573   s-8.533,26.453-21.333,31.573c4.267,1.707,8.533,2.56,12.8,2.56c18.773,0,34.133-15.36,34.133-34.133S111.64,331.8,92.867,331.8"
+                  />
+                  <path
+                    style={{ fill: "#FFDD09" }}
+                    d="M502.467,135.533c0,70.827-57.173,128-128,128s-128-57.173-128-128s57.173-128,128-128   S502.467,64.707,502.467,135.533"
+                  />
+                  <path
+                    style={{ fill: "#FD9808" }}
+                    d="M374.467,7.533c-2.56,0-5.973,0-8.533,0.853C432.493,12.653,485.4,68.12,485.4,135.533   s-52.907,122.88-119.467,127.147c2.56,0,5.973,0.853,8.533,0.853c70.827,0,128-57.173,128-128S445.293,7.533,374.467,7.533"
+                  />
+                  <path
+                    style={{ fill: "#54C9FD" }}
+                    d="M374.467,41.667c-52.053,0-93.867,41.813-93.867,93.867s41.813,93.867,93.867,93.867   s93.867-41.813,93.867-93.867S426.52,41.667,374.467,41.667"
+                  />
+                  <path
+                    style={{ fill: "#33A9F8" }}
+                    d="M374.467,41.667c-2.56,0-5.973,0-8.533,0.853c47.787,4.267,85.333,44.373,85.333,93.013   s-37.547,88.747-85.333,93.013c2.56,0,5.973,0.853,8.533,0.853c52.053,0,93.867-41.813,93.867-93.867S426.52,41.667,374.467,41.667   "
+                  />
+                  <path
+                    style={{ fill: "#FFDD09" }}
+                    d="M374.467,161.133c-14.507,0-25.6-11.093-25.6-25.6s11.093-25.6,25.6-25.6   c14.507,0,25.6,11.093,25.6,25.6S388.973,161.133,374.467,161.133"
+                  />
+                  <path d="M374.467,272.067c-75.093,0-136.533-61.44-136.533-136.533S299.373-1,374.467-1S511,60.44,511,135.533   S449.56,272.067,374.467,272.067z M374.467,16.067C308.76,16.067,255,69.827,255,135.533S308.76,255,374.467,255   s119.467-53.76,119.467-119.467S440.173,16.067,374.467,16.067z" />
+                  <path d="M442.733,511c-37.547,0-68.267-30.72-68.267-68.267s30.72-68.267,68.267-68.267S511,405.187,511,442.733   S480.28,511,442.733,511z M442.733,391.533c-28.16,0-51.2,23.04-51.2,51.2c0,28.16,23.04,51.2,51.2,51.2   c28.16,0,51.2-23.04,51.2-51.2C493.933,414.573,470.893,391.533,442.733,391.533z" />
+                  <path d="M41.667,306.2c-2.56,0-4.267-0.853-5.973-2.56c-3.413-3.413-3.413-8.533,0-11.947l217.6-217.6   c3.413-3.413,8.533-3.413,11.947,0c3.413,3.413,3.413,8.533,0,11.947l-217.6,217.6C45.933,305.347,44.227,306.2,41.667,306.2z" />
+                  <path d="M502.467,451.267c-5.12,0-8.533-3.413-8.533-8.533v-307.2c0-5.12,3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533   v307.2C511,447.853,507.587,451.267,502.467,451.267z" />
+                  <path d="M442.733,511h-0.853L92.013,459.8c-4.267-0.853-7.68-5.12-6.827-9.387s5.12-7.68,9.387-6.827l349.867,51.2   c4.267,0.853,7.68,5.12,6.827,9.387C450.413,507.587,447,511,442.733,511z" />
+                  <path d="M442.733,451.267c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533   C451.267,447.853,447.853,451.267,442.733,451.267" />
+                  <path d="M374.467,84.333c-5.12,0-8.533-3.413-8.533-8.533s3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533   C383,80.92,379.587,84.333,374.467,84.333" />
+                  <path d="M374.467,203.8c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533   C383,200.387,379.587,203.8,374.467,203.8" />
+                  <path d="M92.867,459.8C40.813,459.8-1,417.987-1,365.933s41.813-93.867,93.867-93.867s93.867,41.813,93.867,93.867   S144.92,459.8,92.867,459.8z M92.867,289.133c-42.667,0-76.8,34.133-76.8,76.8s34.133,76.8,76.8,76.8s76.8-34.133,76.8-76.8   S135.533,289.133,92.867,289.133z" />
+                  <path d="M425.667,135.533c0-5.12,3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533s-3.413,8.533-8.533,8.533   C429.08,144.067,425.667,140.653,425.667,135.533" />
+                  <path d="M306.2,135.533c0-5.12,3.413-8.533,8.533-8.533c5.12,0,8.533,3.413,8.533,8.533s-3.413,8.533-8.533,8.533   C309.613,144.067,306.2,140.653,306.2,135.533" />
+                  <path d="M340.333,92.867c0,5.12-3.413,8.533-8.533,8.533s-8.533-3.413-8.533-8.533s3.413-8.533,8.533-8.533   S340.333,87.747,340.333,92.867" />
+                  <path d="M425.667,178.2c0,5.12-3.413,8.533-8.533,8.533s-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533   S425.667,173.08,425.667,178.2" />
+                  <path d="M408.6,92.867c0-5.12,3.413-8.533,8.533-8.533s8.533,3.413,8.533,8.533s-3.413,8.533-8.533,8.533   S408.6,97.987,408.6,92.867" />
+                  <path d="M331.8,186.733c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533s8.533,3.413,8.533,8.533   C340.333,183.32,336.92,186.733,331.8,186.733" />
+                  <path d="M374.467,237.933c-56.32,0-102.4-46.08-102.4-102.4s46.08-102.4,102.4-102.4s102.4,46.08,102.4,102.4   S430.787,237.933,374.467,237.933z M374.467,50.2c-46.933,0-85.333,38.4-85.333,85.333s38.4,85.333,85.333,85.333   s85.333-38.4,85.333-85.333S421.4,50.2,374.467,50.2z" />
+                  <path d="M374.467,169.667c-18.773,0-34.133-15.36-34.133-34.133s15.36-34.133,34.133-34.133c18.773,0,34.133,15.36,34.133,34.133   S393.24,169.667,374.467,169.667z M374.467,118.467c-9.387,0-17.067,7.68-17.067,17.067s7.68,17.067,17.067,17.067   s17.067-7.68,17.067-17.067S383.853,118.467,374.467,118.467z" />
+                  <path d="M92.867,408.6c-23.893,0-42.667-18.773-42.667-42.667c0-23.893,18.773-42.667,42.667-42.667s42.667,18.773,42.667,42.667   C135.533,389.827,116.76,408.6,92.867,408.6z M92.867,340.333c-14.507,0-25.6,11.093-25.6,25.6s11.093,25.6,25.6,25.6   s25.6-11.093,25.6-25.6S107.373,340.333,92.867,340.333z" />
+                </g>
+              </svg>
+
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 MotorSync Intelligence
               </h1>
+
               <div className="flex items-center space-x-2">
                 <div
                   className={`w-3 h-3 rounded-full animate-pulse ${
@@ -322,7 +436,13 @@ export default function MainDashboard({
           </div>
 
           {/* Dashboard Stats */}
-          {dashboardStats && <DashboardStatsComponent stats={dashboardStats} />}
+          {dashboardStats && (
+            <DashboardStatsComponent
+              stats={dashboardStats}
+              signalRConnected={signalRConnected}
+              backendStatus={backendStatus}
+            />
+          )}
         </div>
 
         {/* Hero Section - Motor Status Dashboard */}
@@ -332,8 +452,8 @@ export default function MainDashboard({
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                MotorSync Intelligence Dashboard
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                ⚙️ MotorSync Intelligence Dashboard
               </h2>
               <p className="text-gray-600 dark:text-gray-300">
                 Real-time monitoring and control
@@ -346,32 +466,84 @@ export default function MainDashboard({
                 className={`px-6 py-2 rounded-2xl transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center space-x-4 ${
                   isGenerating
                     ? "bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed"
-                    : readings[0]
+                    : readings.length > 0
                     ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                     : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
                 } text-white`}
-                onClick={() => {
+                onClick={async () => {
                   if (isGenerating) return;
                   setIsGenerating(true);
-                  axios.get(`${API_BASE_URL}/api/motor/sample`);
-                  setFastSpinCount((c) => c + 1);
-                  setTimeout(() => setIsGenerating(false), 1000);
+
+                  try {
+                    // Generate new reading
+                    console.log("🔄 Generating new reading...");
+                    await axios.get(`${API_BASE_URL}/api/motor/sample`);
+
+                    // Refresh readings from database
+                    console.log("📊 Fetching updated readings...");
+                    const response = await axios.get<MotorReading[]>(
+                      `${API_BASE_URL}/api/motor`
+                    );
+                    console.log("📈 Latest reading:", response.data[0]);
+                    console.log("🔄 Setting readings state...");
+                    console.log(
+                      "📊 Current readings state before update:",
+                      readings
+                    );
+                    setReadings((prevReadings) => {
+                      console.log(
+                        "🔄 setReadings callback - prevReadings:",
+                        prevReadings.length,
+                        prevReadings[0]?.id
+                      );
+                      console.log(
+                        "🔄 setReadings callback - newData:",
+                        response.data.length,
+                        response.data[0]?.id
+                      );
+                      return response.data;
+                    });
+                    console.log("✅ Readings state updated");
+                    console.log("📊 New readings data:", response.data);
+
+                    // Force re-render
+                    setForceUpdate((prev) => {
+                      console.log("🔄 Force update from", prev, "to", prev + 1);
+                      return prev + 1;
+                    });
+                    console.log("🔄 Forced re-render triggered");
+
+                    // Refresh dashboard stats
+                    await loadDashboardStats();
+
+                    setFastSpinCount((c) => c + 1);
+                  } catch (error) {
+                    console.error("Failed to generate reading:", error);
+                  } finally {
+                    setTimeout(() => setIsGenerating(false), 1000);
+                  }
                 }}
               >
                 {/* Animated Gear Icon */}
                 <AnimatedGearIcon
-                  isActive={readings[0] ? true : false}
+                  isActive={isGenerating || readings.length > 0}
                   size="md"
                   status={signalRConnected ? "live" : "offline"}
                 />
 
                 <div className="flex flex-col items-start">
                   <span className="text-lg font-semibold">
-                    {readings[0] ? "Generate Reading" : "Start Motor"}
+                    {isGenerating
+                      ? "Generating..."
+                      : readings.length > 0
+                      ? "Generate Reading"
+                      : "Start Motor"}
                   </span>
-                  {readings[0] && (
+                  {readings.length > 0 && !isGenerating && (
                     <span className="text-xs opacity-90">
-                      Current: {readings[0].speed} RPM
+                      Current: {latestReading?.speed} RPM (ID:{" "}
+                      {latestReading?.id}) [R
+                      {forceUpdate}]
                     </span>
                   )}
                 </div>
@@ -398,32 +570,39 @@ export default function MainDashboard({
                 <div className="text-center">
                   <div className="mb-4">
                     <AnimatedMotor
-                      reading={readings[0] || null}
+                      reading={latestReading}
                       className="mx-auto"
+                      signalRConnected={signalRConnected}
+                      backendStatus={backendStatus}
                     />
                   </div>
                   <div className="text-2xl font-bold mb-2">
                     <span
                       className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                        readings[0]?.status === "critical"
+                        latestReading?.status === "critical"
                           ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                          : readings[0]?.status === "warning"
+                          : latestReading?.status === "warning"
                           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                          : readings[0]?.status === "maintenance"
+                          : latestReading?.status === "maintenance"
                           ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                           : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       }`}
                     >
-                      {readings[0]?.status?.toUpperCase() || "OFFLINE"}
+                      {latestReading?.status?.toUpperCase() || "OFFLINE"}
                     </span>
                   </div>
                   <p className="text-gray-600 dark:text-gray-300 text-sm">
                     MotorSync Intelligence
                   </p>
-                  {readings[0] && (
+                  {latestReading && (
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       🕒 <strong>Last Updated:</strong>{" "}
-                      {new Date(readings[0].timestamp).toLocaleString()}
+                      {formatTimestamp(latestReading.timestamp, {
+                        includeTime: true,
+                        useLocalTime: true,
+                      })}
+                      <br />
+                      📊 <strong>Reading ID:</strong> {latestReading.id}
                     </div>
                   )}
                 </div>
@@ -444,12 +623,12 @@ export default function MainDashboard({
                         Motor Speed
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.speed || 0} RPM
+                        {latestReading?.speed || 0} RPM [R{forceUpdate}]
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> Previous Speed ±
-                          (Acceleration × 2s)
+                          📊 <strong>Formula:</strong> Base Speed + Load
+                          Variation + Time Effects + Random Variation
                         </div>
                       )}
                     </div>
@@ -467,12 +646,12 @@ export default function MainDashboard({
                         Motor Temperature
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.temperature || 0}°C
+                        {latestReading?.temperature || 0}°C
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> Ambient(22°C) + (Power ×
-                          (1-Efficiency) × 0.1) - 0.5°C
+                          📊 <strong>Formula:</strong> Base Temp +
+                          (Speed/2500)×2 + (Load-0.5)×3 + Cooling Effects
                         </div>
                       )}
                     </div>
@@ -490,12 +669,12 @@ export default function MainDashboard({
                         Motor Vibration
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.vibration || 0} mm/s
+                        {latestReading?.vibration || 0} mm/s
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> (Speed/1000) × 2 + Load ×
-                          0.5 + Random(0-0.5)
+                          📊 <strong>Formula:</strong> √(VibrationX² +
+                          VibrationY² + VibrationZ²) = RMS Vibration
                         </div>
                       )}
                     </div>
@@ -513,12 +692,12 @@ export default function MainDashboard({
                         Motor Efficiency
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.efficiency || 0}%
+                        {latestReading?.efficiency || 0}%
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> 92% - (Load × 0.1) -
-                          (Temp - 22°C) × 0.05
+                          📊 <strong>Formula:</strong> 92% - (Bearing Wear × 5)
+                          - (Oil Degradation × 2.5) - Temperature Losses
                         </div>
                       )}
                     </div>
@@ -539,12 +718,12 @@ export default function MainDashboard({
                         Motor Power
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.powerConsumption || 0} kW
+                        {latestReading?.powerConsumption || 0} kW
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> (2π × Speed × Torque) ÷
-                          60, where Torque = Load × 50 Nm
+                          📊 <strong>Formula:</strong> Base Power + (Load Factor
+                          × 1.5kW) + ((100-Efficiency) × 0.1kW)
                         </div>
                       )}
                     </div>
@@ -562,12 +741,13 @@ export default function MainDashboard({
                         Motor Health
                       </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {readings[0]?.systemHealth || 0}%
+                        {latestReading?.systemHealth || 0}%
                       </p>
-                      {readings[0] && (
+                      {readings.length > 0 && (
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> 100% - (Vibration × 10) -
-                          (Temp - 22°C) × 0.5 - (100 - Efficiency) × 0.3
+                          📊 <strong>Formula:</strong> (Efficiency × 40%) +
+                          (Vibration Health × 25%) + (Temperature Health × 20%)
+                          + (Bearing Health × 10%) + (Oil Health × 5%)
                         </div>
                       )}
                     </div>
@@ -582,7 +762,11 @@ export default function MainDashboard({
         <div id="charts" className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Chart Section */}
           <div className="lg:col-span-3">
-            <MotorChart readings={readings} />
+            <MotorChart
+              readings={readings}
+              signalRConnected={signalRConnected}
+              backendStatus={backendStatus}
+            />
           </div>
 
           {/* Right Sidebar with Motor Animation and Notifications */}
@@ -593,7 +777,7 @@ export default function MainDashboard({
             {/* Notifications */}
             <div className="space-y-3">
               {highestTemp && (
-                <div className="p-3 bg-red-50 text-red-800 border border-red-200 rounded-lg shadow-sm group relative">
+                <div className="p-3 bg-red-50 text-red-800 border border-red-200 rounded-lg shadow-sm relative">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">🌡️</span>
                     <div className="flex-1">
@@ -601,10 +785,10 @@ export default function MainDashboard({
                         Highest Temp: {highestTemp.temperature}°C
                       </div>
                       <div className="text-xs text-red-600">
-                        {(() => {
-                          const d = safeDate(highestTemp.timestamp);
-                          return d ? d.toLocaleString() : "Invalid Date";
-                        })()}
+                        {formatTimestamp(highestTemp.timestamp, {
+                          includeTime: true,
+                          useLocalTime: true,
+                        })}
                       </div>
                       <div className="text-xs mt-1">
                         {highestTemp.temperature > 85 ? (
@@ -622,22 +806,12 @@ export default function MainDashboard({
                         )}
                       </div>
                     </div>
-                  </div>
-                  {/* Physics Formula Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                    📊 <strong>Formula:</strong> Base Temp + Load Impact +
-                    Efficiency Loss - Cooling
-                    <br />
-                    🔬 <strong>Physics:</strong> Temp = 65°C + (Load-0.5)×2 +
-                    (100-Efficiency)×0.1 - Thermal Equilibrium
-                    <br />
-                    <strong>Thresholds:</strong> Normal: &lt;75°C, Warning:
-                    75-85°C, Critical: &gt;85°C
+                    <PhysicsFormulaTooltip type="temperature" />
                   </div>
                 </div>
               )}
               {lowestTemp && (
-                <div className="p-3 bg-green-50 text-green-800 border border-green-200 rounded-lg shadow-sm group relative">
+                <div className="p-3 bg-green-50 text-green-800 border border-green-200 rounded-lg shadow-sm relative">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">❄️</span>
                     <div className="flex-1">
@@ -645,10 +819,10 @@ export default function MainDashboard({
                         Lowest Temp: {lowestTemp.temperature}°C
                       </div>
                       <div className="text-xs text-green-600">
-                        {(() => {
-                          const d = safeDate(lowestTemp.timestamp);
-                          return d ? d.toLocaleString() : "Invalid Date";
-                        })()}
+                        {formatTimestamp(lowestTemp.timestamp, {
+                          includeTime: true,
+                          useLocalTime: true,
+                        })}
                       </div>
                       <div className="text-xs mt-1">
                         {lowestTemp.temperature < 30 ? (
@@ -666,22 +840,12 @@ export default function MainDashboard({
                         )}
                       </div>
                     </div>
-                  </div>
-                  {/* Physics Formula Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                    📊 <strong>Formula:</strong> Base Temp + Load Impact +
-                    Efficiency Loss - Cooling
-                    <br />
-                    🔬 <strong>Physics:</strong> Temp = 65°C + (Load-0.5)×2 +
-                    (100-Efficiency)×0.1 - Thermal Equilibrium
-                    <br />
-                    <strong>Thresholds:</strong> Cold: &lt;30°C, Optimal:
-                    30-50°C, Warm: &gt;50°C
+                    <PhysicsFormulaTooltip type="temperature" />
                   </div>
                 </div>
               )}
               {highestRpm && (
-                <div className="p-3 bg-orange-50 text-orange-800 border border-orange-200 rounded-lg shadow-sm group relative">
+                <div className="p-3 bg-orange-50 text-orange-800 border border-orange-200 rounded-lg shadow-sm relative">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">⚡</span>
                     <div className="flex-1">
@@ -689,10 +853,10 @@ export default function MainDashboard({
                         Highest RPM: {highestRpm.speed}
                       </div>
                       <div className="text-xs text-orange-600">
-                        {(() => {
-                          const d = safeDate(highestRpm.timestamp);
-                          return d ? d.toLocaleString() : "Invalid Date";
-                        })()}
+                        {formatTimestamp(highestRpm.timestamp, {
+                          includeTime: true,
+                          useLocalTime: true,
+                        })}
                       </div>
                       <div className="text-xs mt-1">
                         {highestRpm.speed > 3000 ? (
@@ -714,22 +878,12 @@ export default function MainDashboard({
                         )}
                       </div>
                     </div>
-                  </div>
-                  {/* Physics Formula Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                    📊 <strong>Formula:</strong> Base Speed + Load Variation -
-                    Temperature Impact + Random
-                    <br />
-                    🔬 <strong>Physics:</strong> Speed = 2500 + (Load-0.7)×500 -
-                    (Temp-65°C)×2 ±1%
-                    <br />
-                    <strong>Thresholds:</strong> Low: &lt;1500 RPM, Optimal:
-                    1500-2500 RPM, High: 2500-3000 RPM, Overload: &gt;3000 RPM
+                    <PhysicsFormulaTooltip type="speed" />
                   </div>
                 </div>
               )}
               {lowestRpm && (
-                <div className="p-3 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shadow-sm group relative">
+                <div className="p-3 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shadow-sm relative">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">🐌</span>
                     <div className="flex-1">
@@ -737,10 +891,10 @@ export default function MainDashboard({
                         Lowest RPM: {lowestRpm.speed}
                       </div>
                       <div className="text-xs text-blue-600">
-                        {(() => {
-                          const d = safeDate(lowestRpm.timestamp);
-                          return d ? d.toLocaleString() : "Invalid Date";
-                        })()}
+                        {formatTimestamp(lowestRpm.timestamp, {
+                          includeTime: true,
+                          useLocalTime: true,
+                        })}
                       </div>
                       <div className="text-xs mt-1">
                         {lowestRpm.speed < 500 ? (
@@ -762,17 +916,7 @@ export default function MainDashboard({
                         )}
                       </div>
                     </div>
-                  </div>
-                  {/* Physics Formula Tooltip */}
-                  <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                    📊 <strong>Formula:</strong> Base Speed + Load Variation -
-                    Temperature Impact + Random
-                    <br />
-                    🔬 <strong>Physics:</strong> Speed = 2500 + (Load-0.7)×500 -
-                    (Temp-65°C)×2 ±1%
-                    <br />
-                    <strong>Thresholds:</strong> Stall: &lt;500 RPM, Low:
-                    500-1000 RPM, Idle: 1000-1500 RPM, Normal: &gt;1500 RPM
+                    <PhysicsFormulaTooltip type="speed" />
                   </div>
                 </div>
               )}
@@ -783,9 +927,21 @@ export default function MainDashboard({
         {/* Readings Section */}
         <div id="readings" className="mt-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Motor Readings Dashboard
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                ⚙️ Motor Readings Data List Dashboard
+              </h2>
+              {/* Data Source Status Indicator */}
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
+                  dataSource === "backend"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}
+              >
+                {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+              </span>
+            </div>
             <div className="flex items-center space-x-3">
               <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium"
@@ -804,11 +960,18 @@ export default function MainDashboard({
               >
                 Export JSON
               </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
+                onClick={deleteAllData}
+                disabled={loading}
+              >
+                {loading ? "Deleting..." : "Delete All Data"}
+              </button>
             </div>
           </div>
 
           {/* Color Legend */}
-          <ColorLegend />
+          {/* <ColorLegend /> */}
 
           {/* Reading List */}
           <div className="mb-8">
@@ -818,47 +981,88 @@ export default function MainDashboard({
 
         {/* Industrial Sensor Dashboard */}
         <div id="sensor-dashboard" className="mb-8">
-          <SensorDashboard reading={readings[0] || null} />
+          <SensorDashboard
+            reading={latestReading}
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* Advanced Analytics Dashboard */}
         <div id="advanced-analytics" className="mb-8">
-          <AdvancedAnalyticsDashboard motorId="MOTOR-001" />
+          <AdvancedAnalyticsDashboard
+            motorId="MOTOR-001"
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+            readings={readings}
+            isReadingsLoading={loading}
+          />
         </div>
 
         {/* Industrial Management Dashboard */}
         <div id="industrial-management" className="mb-8">
-          <IndustrialManagementDashboard facilityId="FACILITY-001" />
+          <IndustrialManagementDashboard
+            facilityId="FACILITY-001"
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+            readings={readings}
+            isReadingsLoading={loading}
+          />
         </div>
 
         {/* Predictive Maintenance Dashboard */}
         <div id="predictive-maintenance" className="mb-8">
-          <PredictiveMaintenanceDashboard motorId="MOTOR-001" />
+          <PredictiveMaintenanceDashboard
+            readings={readings}
+            isReadingsLoading={loading}
+            motorId="MOTOR-001"
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* Motor Control Dashboard */}
         <div id="motor-control" className="mb-8">
-          <MotorControlDashboard motorId="MOTOR-001" />
+          <MotorControlDashboard
+            reading={latestReading}
+            motorId="MOTOR-001"
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* Daily Life Applications */}
         <div id="daily-applications" className="mb-8">
-          <DailyLifeApplications reading={readings[0] || null} />
+          <DailyLifeApplications
+            reading={latestReading}
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* IoT Cloud Integration */}
         <div id="iot-cloud" className="mb-8">
-          <IoTCloudIntegration reading={readings[0] || null} />
+          <IoTCloudIntegration
+            reading={latestReading}
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* Edge Computing Dashboard */}
         <div id="edge-computing" className="mb-8">
-          <EdgeComputingDashboard motorId="MOTOR-001" />
+          <EdgeComputingDashboard
+            readings={readings}
+            isReadingsLoading={loading}
+            motorId="MOTOR-001"
+            signalRConnected={signalRConnected}
+            backendStatus={backendStatus}
+          />
         </div>
 
         {/* Mobile Dashboard */}
         <MobileDashboard
-          reading={readings[0] || null}
+          reading={latestReading}
           onRefresh={() => {
             axios.get(`${API_BASE_URL}/api/motor/sample`);
             setFastSpinCount((c) => c + 1);

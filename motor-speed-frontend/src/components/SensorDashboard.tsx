@@ -3,9 +3,20 @@ import React from "react";
 
 interface SensorDashboardProps {
   reading: MotorReading | null;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
-export default function SensorDashboard({ reading }: SensorDashboardProps) {
+export default function SensorDashboard({
+  reading,
+  signalRConnected = true,
+  backendStatus = "connected",
+}: SensorDashboardProps) {
+  // Determine data source status
+  const dataSource =
+    reading && signalRConnected && backendStatus === "connected"
+      ? "backend"
+      : "offline";
   if (!reading) {
     return (
       <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
@@ -19,132 +30,9 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
     );
   }
 
-  // Dynamic calculations for enhanced sensor insights
-  const calculateVibrationRMS = () => {
-    if (reading.vibrationX && reading.vibrationY && reading.vibrationZ) {
-      return Math.sqrt(
-        (reading.vibrationX ** 2 +
-          reading.vibrationY ** 2 +
-          reading.vibrationZ ** 2) /
-          3
-      );
-    }
-    return reading.vibration || 0;
-  };
-
-  const calculatePowerFromVoltageCurrent = () => {
-    if (reading.voltage && reading.current) {
-      return (
-        (reading.voltage * reading.current * (reading.powerFactor || 0.9)) /
-        1000
-      ); // Convert to kW
-    }
-    return reading.powerConsumption || 0;
-  };
-
-  const calculateBearingHealth = () => {
-    // Bearing health based on vibration, temperature, and sound level
-    let health = 100;
-
-    // Vibration impact (RMS vibration affects bearing health)
-    const rmsVibration = calculateVibrationRMS();
-    if (rmsVibration > 4.5) health -= 15;
-    else if (rmsVibration > 2.5) health -= 8;
-    else if (rmsVibration > 1.5) health -= 3;
-
-    // Temperature impact
-    if (reading.temperature > 90) health -= 12;
-    else if (reading.temperature > 80) health -= 6;
-    else if (reading.temperature > 70) health -= 2;
-
-    // Sound level impact
-    if (reading.soundLevel && reading.soundLevel > 80) health -= 8;
-    else if (reading.soundLevel && reading.soundLevel > 70) health -= 4;
-
-    return Math.max(0, Math.min(100, health));
-  };
-
-  const calculateDynamicEfficiency = () => {
-    // Dynamic efficiency calculation based on power, torque, and RPM
-    if (reading.powerConsumption && reading.torque && reading.rpm) {
-      // Mechanical power = Torque × Angular Velocity
-      const angularVelocity = (reading.rpm * 2 * Math.PI) / 60; // rad/s
-      const mechanicalPower = (reading.torque * angularVelocity) / 1000; // kW
-
-      // Efficiency = (Mechanical Power / Electrical Power) × 100%
-      const efficiency = (mechanicalPower / reading.powerConsumption) * 100;
-
-      // Apply temperature correction factor
-      const tempFactor =
-        reading.temperature > 80 ? 0.95 : reading.temperature > 70 ? 0.98 : 1.0;
-
-      return Math.max(0, Math.min(100, efficiency * tempFactor));
-    }
-
-    // Fallback to reading efficiency or calculate from power factor
-    if (reading.efficiency) return reading.efficiency;
-    if (reading.powerFactor) return reading.powerFactor * 100;
-
-    return 85; // Default efficiency
-  };
-
-  const calculateSystemHealth = () => {
-    // Dynamic system health calculation based on all sensor readings
-    let health = 100;
-
-    // Vibration impact (RMS vibration affects overall health)
-    const rmsVibration = calculateVibrationRMS();
-    if (rmsVibration > 4.5) health -= 20;
-    else if (rmsVibration > 2.5) health -= 10;
-    else if (rmsVibration > 1.5) health -= 5;
-
-    // Temperature impact
-    if (reading.temperature > 90) health -= 15;
-    else if (reading.temperature > 80) health -= 8;
-    else if (reading.temperature > 70) health -= 3;
-
-    // Bearing health impact
-    const bearingHealth = calculateBearingHealth();
-    health = (health + bearingHealth) / 2; // Average with bearing health
-
-    // Efficiency impact
-    const dynamicEfficiency = calculateDynamicEfficiency();
-    if (dynamicEfficiency < 80) health -= 10;
-    else if (dynamicEfficiency < 90) health -= 5;
-
-    // Power factor impact
-    if (reading.powerFactor && reading.powerFactor < 0.8) health -= 8;
-    else if (reading.powerFactor && reading.powerFactor < 0.9) health -= 4;
-
-    return Math.max(0, Math.min(100, health));
-  };
-
-  const calculateMaintenanceStatus = () => {
-    // Dynamic maintenance status based on multiple sensor readings
-    let status = 0; // Good
-
-    // Check vibration thresholds
-    const rmsVibration = calculateVibrationRMS();
-    if (rmsVibration > 4.5) status = Math.max(status, 2); // Critical
-    else if (rmsVibration > 2.5) status = Math.max(status, 1); // Warning
-
-    // Check temperature
-    if (reading.temperature > 90) status = Math.max(status, 2); // Critical
-    else if (reading.temperature > 80) status = Math.max(status, 1); // Warning
-
-    // Check bearing health
-    const bearingHealth = calculateBearingHealth();
-    if (bearingHealth < 70) status = Math.max(status, 2); // Critical
-    else if (bearingHealth < 85) status = Math.max(status, 1); // Warning
-
-    // Check operating hours for scheduled maintenance
-    if (reading.operatingHours && reading.operatingHours > 1000)
-      status = Math.max(status, 3); // Maintenance due
-
-    return status;
-  };
-
-  const getVibrationStatus = (value: number) => {
+  // Helper functions for status indicators (NO CALCULATIONS - just status display)
+  const getVibrationStatus = (value: number | undefined) => {
+    if (!value) return { status: "normal", color: "text-gray-500", icon: "ℹ️" };
     if (value < 2.5)
       return { status: "normal", color: "text-green-600", icon: "✅" };
     if (value < 4.5)
@@ -152,7 +40,9 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
     return { status: "critical", color: "text-red-600", icon: "🚨" };
   };
 
-  const getPressureStatus = (value: number, type: string) => {
+  const getPressureStatus = (value: number | undefined, type: string) => {
+    if (!value) return { status: "normal", color: "text-gray-500", icon: "ℹ️" };
+
     const thresholds = {
       oil: { min: 2.0, max: 6.0 },
       air: { min: 6.0, max: 12.0 },
@@ -160,7 +50,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
     };
     const threshold = thresholds[type as keyof typeof thresholds];
     if (!threshold)
-      return { status: "normal", color: "text-gray-600", icon: "ℹ️" };
+      return { status: "normal", color: "text-gray-500", icon: "ℹ️" };
 
     if (value < threshold.min || value > threshold.max)
       return { status: "warning", color: "text-yellow-600", icon: "⚠️" };
@@ -191,9 +81,21 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
   return (
     <div className="bg-indigo-100 dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-          Industrial Sensor Dashboard
-        </h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+            🏭 Industrial Sensor Dashboard
+          </h3>
+          {/* Data Source Status Indicator */}
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${
+              dataSource === "backend"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+            }`}
+          >
+            {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+          </span>
+        </div>
         <div
           className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
             reading.status
@@ -212,53 +114,48 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               🔧 Industrial Sensor Dashboard Overview
             </h4>
             <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
-              This dashboard displays real-time data from multiple industrial
-              sensors monitoring your motor's performance, health, and
-              environmental conditions. All values are dynamically calculated
-              from actual sensor readings with intelligent status indicators and
-              maintenance recommendations.
+              All values are computed from the latest motor reading data (which
+              is generated as last time the motor was sampled) from the C++
+              engine using real-world physics formulas and transmitted to the
+              frontend without any intermediate calculations.
             </p>
             <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
               <div>
-                • <strong>Real-time Data:</strong> All sensor readings are live
-                data from your motor system
+                • <strong>Direct C++ Data:</strong> All sensor readings come
+                directly from C++ backend physics calculations
               </div>
               <div>
-                • <strong>Dynamic Calculations:</strong> RMS vibration, power
-                calculations, and health metrics are computed in real-time
+                • <strong>Real Physics Formulas:</strong> Temperature,
+                vibration, efficiency, power, and health metrics use actual
+                physics
               </div>
               <div>
-                • <strong>Intelligent Status:</strong> Color-coded indicators
-                show normal, warning, and critical conditions
+                • <strong>No Frontend Calculations:</strong> This dashboard only
+                displays data - no calculations performed here
               </div>
               <div>
-                • <strong>Maintenance Integration:</strong> Automatic
-                maintenance status based on sensor thresholds and operating
-                hours
+                • <strong>Live Backend Integration:</strong> Data flows directly
+                from motor_engine.cpp
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* System Health Overview */}
+      {/* System Health Overview - USING DIRECT C++ DATA */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg hover:shadow-lg transition-shadow duration-200">
           <div className="text-sm opacity-90">System Health</div>
           <div className="text-2xl font-bold text-white">
-            {calculateSystemHealth().toFixed(0)}%
+            {reading.systemHealth?.toFixed(0) || "N/A"}%
           </div>
           <div className="text-xs opacity-75 mt-1">
-            Overall system condition based on all sensors
+            Overall system condition from C++ backend
           </div>
+
           <div className="text-xs opacity-60 mt-2 border-t border-blue-400 pt-2">
-            💡 <strong>Dynamic:</strong> Composite health score from vibration,
+            <strong>Formula:</strong> Composite health score from vibration,
             temperature, bearing health, and efficiency
-          </div>
-          <div className="text-xs opacity-50 mt-1">
-            <strong>Formula:</strong> Base(100%) - Vibration Penalty -
-            Temperature Penalty - Efficiency Penalty - Power Factor Penalty,
-            averaged with Bearing Health
           </div>
           <div className="text-xs opacity-50 mt-1">
             <strong>Physics:</strong> Weighted composite of all sensor health
@@ -268,16 +165,13 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
         <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg hover:shadow-lg transition-shadow duration-200">
           <div className="text-sm opacity-90">Efficiency</div>
           <div className="text-2xl font-bold text-white">
-            {calculateDynamicEfficiency().toFixed(1)}%
+            {reading.efficiency?.toFixed(1) || "N/A"}%
           </div>
           <div className="text-xs opacity-75 mt-1">
-            Energy conversion efficiency (higher is better)
+            Energy conversion efficiency from C++ backend
           </div>
+
           <div className="text-xs opacity-60 mt-2 border-t border-green-400 pt-2">
-            💡 <strong>Dynamic:</strong> Real-time efficiency from mechanical
-            power vs electrical power
-          </div>
-          <div className="text-xs opacity-50 mt-1">
             <strong>Formula:</strong> (Mechanical Power ÷ Electrical Power) ×
             100% × Temperature Factor
           </div>
@@ -299,27 +193,21 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               ? `${Math.floor(reading.operatingSeconds)}s`
               : "0s"}
           </div>
-          {/* Debug info - remove after fixing */}
-          <div className="text-xs text-white opacity-50">
-            Debug: h={reading.operatingHours}, m={reading.operatingMinutes}, s=
-            {reading.operatingSeconds}
-          </div>
           <div className="text-xs opacity-75 mt-1 text-white">
             {reading.operatingHours !== undefined && reading.operatingHours > 0
-              ? `${reading.operatingMinutes}m ${Math.floor(
-                  reading.operatingSeconds || 0
-                )}s total runtime`
+              ? `${reading.operatingMinutes || 0}m ${Math.floor(
+                  (reading.operatingSeconds || 0) % 60
+                )}s`
               : reading.operatingMinutes !== undefined &&
                 reading.operatingMinutes > 0
-              ? `${Math.floor(reading.operatingSeconds || 0)}s total runtime`
+              ? `${Math.floor((reading.operatingSeconds || 0) % 60)}s`
               : reading.operatingSeconds !== undefined &&
                 reading.operatingSeconds > 0
-              ? `${Math.floor(reading.operatingSeconds)}s total runtime`
+              ? `${Math.floor(reading.operatingSeconds)}s`
               : "Session just started"}
           </div>
           <div className="text-xs opacity-60 mt-2 border-t border-purple-400 pt-2">
-            💡 <strong>Real-time:</strong> Continuous tracking from motor
-            startup
+            💡 <strong>Source:</strong> Direct tracking from C++ backend
           </div>
           <div className="text-xs opacity-50 mt-1">
             <strong>Purpose:</strong> Maintenance scheduling and operational
@@ -328,7 +216,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
         </div>
       </div>
 
-      {/* Sensor Data Grid */}
+      {/* Sensor Data Grid - ALL DIRECT C++ DATA */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Vibration Sensors */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
@@ -340,9 +228,9 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Vibration Analysis
             </div>
             <div className="text-xs text-orange-700 dark:text-orange-300">
-              Measures motor vibration in X, Y, Z axes. RMS (Root Mean Square)
-              provides overall vibration severity. Normal: &lt;2.5 mm/s,
-              Warning: 2.5-4.5 mm/s, Critical: &gt;4.5 mm/s
+              Direct C++ backend vibration data. RMS calculated using physics
+              formulas. Normal: &lt;2.5 mm/s, Warning: 2.5-4.5 mm/s, Critical:
+              &gt;4.5 mm/s
             </div>
           </div>
           <div className="space-y-2">
@@ -409,17 +297,17 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               </span>
               <div className="flex items-center space-x-2">
                 <span className="font-bold text-gray-900 dark:text-white">
-                  {calculateVibrationRMS().toFixed(2)} mm/s
+                  {reading.vibration?.toFixed(2) || "N/A"} mm/s
                 </span>
                 <span className="text-xs">
-                  {getVibrationStatus(calculateVibrationRMS()).icon}
+                  {getVibrationStatus(reading.vibration).icon}
                 </span>
               </div>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              💡 <strong>Dynamic:</strong> RMS = √((X² + Y² + Z²) ÷ 3) - Overall
-              vibration severity
-            </div>
+            {/* <div className="text-xs text-gray-500 dark:text-gray-400">
+              💡 <strong>Direct C++ Data:</strong> RMS calculated in C++ backend
+              using physics formulas
+            </div> */}
           </div>
         </div>
 
@@ -433,9 +321,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Pressure Monitoring
             </div>
             <div className="text-xs text-gray-700 dark:text-gray-300">
-              Monitors oil, air, and hydraulic pressure. Low pressure indicates
-              leaks or pump issues, high pressure may cause damage. Each system
-              has specific operating ranges.
+              Direct C++ backend pressure data. Each system has specific
+              operating ranges calculated using physics-based formulas.
             </div>
           </div>
           <div className="space-y-2">
@@ -511,9 +398,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Electrical System Analysis
             </div>
             <div className="text-xs text-yellow-700 dark:text-yellow-300">
-              Electrical system monitoring. Voltage should be stable (220-240V),
-              power factor near 1.0 indicates efficient operation. Power is
-              calculated from voltage, current, and power factor.
+              Direct C++ backend electrical data. All calculations performed
+              using real-world physics formulas in the C++ engine.
             </div>
           </div>
           <div className="space-y-2">
@@ -559,13 +445,13 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
                 Power:
               </span>
               <span className="font-bold text-gray-900 dark:text-white">
-                {calculatePowerFromVoltageCurrent().toFixed(1)} kW
+                {reading.powerConsumption?.toFixed(1) || "N/A"} kW
               </span>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              💡 <strong>Dynamic:</strong> Power = (Voltage × Current × Power
-              Factor) ÷ 1000 - Real-time power calculation
-            </div>
+            {/* <div className="text-xs text-gray-500 dark:text-gray-400">
+              💡 <strong>Direct C++ Data:</strong> Power calculated in C++
+              backend using physics formulas
+            </div> */}
           </div>
         </div>
 
@@ -579,10 +465,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Mechanical Performance
             </div>
             <div className="text-xs text-gray-700 dark:text-gray-300">
-              Mechanical performance metrics. RPM and torque indicate motor
-              load, shaft position shows alignment, displacement detects wear.
-              These measurements help assess mechanical condition and
-              performance.
+              Direct C++ backend mechanical data. All measurements calculated
+              using real-world physics formulas in the C++ engine.
             </div>
           </div>
           <div className="space-y-2">
@@ -591,7 +475,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
                 RPM:
               </span>
               <span className="font-medium text-gray-900 dark:text-white">
-                {reading.rpm || "N/A"}
+                {reading.rpm || reading.speed || "N/A"}
               </span>
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -647,9 +531,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Environmental Monitoring
             </div>
             <div className="text-xs text-red-700 dark:text-red-300">
-              Environmental conditions affecting motor performance. Temperature
-              and humidity impact cooling efficiency and component life. Ambient
-              pressure affects air density and cooling effectiveness.
+              Direct C++ backend environmental data. Temperature and humidity
+              impact cooling efficiency and component life.
             </div>
           </div>
           <div className="space-y-2">
@@ -716,10 +599,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Health & Acoustic Analysis
             </div>
             <div className="text-xs text-gray-700 dark:text-gray-300">
-              Sound level indicates mechanical condition. Bearing health {">"}
-              90% is good, strain gauges detect structural stress and fatigue.
-              Bearing health is dynamically calculated from vibration,
-              temperature, and sound.
+              Direct C++ backend acoustic and health data. Bearing health
+              calculated using physics-based formulas in the C++ engine.
             </div>
           </div>
           <div className="space-y-2">
@@ -740,16 +621,14 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
                 Bearing Health:
               </span>
               <span
-                className={`font-bold ${getHealthColor(
-                  calculateBearingHealth()
-                )}`}
+                className={`font-bold ${getHealthColor(reading.bearingHealth)}`}
               >
-                {calculateBearingHealth().toFixed(1)}%
+                {reading.bearingHealth?.toFixed(1) || "N/A"}%
               </span>
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              💡 <strong>Dynamic:</strong> Based on vibration (RMS),
-              temperature, and sound level - calculated in real-time
+              💡 <strong>Direct C++ Data:</strong> Bearing health calculated in
+              C++ backend using physics formulas
             </div>
 
             <div className="flex justify-between">
@@ -788,9 +667,8 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
               💡 Fluid Flow Monitoring
             </div>
             <div className="text-xs text-blue-700 dark:text-blue-300">
-              Fluid flow monitoring. Coolant flow prevents overheating, fuel
-              flow indicates consumption and system efficiency. Flow rates are
-              critical for thermal management and operational efficiency.
+              Direct C++ backend flow rate data. Coolant and fuel flow rates
+              calculated using physics-based formulas.
             </div>
           </div>
           <div className="space-y-2">
@@ -823,7 +701,7 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
         </div>
       </div>
 
-      {/* Maintenance Status */}
+      {/* Maintenance Status - USING DIRECT C++ DATA */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
         <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
           Maintenance Status
@@ -833,32 +711,31 @@ export default function SensorDashboard({ reading }: SensorDashboardProps) {
             💡 Intelligent Maintenance Analysis
           </div>
           <div className="text-xs text-blue-700 dark:text-blue-300">
-            Maintenance status is dynamically calculated based on vibration
-            thresholds, temperature, bearing health, and operating hours. This
-            provides proactive maintenance recommendations based on actual
-            sensor data.
+            Maintenance status calculated directly in C++ backend based on
+            vibration thresholds, temperature, bearing health, and operating
+            hours.
           </div>
         </div>
         <div className="text-sm text-blue-700 dark:text-blue-300">
-          Status Code: {calculateMaintenanceStatus()}
-          {calculateMaintenanceStatus() === 0 && " - Good"}
-          {calculateMaintenanceStatus() === 1 && " - Warning"}
-          {calculateMaintenanceStatus() === 2 && " - Critical"}
-          {calculateMaintenanceStatus() === 3 && " - Maintenance Due"}
+          Status Code: {reading.maintenanceStatus || 0}
+          {reading.maintenanceStatus === 0 && " - Good"}
+          {reading.maintenanceStatus === 1 && " - Warning"}
+          {reading.maintenanceStatus === 2 && " - Critical"}
+          {reading.maintenanceStatus === 3 && " - Maintenance Due"}
         </div>
         <div className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-          {calculateMaintenanceStatus() === 0 &&
+          {reading.maintenanceStatus === 0 &&
             "✅ System is operating normally, no maintenance required."}
-          {calculateMaintenanceStatus() === 1 &&
+          {reading.maintenanceStatus === 1 &&
             "⚠️ Some parameters are outside normal range, monitor closely."}
-          {calculateMaintenanceStatus() === 2 &&
+          {reading.maintenanceStatus === 2 &&
             "🚨 Critical issues detected, immediate attention required."}
-          {calculateMaintenanceStatus() === 3 &&
+          {reading.maintenanceStatus === 3 &&
             "🔧 Scheduled maintenance is due based on operating hours and sensor data."}
         </div>
         <div className="text-xs text-blue-500 dark:text-blue-400 mt-3 border-t border-blue-300 dark:border-blue-700 pt-2">
-          💡 <strong>Dynamic Calculation:</strong> Based on vibration RMS ({">"}
-          4.5=Critical, {">"}2.5=Warning), temperature ({">"}90°C=Critical,{" "}
+          💡 <strong>Direct C++ Calculation:</strong> Based on vibration RMS (
+          {">"}4.5=Critical, {">"}2.5=Warning), temperature ({">"}90°C=Critical,{" "}
           {">"}80°C=Warning), bearing health ({"<"}70%=Critical, {"<"}
           85%=Warning), and operating hours ({">"}1000h=Maintenance Due)
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import type {
   IndustrialMachine as ApiIndustrialMachine,
   ProductionLineAnalysis as ApiProductionLineAnalysis,
@@ -10,17 +10,34 @@ import type {
 import { enhancedApiService } from "../services/enhancedApi";
 import AnimatedGearIcon from "./ui/AnimatedGearIcon";
 import { useToast } from "../hooks/useToast";
+import type { MotorReading } from "../types";
 
 interface IndustrialManagementDashboardProps {
   facilityId?: string;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
+  readings: MotorReading[];
+  isReadingsLoading: boolean;
 }
 
 export default function IndustrialManagementDashboard({
   facilityId = "FACILITY-001",
+  signalRConnected = true,
+  backendStatus = "connected",
+  readings,
+  isReadingsLoading: _isReadingsLoading, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: IndustrialManagementDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const isInitialized = useRef(false);
+
+  // Get latest reading for calculations
+  const latestReading = readings.length > 0 ? readings[0] : null;
+
+  // Determine live status
+  const isLive =
+    latestReading !== null && signalRConnected && backendStatus === "connected";
   const [machines, setMachines] = useState<ApiIndustrialMachine[]>([]);
   const [facilityOverview, setFacilityOverview] =
     useState<ApiFacilityOverview | null>(null);
@@ -32,7 +49,29 @@ export default function IndustrialManagementDashboard({
     useState<ApiQualityControlMetrics | null>(null);
   const [supplyChain, setSupplyChain] =
     useState<ApiSupplyChainOptimization | null>(null);
+  const [dataSource, setDataSource] = useState<"backend" | "offline">(
+    "backend"
+  );
   const toast = useToast();
+
+  // Determine data source status - only live or offline
+  const getDataSourceStatus = useCallback(() => {
+    if (
+      signalRConnected &&
+      backendStatus === "connected" &&
+      machines.length > 0
+    ) {
+      return "backend";
+    } else {
+      return "offline";
+    }
+  }, [signalRConnected, backendStatus, machines.length]);
+
+  // Update data source
+  useEffect(() => {
+    const currentDataSource = getDataSourceStatus();
+    setDataSource(currentDataSource);
+  }, [getDataSourceStatus]);
 
   // Enhanced industrial simulation operation with dynamic feedback
   const performIndustrialSimulation = async () => {
@@ -40,8 +79,8 @@ export default function IndustrialManagementDashboard({
       setRefreshing(true);
 
       // Simulate industrial simulation operation with realistic timing
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1500 + Math.random() * 800)
+      await new Promise(
+        (resolve) => setTimeout(resolve, 1500 + 400) // Fixed timing instead of random
       );
 
       // Get current industrial data for dynamic calculations
@@ -77,7 +116,7 @@ export default function IndustrialManagementDashboard({
         99.5,
         90 + (facilityHealth / 100) * 8 + (simulationReliability / 100) * 2
       );
-      const isSuccessful = Math.random() * 100 < simulationSuccessRate;
+      const isSuccessful = simulationSuccessRate > 95; // Use deterministic success based on facility health
 
       // Check for industrial alert conditions
       const hasCriticalMaintenance =
@@ -92,11 +131,11 @@ export default function IndustrialManagementDashboard({
         // Success scenario - calculate dynamic metrics
         const simulationLatency = Math.max(
           100,
-          300 + totalPowerConsumption / 10 + Math.random() * 200
+          300 + totalPowerConsumption / 10 + 100 // Fixed variation instead of random
         );
-        const machinesSimulated = totalMachines + Math.floor(Math.random() * 3);
+        const machinesSimulated = totalMachines + 1; // Fixed variation instead of random
         const dataPointsGenerated = Math.floor(
-          totalMachines * 50 + Math.random() * 100
+          totalMachines * 50 + 50 // Fixed variation instead of random
         );
 
         // Determine simulation quality based on facility performance
@@ -160,7 +199,7 @@ export default function IndustrialManagementDashboard({
           : onlineMachines < totalMachines * 0.5
           ? "Machine Connectivity Issues"
           : "Simulation Overload";
-        const retryTime = Math.floor(5 + Math.random() * 10);
+        const retryTime = Math.floor(7); // Fixed retry time
 
         const errorMessage = hasLowEfficiency
           ? `Industrial simulation blocked due to low efficiency conditions. Average efficiency: ${avgEfficiency.toFixed(
@@ -232,95 +271,147 @@ export default function IndustrialManagementDashboard({
     };
   }, []);
 
-  useEffect(() => {
-    loadIndustrialData();
-  }, [facilityId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const loadIndustrialData = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
 
-  const loadIndustrialData = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+        let machinesData: ApiIndustrialMachine[] = [];
+        let overviewData: ApiFacilityOverview | null = null;
+        let productionData: ApiProductionLineAnalysis | null = null;
+        let maintenanceData: ApiMaintenanceSchedule | null = null;
+        let qualityData: ApiQualityControlMetrics | null = null;
+        let supplyData: ApiSupplyChainOptimization | null = null;
 
-      // Add minimum delay for refresh to show animation
-      const startTime = Date.now();
-      const minDelay = isRefresh ? 1000 : 0; // 1 second minimum for refresh
+        // Try to fetch real data from enhanced backend (C++ engine) - ONLY when connected
+        if (signalRConnected && backendStatus === "connected") {
+          try {
+            // Use enhanced API service to get real industrial data
+            const [
+              machinesResult,
+              overviewResult,
+              productionResult,
+              maintenanceResult,
+              qualityResult,
+              supplyResult,
+            ] = await Promise.all([
+              enhancedApiService.getIndustrialMachines(),
+              enhancedApiService.getFacilityOverview(facilityId),
+              enhancedApiService.getProductionLineAnalysis("LINE-001"),
+              enhancedApiService.getMaintenanceSchedule(facilityId),
+              enhancedApiService.getQualityControlMetrics("MOTOR-001"),
+              enhancedApiService.getSupplyChainOptimization(facilityId),
+            ]);
 
-      // Use enhanced API service to get real industrial data
-      const [
-        machinesData,
-        overviewData,
-        productionData,
-        maintenanceData,
-        qualityData,
-        supplyData,
-      ] = await Promise.all([
-        enhancedApiService.getIndustrialMachines(),
-        enhancedApiService.getFacilityOverview(facilityId),
-        enhancedApiService.getProductionLineAnalysis("LINE-001"),
-        enhancedApiService.getMaintenanceSchedule(facilityId),
-        enhancedApiService.getQualityControlMetrics("MOTOR-001"),
-        enhancedApiService.getSupplyChainOptimization(facilityId),
-      ]);
+            machinesData = machinesResult;
+            overviewData = overviewResult;
+            productionData = productionResult;
+            maintenanceData = maintenanceResult;
+            qualityData = qualityResult;
+            supplyData = supplyResult;
 
-      setMachines(machinesData);
-      setFacilityOverview(overviewData);
-      setProductionLineAnalysis(productionData);
-      setMaintenanceSchedule(maintenanceData);
-      setQualityMetrics(qualityData);
-      setSupplyChain(supplyData);
+            console.log(
+              `🏭 Industrial data loaded from backend: ${machinesData.length} machines`
+            );
+          } catch (error) {
+            console.error(
+              "Failed to fetch industrial data from backend:",
+              error
+            );
+            // When API fails, set to empty (true offline mode)
+            machinesData = [];
+            overviewData = null;
+            productionData = null;
+            maintenanceData = null;
+            qualityData = null;
+            supplyData = null;
+          }
+        } else {
+          console.log("🏭 Offline mode - no industrial data shown");
+          // When offline, don't show fallback data - true offline mode
+          machinesData = [];
+          overviewData = null;
+          productionData = null;
+          maintenanceData = null;
+          qualityData = null;
+          supplyData = null;
+        }
 
-      // Show success toast notification for refresh operations
-      if (isRefresh) {
-        const onlineMachines = machinesData.filter((m) => m.isRunning).length;
-        const avgEfficiency =
-          machinesData.length > 0
-            ? machinesData.reduce((sum, m) => sum + (m.efficiency || 0), 0) /
+        // NO FALLBACK DATA - When offline, display empty state
+        // All data comes from real C++ backend via C# APIs
+
+        setMachines(machinesData);
+        setFacilityOverview(overviewData);
+        setProductionLineAnalysis(productionData);
+        setMaintenanceSchedule(maintenanceData);
+        setQualityMetrics(qualityData);
+        setSupplyChain(supplyData);
+
+        // Show success toast notification for refresh operations
+        if (isRefresh && machinesData.length > 0) {
+          const onlineMachines = machinesData.filter((m) => m.isRunning).length;
+          const avgEfficiency =
+            machinesData.length > 0
+              ? machinesData.reduce((sum, m) => sum + (m.efficiency || 0), 0) /
+                machinesData.length
+              : 0;
+          const totalPowerConsumption = machinesData.reduce(
+            (sum, m) => sum + (m.powerConsumption || 0),
+            0
+          );
+
+          toast.success(
+            "🔄 Industrial Data Synchronized Successfully",
+            `Synced facility ${facilityId} data. Online machines: ${onlineMachines}/${
               machinesData.length
-            : 0;
-        const totalPowerConsumption = machinesData.reduce(
-          (sum, m) => sum + (m.powerConsumption || 0),
-          0
-        );
+            }, Average efficiency: ${avgEfficiency.toFixed(
+              1
+            )}%, Power consumption: ${totalPowerConsumption.toFixed(
+              1
+            )}kW. Data source: Real C++ Backend Data.`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load industrial data:", error);
 
-        toast.success(
-          "🔄 Industrial Data Synchronized Successfully",
-          `Synced facility ${facilityId} data. Online machines: ${onlineMachines}/${
-            machinesData.length
-          }, Average efficiency: ${avgEfficiency.toFixed(
-            1
-          )}%, Power consumption: ${totalPowerConsumption.toFixed(1)}kW`
-        );
-      }
-
-      // Ensure minimum delay for refresh animation
-      if (isRefresh) {
-        const elapsed = Date.now() - startTime;
-        const remainingDelay = Math.max(0, minDelay - elapsed);
-        if (remainingDelay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+        // Show error toast notification for refresh operations
+        if (isRefresh) {
+          toast.error(
+            "⚠️ Industrial Data Sync Failed",
+            "Unable to synchronize industrial facility data. Using cached data. Check facility connectivity and machine status."
+          );
+        }
+      } finally {
+        if (isRefresh) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
         }
       }
-    } catch (error) {
-      console.error("Failed to load industrial data:", error);
+    },
+    [facilityId, signalRConnected, backendStatus, toast]
+  );
 
-      // Show error toast notification for refresh operations
-      if (isRefresh) {
-        toast.error(
-          "⚠️ Industrial Data Sync Failed",
-          "Unable to synchronize industrial facility data. Using cached data. Check facility connectivity and machine status."
-        );
-      }
-    } finally {
-      if (isRefresh) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
+  // Load data when component mounts and when readings change
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      loadIndustrialData(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload when connection status changes
+  useEffect(() => {
+    if (isInitialized.current) {
+      loadIndustrialData(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signalRConnected, backendStatus]);
 
   const getStatusColor = (status: string | undefined) => {
     if (!status) return "bg-gray-100 text-gray-800 border-gray-300";
@@ -434,9 +525,21 @@ export default function IndustrialManagementDashboard({
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            🏭 Industrial Management Dashboard
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              🏭 Industrial Management Dashboard
+            </h2>
+            {/* Data Source Status Indicator */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                dataSource === "backend"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+              }`}
+            >
+              {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+            </span>
+          </div>
           <div className="relative">
             <button
               onClick={performIndustrialSimulation}
@@ -447,20 +550,25 @@ export default function IndustrialManagementDashboard({
             >
               {/* Animated Gear Icon */}
               <AnimatedGearIcon
-                isActive={refreshing || machines.length > 0}
+                isActive={true}
                 size="md"
+                status={isLive ? "live" : "offline"}
               />
               <span className="transition-opacity duration-200">
                 {refreshing
-                  ? `Running Industrial Simulation on ${facilityId}...`
-                  : `Simulate Machines (${facilityId})`}
+                  ? `Syncing Industrial Data (${facilityId})...`
+                  : `Sync Industrial Data (${machines.length} machines)`}
               </span>
             </button>
 
-            {/* LIVE Indicator - positioned relative to button */}
-            {machines.length > 0 && (
+            {/* Status Indicator - positioned relative to button */}
+            {isLive ? (
               <div className="absolute -top-3 -right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse shadow-lg">
                 LIVE
+              </div>
+            ) : (
+              <div className="absolute -top-3 -right-3 bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse shadow-lg">
+                OFFLINE
               </div>
             )}
           </div>
@@ -652,7 +760,7 @@ export default function IndustrialManagementDashboard({
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-200">
                 <div className="text-sm opacity-90">Operating Cost</div>
                 <div className="text-3xl font-bold">
-                  ${facilityOverview.totalOperatingCost.toFixed(0)}
+                  ${facilityOverview.totalOperatingCost.toFixed(2)}
                 </div>
                 <div className="text-sm opacity-90">Per Hour</div>
                 <div className="text-xs opacity-60 mt-2 border-t border-orange-400 pt-2">

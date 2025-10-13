@@ -9,20 +9,34 @@ import { useState, useEffect } from "react";
 interface AlertSystemProps {
   alerts: Alert[];
   onAcknowledge: (alertId: string) => void;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
 export default function AlertSystem({
   alerts,
   onAcknowledge,
+  signalRConnected = true,
+  backendStatus = "connected",
 }: AlertSystemProps) {
   const [visibleAlerts, setVisibleAlerts] = useState<Alert[]>([]);
   const [dismissingAlerts, setDismissingAlerts] = useState<Set<string>>(
     new Set()
   );
+  const [alertSource, setAlertSource] = useState<"backend" | "offline">(
+    "backend"
+  );
 
   useEffect(() => {
     setVisibleAlerts(alerts.filter((alert) => !alert.acknowledged));
-  }, [alerts]);
+
+    // Track alert source based on connection status
+    if (signalRConnected && backendStatus === "connected") {
+      setAlertSource("backend");
+    } else {
+      setAlertSource("offline");
+    }
+  }, [alerts, signalRConnected, backendStatus]);
 
   // Auto-dismiss alerts after 5 seconds
   useEffect(() => {
@@ -109,6 +123,27 @@ export default function AlertSystem({
 
   return (
     <div className="fixed top-4 right-4 z-[60] space-y-2 max-w-sm">
+      {/* Alert System Status Indicator */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 shadow-sm">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                alertSource === "backend" ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></div>
+            <span className="text-gray-600 dark:text-gray-400">
+              Alert System:{" "}
+              {alertSource === "backend"
+                ? "🔗 Real-time Backend"
+                : "❌ Offline"}
+            </span>
+          </div>
+          <div className="text-gray-500 dark:text-gray-400">
+            {visibleAlerts.length} active
+          </div>
+        </div>
+      </div>
       {visibleAlerts.map((alert) => {
         const isDismissing = dismissingAlerts.has(alert.id);
         return (
@@ -149,6 +184,21 @@ export default function AlertSystem({
                   <p className="text-xs text-gray-500">
                     {formatTime(alert.timestamp)}
                   </p>
+                </div>
+
+                {/* Data Source Indicator */}
+                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      Source:{" "}
+                      {alertSource === "backend"
+                        ? "🔗 C++ Backend"
+                        : "❌ Offline"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {formatTime(alert.timestamp)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

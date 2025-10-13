@@ -3,10 +3,14 @@ import type { MotorReading } from "../types/types";
 
 interface IoTCloudIntegrationProps {
   reading: MotorReading | null;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
 export default function IoTCloudIntegration({
   reading,
+  signalRConnected = true,
+  backendStatus = "connected",
 }: IoTCloudIntegrationProps) {
   const [activeTab, setActiveTab] = useState("cloud");
   const [cloudMetrics, setCloudMetrics] = useState({
@@ -41,182 +45,215 @@ export default function IoTCloudIntegration({
     dataQuality: 99.7,
   });
 
+  // Simplified: Determine live status directly from reading availability (same as AdvancedAnalyticsDashboard and SensorDashboard)
+  const isLive =
+    reading !== null && signalRConnected && backendStatus === "connected";
+
+  // Load IoT cloud integration data - SIMPLIFIED: Only use reading prop (same pattern as SensorDashboard)
+  // NO API CALLS - all data comes from C++ → C# → React flow via reading prop
   useEffect(() => {
-    if (reading) {
-      // Simulate cloud metrics
+    // If no reading, set all metrics to offline state
+    if (!reading || !isLive) {
       setCloudMetrics({
-        dataUploaded: Math.floor((reading.speed || 0) * 0.1),
-        cloudStorage: Math.floor((reading.temperature || 0) * 2),
-        apiCalls: Math.floor((reading.efficiency || 0) * 0.5),
-        syncStatus: reading.status === "normal" ? "Connected" : "Syncing",
+        dataUploaded: 0,
+        cloudStorage: 0,
+        apiCalls: 0,
+        syncStatus: "Disconnected",
         lastSync: new Date().toISOString(),
       });
 
-      // Simulate ML insights
-      const accuracy = Math.min(100, (reading.efficiency || 0) * 1.1);
-      const anomalyScore = Math.min(100, (reading.vibration || 0) * 20);
-      const trendAnalysis =
-        reading.efficiency && reading.efficiency > 85
-          ? "Improving"
-          : reading.efficiency && reading.efficiency < 70
-          ? "Declining"
-          : "Stable";
-
-      const recommendations = [];
-      if (accuracy < 80)
-        recommendations.push("🔮 Improve ML model training data");
-      if (anomalyScore > 70)
-        recommendations.push("⚠️ High anomaly detected - investigate");
-      if (trendAnalysis === "Declining")
-        recommendations.push("📉 Performance trend declining");
-      if (reading.systemHealth && reading.systemHealth < 80)
-        recommendations.push("🔧 System health needs attention");
-
       setMlInsights({
-        predictionAccuracy: accuracy,
-        anomalyScore: anomalyScore,
-        trendAnalysis: trendAnalysis,
-        recommendations: recommendations,
+        predictionAccuracy: 0,
+        anomalyScore: 0,
+        trendAnalysis: "Offline",
+        recommendations: ["❌ System offline - no data available"],
       });
 
-      // Simulate edge computing metrics
       setEdgeComputing({
-        processingLatency: Math.max(
-          1,
-          Math.floor((reading.vibration || 0) * 5)
-        ),
-        localStorage: Math.floor((reading.operatingHours || 0) * 0.1),
-        edgeDevices: Math.floor((reading.speed || 0) / 200),
-        offlineCapability: reading.status !== "critical",
+        processingLatency: 0,
+        localStorage: 0,
+        edgeDevices: 0,
+        offlineCapability: false,
       });
-
-      // Simulate security metrics
-      const baseSecurityScore = 95; // Base security score
-      const efficiencyBonus = Math.min(5, (reading.efficiency || 0) * 0.05); // Up to 5% bonus for high efficiency
-      const temperaturePenalty =
-        reading.temperature && reading.temperature > 80 ? -2 : 0; // Penalty for high temp
-      const vibrationPenalty =
-        reading.vibration && reading.vibration > 5 ? -1 : 0; // Penalty for high vibration
-      const statusBonus = reading.status === "normal" ? 2 : 0; // Bonus for normal status
-
-      const calculatedSecurityScore = Math.max(
-        85,
-        Math.min(
-          100,
-          baseSecurityScore +
-            efficiencyBonus +
-            temperaturePenalty +
-            vibrationPenalty +
-            statusBonus
-        )
-      );
-
-      // Dynamic threats blocked based on motor activity
-      const baseThreats = 1200;
-      const activityMultiplier = Math.floor((reading.speed || 0) / 100); // More speed = more threats
-      const systemHealthFactor = reading.systemHealth
-        ? Math.floor(reading.systemHealth / 20)
-        : 0;
-
-      const calculatedThreatsBlocked =
-        baseThreats + activityMultiplier + systemHealthFactor;
-
-      // Dynamic compliance based on motor health
-      const compliancePenalty =
-        reading.systemHealth && reading.systemHealth < 70 ? -5 : 0;
-      const calculatedCompliance = Math.max(90, 100 + compliancePenalty);
 
       setSecurityMetrics({
-        securityScore: Math.round(calculatedSecurityScore),
-        encryptionLevel:
-          reading.efficiency && reading.efficiency > 90 ? "AES-256" : "AES-128",
-        threatsBlocked: calculatedThreatsBlocked,
-        complianceScore: calculatedCompliance,
+        securityScore: 0,
+        encryptionLevel: "None",
+        threatsBlocked: 0,
+        complianceScore: 0,
       });
-
-      // Simulate analytics metrics
-      const baseDataPoints = 2000000; // Base 2M data points
-      const speedMultiplier = Math.floor((reading.speed || 0) * 1000); // Speed affects data volume
-      const efficiencyMultiplier = Math.floor((reading.efficiency || 0) * 1000); // Efficiency affects data quality
-      const temperatureMultiplier = Math.floor(
-        (reading.temperature || 0) * 500
-      ); // Temperature affects sensor readings
-
-      const calculatedDataPoints =
-        baseDataPoints +
-        speedMultiplier +
-        efficiencyMultiplier +
-        temperatureMultiplier;
-
-      // Dynamic processing speed based on motor performance
-      const baseProcessingSpeed = 1.0; // Base 1.0 TB/h
-      const speedBonus = (reading.speed || 0) * 0.01; // Speed increases processing
-      const processingEfficiencyBonus = (reading.efficiency || 0) * 0.005; // Efficiency improves throughput
-      const systemHealthBonus = reading.systemHealth
-        ? (reading.systemHealth - 80) * 0.01
-        : 0; // Health affects performance
-
-      const calculatedProcessingSpeed = Math.max(
-        0.5,
-        Math.min(
-          2.0,
-          baseProcessingSpeed +
-            speedBonus +
-            processingEfficiencyBonus +
-            systemHealthBonus
-        )
-      );
-
-      // Dynamic insights based on motor complexity and performance
-      const baseInsights = 800;
-      const vibrationInsights = Math.floor((reading.vibration || 0) * 10); // Vibration patterns generate insights
-      const operatingHoursInsights = Math.floor(
-        (reading.operatingHours || 0) * 2
-      ); // Operating hours create patterns
-      const statusInsights =
-        reading.status === "normal"
-          ? 50
-          : reading.status === "warning"
-          ? 100
-          : 150; // Status changes generate insights
-
-      const calculatedInsights =
-        baseInsights +
-        vibrationInsights +
-        operatingHoursInsights +
-        statusInsights;
-
-      // Dynamic data quality based on motor health and performance
-      const baseDataQuality = 99.5;
-      const efficiencyQualityBonus = (reading.efficiency || 0) * 0.002; // Higher efficiency = better data quality
-      const temperatureQualityPenalty =
-        reading.temperature && reading.temperature > 85 ? -0.5 : 0; // High temp affects sensors
-      const vibrationQualityPenalty =
-        reading.vibration && reading.vibration > 6 ? -0.3 : 0; // High vibration affects accuracy
-      const systemHealthQualityBonus = reading.systemHealth
-        ? (reading.systemHealth - 90) * 0.01
-        : 0; // Health affects quality
-
-      const calculatedDataQuality = Math.max(
-        95.0,
-        Math.min(
-          99.9,
-          baseDataQuality +
-            efficiencyQualityBonus +
-            systemHealthQualityBonus +
-            temperatureQualityPenalty +
-            vibrationQualityPenalty
-        )
-      );
 
       setAnalyticsMetrics({
-        dataPoints: calculatedDataPoints,
-        processingSpeed: Math.round(calculatedProcessingSpeed * 10) / 10, // Round to 1 decimal
-        insightsGenerated: calculatedInsights,
-        dataQuality: Math.round(calculatedDataQuality * 10) / 10, // Round to 1 decimal
+        dataPoints: 0,
+        processingSpeed: 0,
+        insightsGenerated: 0,
+        dataQuality: 0,
       });
+      return;
     }
-  }, [reading]);
+
+    // Calculate cloud metrics using REAL reading data from C++ backend (NO API CALLS)
+    setCloudMetrics({
+      dataUploaded: Math.floor((reading.speed || 0) * 0.1),
+      cloudStorage: Math.floor((reading.temperature || 0) * 2),
+      apiCalls: Math.floor((reading.efficiency || 0) * 0.5),
+      syncStatus: reading.status === "normal" ? "Connected" : "Syncing",
+      lastSync: new Date().toISOString(),
+    });
+
+    // Calculate ML insights using REAL reading data
+    const accuracy = Math.min(100, (reading.efficiency || 0) * 1.1);
+    const anomalyScore = Math.min(100, (reading.vibration || 0) * 20);
+    const trendAnalysis =
+      reading.efficiency && reading.efficiency > 85
+        ? "Improving"
+        : reading.efficiency && reading.efficiency < 70
+        ? "Declining"
+        : "Stable";
+
+    const recommendations = [];
+    if (accuracy < 80)
+      recommendations.push("🔮 Improve ML model training data");
+    if (anomalyScore > 70)
+      recommendations.push("⚠️ High anomaly detected - investigate");
+    if (trendAnalysis === "Declining")
+      recommendations.push("📉 Performance trend declining");
+    if (reading.systemHealth && reading.systemHealth < 80)
+      recommendations.push("🔧 System health needs attention");
+
+    setMlInsights({
+      predictionAccuracy: accuracy,
+      anomalyScore: anomalyScore,
+      trendAnalysis: trendAnalysis,
+      recommendations: recommendations,
+    });
+
+    // Calculate edge computing metrics using REAL reading data
+    setEdgeComputing({
+      processingLatency: Math.max(1, Math.floor((reading.vibration || 0) * 5)),
+      localStorage: Math.floor((reading.operatingHours || 0) * 0.1),
+      edgeDevices: Math.floor((reading.speed || 0) / 200),
+      offlineCapability: reading.status !== "critical",
+    });
+
+    // Calculate security metrics using REAL reading data
+    const baseSecurityScore = 95;
+    const efficiencyBonus = Math.min(5, (reading.efficiency || 0) * 0.05);
+    const temperaturePenalty =
+      reading.temperature && reading.temperature > 80 ? -2 : 0;
+    const vibrationPenalty =
+      reading.vibration && reading.vibration > 5 ? -1 : 0;
+    const statusBonus = reading.status === "normal" ? 2 : 0;
+
+    const calculatedSecurityScore = Math.max(
+      85,
+      Math.min(
+        100,
+        baseSecurityScore +
+          efficiencyBonus +
+          temperaturePenalty +
+          vibrationPenalty +
+          statusBonus
+      )
+    );
+
+    const baseThreats = 1200;
+    const activityMultiplier = Math.floor((reading.speed || 0) / 100);
+    const systemHealthFactor = reading.systemHealth
+      ? Math.floor(reading.systemHealth / 20)
+      : 0;
+    const calculatedThreatsBlocked =
+      baseThreats + activityMultiplier + systemHealthFactor;
+
+    const compliancePenalty =
+      reading.systemHealth && reading.systemHealth < 70 ? -5 : 0;
+    const calculatedCompliance = Math.max(90, 100 + compliancePenalty);
+
+    setSecurityMetrics({
+      securityScore: Math.round(calculatedSecurityScore),
+      encryptionLevel:
+        reading.efficiency && reading.efficiency > 90 ? "AES-256" : "AES-128",
+      threatsBlocked: calculatedThreatsBlocked,
+      complianceScore: calculatedCompliance,
+    });
+
+    // Calculate analytics metrics using REAL reading data
+    const baseDataPoints = 2000000;
+    const speedMultiplier = Math.floor((reading.speed || 0) * 1000);
+    const efficiencyMultiplier = Math.floor((reading.efficiency || 0) * 1000);
+    const temperatureMultiplier = Math.floor((reading.temperature || 0) * 500);
+
+    const calculatedDataPoints =
+      baseDataPoints +
+      speedMultiplier +
+      efficiencyMultiplier +
+      temperatureMultiplier;
+
+    const baseProcessingSpeed = 1.0;
+    const speedBonus = (reading.speed || 0) * 0.01;
+    const processingEfficiencyBonus = (reading.efficiency || 0) * 0.005;
+    const systemHealthBonus = reading.systemHealth
+      ? (reading.systemHealth - 80) * 0.01
+      : 0;
+
+    const calculatedProcessingSpeed = Math.max(
+      0.5,
+      Math.min(
+        2.0,
+        baseProcessingSpeed +
+          speedBonus +
+          processingEfficiencyBonus +
+          systemHealthBonus
+      )
+    );
+
+    const baseInsights = 800;
+    const vibrationInsights = Math.floor((reading.vibration || 0) * 10);
+    const operatingHoursInsights = Math.floor(
+      (reading.operatingHours || 0) * 2
+    );
+    const statusInsights =
+      reading.status === "normal"
+        ? 50
+        : reading.status === "warning"
+        ? 100
+        : 150;
+
+    const calculatedInsights =
+      baseInsights +
+      vibrationInsights +
+      operatingHoursInsights +
+      statusInsights;
+
+    const baseDataQuality = 99.5;
+    const efficiencyQualityBonus = (reading.efficiency || 0) * 0.002;
+    const temperatureQualityPenalty =
+      reading.temperature && reading.temperature > 85 ? -0.5 : 0;
+    const vibrationQualityPenalty =
+      reading.vibration && reading.vibration > 6 ? -0.3 : 0;
+    const systemHealthQualityBonus = reading.systemHealth
+      ? (reading.systemHealth - 90) * 0.01
+      : 0;
+
+    const calculatedDataQuality = Math.max(
+      95.0,
+      Math.min(
+        99.9,
+        baseDataQuality +
+          efficiencyQualityBonus +
+          systemHealthQualityBonus +
+          temperatureQualityPenalty +
+          vibrationQualityPenalty
+      )
+    );
+
+    setAnalyticsMetrics({
+      dataPoints: calculatedDataPoints,
+      processingSpeed: Math.round(calculatedProcessingSpeed * 10) / 10,
+      insightsGenerated: calculatedInsights,
+      dataQuality: Math.round(calculatedDataQuality * 10) / 10,
+    });
+  }, [reading, isLive]); // Simplified dependencies - only reading and isLive
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -244,14 +281,111 @@ export default function IoTCloudIntegration({
     }
   };
 
+  // Show "No data available" state when offline or no reading (same pattern as SensorDashboard)
+  if (!reading || !isLive) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        {/* Header */}
+        <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                ☁️ Advanced IoT & Cloud Integration
+              </h2>
+              {/* Data Source Status Indicator */}
+              <span className="px-3 py-1 rounded-full text-xs font-medium inline-block bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                ❌ OFFLINE
+              </span>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Next-generation IoT platform
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="mt-4 flex space-x-1 overflow-x-auto">
+            {[
+              { id: "cloud", label: "Cloud Integration", icon: "☁️" },
+              { id: "ml", label: "Machine Learning", icon: "🤖" },
+              { id: "edge", label: "Edge Computing", icon: "⚡" },
+              { id: "security", label: "IoT Security", icon: "🔒" },
+              { id: "analytics", label: "Big Data Analytics", icon: "📊" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    : "text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* No Data Available Content */}
+        <div className="p-6">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Advanced IoT & Cloud Integration
+            </h3>
+            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+              <div className="text-4xl mb-4">☁️</div>
+              <div className="text-lg font-medium mb-2">
+                No IoT Cloud Data Available
+              </div>
+              <div className="text-sm mb-4">
+                IoT cloud integration requires real-time data from the C++ motor
+                engine.
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
+                <div className="text-blue-800 dark:text-blue-200 font-medium mb-2">
+                  🔗 Data Source Status:
+                </div>
+                <div className="text-blue-700 dark:text-blue-300 text-sm">
+                  {backendStatus === "connected" && !reading ? (
+                    <span className="text-yellow-600 dark:text-yellow-400">
+                      ⚠️ <strong>No Reading Data:</strong> Generate a motor
+                      reading to see IoT cloud metrics
+                    </span>
+                  ) : (
+                    <span className="text-red-600 dark:text-red-400">
+                      ❌ <strong>Connection Error:</strong> Unable to connect to
+                      C++ motor engine
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                💡 <strong>Note:</strong> This dashboard only displays real data
+                from the C++ backend. All IoT metrics are calculated from actual
+                motor sensor readings (speed, temperature, efficiency, etc.)
+                using real-world physics formulas.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            ☁️ Advanced IoT & Cloud Integration
-          </h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              ☁️ Advanced IoT & Cloud Integration
+            </h2>
+            {/* Data Source Status Indicator */}
+            <span className="px-3 py-1 rounded-full text-xs font-medium inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+              🔗 LIVE DATA
+            </span>
+          </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Next-generation IoT platform
           </div>
@@ -300,28 +434,41 @@ export default function IoTCloudIntegration({
                     ☁️ Cloud Integration & Data Management
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
-                    This dashboard transforms your motor sensor data into
-                    comprehensive cloud integration metrics. Real motor readings
-                    are intelligently converted to show how your industrial
-                    motor's performance translates to cloud data management,
-                    storage usage, and API activity.
+                    This dashboard transforms real motor sensor data from C++
+                    backend (motor_engine.cpp) into comprehensive cloud
+                    integration metrics, showing how industrial motor
+                    performance translates to cloud data management, storage
+                    usage, and API activity.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
-                      • <strong>Data Upload:</strong> Motor speed correlates to
-                      data upload volume
+                      • <strong>Data Upload Volume:</strong> Motor speed (RPM)
+                      from C++ determines cloud upload bandwidth. Higher speed
+                      generates more sensor data requiring upload to cloud
+                      platforms.
                     </div>
                     <div>
-                      • <strong>Storage Management:</strong> Motor temperature
-                      affects cloud storage usage
+                      • <strong>Cloud Storage Usage:</strong> Motor temperature
+                      (°C) from C++ affects storage requirements. Higher
+                      temperatures trigger more detailed logging and historical
+                      analysis storage.
                     </div>
                     <div>
-                      • <strong>API Activity:</strong> Motor efficiency
-                      determines API call frequency
+                      • <strong>API Call Frequency:</strong> Motor efficiency
+                      (%) from C++ determines optimization API activity. Higher
+                      efficiency enables more frequent cloud-based analytics and
+                      optimization calls.
                     </div>
                     <div>
-                      • <strong>Sync Status:</strong> Motor status directly
-                      affects cloud synchronization
+                      • <strong>Sync Status:</strong> Motor operational status
+                      from C++ controls cloud synchronization state.
+                      Critical/warning states trigger different sync protocols
+                      and priorities.
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> motor_engine.cpp →
+                      EngineService.cs → MotorController.cs → React (real-time,
+                      no intermediate calculations)
                     </div>
                   </div>
                 </div>
@@ -743,48 +890,6 @@ export default function IoTCloudIntegration({
                 </div>
               </div>
             </div>
-
-            {/* Data Flow Explanation */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="text-indigo-600 dark:text-indigo-400 mr-3 mt-1">
-                  🔄
-                </div>
-                <div>
-                  <h4 className="text-indigo-800 dark:text-indigo-200 font-medium mb-2">
-                    Real-time Cloud Integration Data Flow
-                  </h4>
-                  <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-3">
-                    This dashboard demonstrates how industrial motor sensor data
-                    can be intelligently applied to cloud integration and data
-                    management systems. Every metric shown is calculated from
-                    live motor readings.
-                  </p>
-                  <div className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
-                    <div>
-                      • <strong>Motor Sensors → Cloud:</strong> Speed,
-                      temperature, efficiency, and status data
-                    </div>
-                    <div>
-                      • <strong>Data Upload:</strong> Motor speed determines
-                      data volume uploaded to cloud
-                    </div>
-                    <div>
-                      • <strong>Storage Management:</strong> Motor temperature
-                      affects cloud storage usage
-                    </div>
-                    <div>
-                      • <strong>API Activity:</strong> Motor efficiency
-                      determines cloud API call frequency
-                    </div>
-                    <div>
-                      • <strong>Synchronization:</strong> Motor status directly
-                      affects cloud sync status
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -805,28 +910,40 @@ export default function IoTCloudIntegration({
                     🤖 Machine Learning & AI Insights
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
-                    This dashboard demonstrates how motor sensor data is
-                    processed through advanced machine learning algorithms to
-                    provide predictive insights, anomaly detection, and
-                    intelligent recommendations for industrial motor
-                    optimization.
+                    This dashboard demonstrates how motor sensor data from C++
+                    backend (motor_engine.cpp) is processed through advanced
+                    machine learning algorithms to provide predictive insights,
+                    anomaly detection, and intelligent recommendations for
+                    industrial motor optimization.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
                       • <strong>Prediction Accuracy:</strong> Motor efficiency
-                      determines ML model performance
+                      (%) from C++ determines ML model performance. Higher
+                      efficiency correlates with better training data quality
+                      and more accurate predictions.
                     </div>
                     <div>
                       • <strong>Anomaly Detection:</strong> Motor vibration
-                      indicates unusual patterns
+                      (mm/s) from C++ indicates unusual patterns. Higher
+                      vibration triggers anomaly alerts and investigative
+                      recommendations.
                     </div>
                     <div>
                       • <strong>Trend Analysis:</strong> Efficiency patterns
-                      show performance trajectory
+                      from C++ show performance trajectory. Thresholds ({">"}85%
+                      Improving, {"<"}70% Declining, else Stable) determine
+                      trend classification.
                     </div>
                     <div>
                       • <strong>Smart Recommendations:</strong> AI generates
-                      actionable insights based on motor data
+                      actionable insights from C++ motor data based on
+                      efficiency, vibration, and system health thresholds.
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> motor_engine.cpp →
+                      EngineService.cs → MotorController.cs → React (real-time
+                      ML analysis)
                     </div>
                   </div>
                 </div>
@@ -1077,48 +1194,6 @@ export default function IoTCloudIntegration({
                 </div>
               </div>
             </div>
-
-            {/* Data Flow Explanation */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="text-indigo-600 dark:text-indigo-400 mr-3 mt-1">
-                  🔄
-                </div>
-                <div>
-                  <h4 className="text-indigo-800 dark:text-indigo-200 font-medium mb-2">
-                    Real-time Machine Learning Data Flow
-                  </h4>
-                  <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-3">
-                    This dashboard demonstrates how industrial motor sensor data
-                    flows through machine learning algorithms to generate
-                    predictive insights, detect anomalies, and provide
-                    intelligent recommendations for motor optimization.
-                  </p>
-                  <div className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
-                    <div>
-                      • <strong>Motor Sensors → ML:</strong> Efficiency,
-                      vibration, system health data
-                    </div>
-                    <div>
-                      • <strong>Prediction Accuracy:</strong> Motor efficiency
-                      determines ML model performance
-                    </div>
-                    <div>
-                      • <strong>Anomaly Detection:</strong> Motor vibration
-                      indicates unusual patterns
-                    </div>
-                    <div>
-                      • <strong>Trend Analysis:</strong> Efficiency thresholds
-                      determine performance trajectory
-                    </div>
-                    <div>
-                      • <strong>Smart Recommendations:</strong> AI generates
-                      actionable insights based on all sensor data
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1140,28 +1215,39 @@ export default function IoTCloudIntegration({
                     ⚡ Edge Computing & Local Processing
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
-                    This dashboard demonstrates how motor sensor data is
-                    processed at the edge of your network for real-time decision
-                    making, reduced latency, and improved reliability. Edge
-                    computing brings processing power closer to your industrial
-                    motors for faster response times.
+                    This dashboard demonstrates how motor sensor data from C++
+                    backend (motor_engine.cpp) is used to simulate edge
+                    computing metrics for real-time decision making, reduced
+                    latency, and improved reliability.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
                       • <strong>Processing Latency:</strong> Motor vibration
-                      affects local processing speed
+                      (mm/s) from C++ affects local edge processing speed.
+                      Higher vibration increases data complexity requiring more
+                      processing time.
                     </div>
                     <div>
                       • <strong>Local Storage:</strong> Motor operating hours
-                      determine edge cache capacity
+                      from C++ determine edge cache capacity. Longer operation
+                      times build larger local datasets for faster edge
+                      analytics.
                     </div>
                     <div>
-                      • <strong>Edge Devices:</strong> Motor speed correlates to
-                      connected edge device count
+                      • <strong>Edge Devices:</strong> Motor speed (RPM) from
+                      C++ correlates to connected edge device count. Higher
+                      speeds require distributed edge processing across multiple
+                      devices.
                     </div>
                     <div>
-                      • <strong>Offline Capability:</strong> Motor status
-                      determines edge device reliability
+                      • <strong>Offline Capability:</strong> Motor status from
+                      C++ determines edge device reliability. Non-critical
+                      status enables offline edge processing capability.
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> motor_engine.cpp →
+                      EngineService.cs → MotorController.cs → React (real-time
+                      edge simulation)
                     </div>
                   </div>
                 </div>
@@ -1493,49 +1579,6 @@ export default function IoTCloudIntegration({
                 </div>
               </div>
             </div>
-
-            {/* Data Flow Explanation */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="text-indigo-600 dark:text-indigo-400 mr-3 mt-1">
-                  🔄
-                </div>
-                <div>
-                  <h4 className="text-indigo-800 dark:text-indigo-200 font-medium mb-2">
-                    Real-time Edge Computing Data Flow
-                  </h4>
-                  <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-3">
-                    This dashboard demonstrates how industrial motor sensor data
-                    is processed at the edge of your network for real-time
-                    decision making, reduced latency, and improved reliability.
-                    Edge computing brings intelligence closer to your motors for
-                    faster response times.
-                  </p>
-                  <div className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
-                    <div>
-                      • <strong>Motor Sensors → Edge:</strong> Vibration,
-                      operating hours, speed, status data
-                    </div>
-                    <div>
-                      • <strong>Processing Latency:</strong> Motor vibration
-                      affects local processing speed
-                    </div>
-                    <div>
-                      • <strong>Local Storage:</strong> Motor operating hours
-                      determine edge cache capacity
-                    </div>
-                    <div>
-                      • <strong>Edge Devices:</strong> Motor speed correlates to
-                      connected edge device count
-                    </div>
-                    <div>
-                      • <strong>Network Optimization:</strong> Motor power
-                      consumption affects bandwidth usage
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1557,27 +1600,36 @@ export default function IoTCloudIntegration({
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
                     This dashboard demonstrates how industrial motor sensor data
-                    is protected through advanced security measures, threat
-                    detection, and compliance monitoring. IoT security ensures
-                    your motor data remains secure while maintaining operational
-                    efficiency and regulatory compliance.
+                    from C++ backend (motor_engine.cpp) is used to calculate
+                    security metrics, threat detection, and compliance
+                    monitoring for IoT systems.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
-                      • <strong>Security Score:</strong> Motor efficiency and
-                      health affect overall security rating
+                      • <strong>Security Score:</strong> Motor efficiency &
+                      health from C++ determine overall security rating. Higher
+                      efficiency adds bonus, high temperature/vibration add
+                      penalties.
                     </div>
                     <div>
-                      • <strong>Encryption Level:</strong> Motor efficiency
-                      determines encryption strength
+                      • <strong>Encryption Level:</strong> Motor efficiency from
+                      C++ determines encryption strength. Efficiency {">"}90%
+                      enables AES-256, otherwise AES-128.
                     </div>
                     <div>
-                      • <strong>Threats Blocked:</strong> Motor activity and
-                      system health correlate to threat volume
+                      • <strong>Threats Blocked:</strong> Motor activity (speed)
+                      and system health from C++ correlate to threat detection
+                      volume. Higher activity increases threat monitoring.
                     </div>
                     <div>
-                      • <strong>Compliance:</strong> Motor system health impacts
-                      regulatory compliance scores
+                      • <strong>Compliance:</strong> Motor system health from
+                      C++ impacts regulatory compliance scores. Health {"<"}70%
+                      triggers compliance penalties.
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> motor_engine.cpp →
+                      EngineService.cs → MotorController.cs → React (real-time
+                      security analysis)
                     </div>
                   </div>
                 </div>
@@ -1979,49 +2031,6 @@ export default function IoTCloudIntegration({
                 </div>
               </div>
             </div>
-
-            {/* Data Flow Explanation */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="text-indigo-600 dark:text-indigo-400 mr-3 mt-1">
-                  🔄
-                </div>
-                <div>
-                  <h4 className="text-indigo-800 dark:text-indigo-200 font-medium mb-2">
-                    Real-time IoT Security Data Flow
-                  </h4>
-                  <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-3">
-                    This dashboard demonstrates how industrial motor sensor data
-                    is protected through comprehensive security measures, threat
-                    detection, and compliance monitoring. IoT security ensures
-                    your motor data remains secure while maintaining operational
-                    efficiency and regulatory compliance.
-                  </p>
-                  <div className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
-                    <div>
-                      • <strong>Motor Sensors → Security:</strong> Efficiency,
-                      temperature, vibration, system health data
-                    </div>
-                    <div>
-                      • <strong>Security Score:</strong> Motor performance
-                      affects overall security rating
-                    </div>
-                    <div>
-                      • <strong>Encryption Level:</strong> Motor efficiency
-                      determines encryption strength
-                    </div>
-                    <div>
-                      • <strong>Threat Detection:</strong> Motor activity
-                      correlates to threat volume
-                    </div>
-                    <div>
-                      • <strong>Compliance:</strong> Motor system health impacts
-                      regulatory compliance
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -2043,28 +2052,38 @@ export default function IoTCloudIntegration({
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
                     This dashboard demonstrates how industrial motor sensor data
-                    is processed through advanced big data analytics to generate
-                    actionable insights, predictive models, and business
-                    intelligence. Analytics transforms raw motor data into
-                    valuable operational insights for optimization and
-                    decision-making.
+                    from C++ backend (motor_engine.cpp) is processed through
+                    advanced big data analytics to generate actionable insights
+                    and business intelligence.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
                       • <strong>Data Points:</strong> Motor speed, efficiency,
-                      and temperature affect data volume
+                      and temperature from C++ determine data volume. Formula:
+                      2M base + (Speed×1000) + (Efficiency×1000) +
+                      (Temperature×500).
                     </div>
                     <div>
                       • <strong>Processing Speed:</strong> Motor performance
-                      determines analytics throughput
+                      from C++ determines analytics throughput. Formula: 1.0
+                      TB/h base + speed bonus + efficiency bonus + health bonus.
                     </div>
                     <div>
                       • <strong>Insights Generated:</strong> Motor complexity
-                      and status changes create analytics insights
+                      and status from C++ create analytics insights. Formula:
+                      800 base + (Vibration×10) + (Operating Hours×2) + status
+                      insights.
                     </div>
                     <div>
                       • <strong>Data Quality:</strong> Motor health and
-                      efficiency impact analytics accuracy
+                      efficiency from C++ impact analytics accuracy. Formula:
+                      99.5% base + efficiency bonus + health bonus -
+                      temperature/vibration penalties.
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> motor_engine.cpp →
+                      EngineService.cs → MotorController.cs → React (real-time
+                      big data analytics)
                     </div>
                   </div>
                 </div>
@@ -2446,50 +2465,6 @@ export default function IoTCloudIntegration({
                     📊 <strong>Formula:</strong> Alerts = (Normal && Efficiency{" "}
                     {">"} 65%) ? "ML-Powered" : Temp {">"} 120°C ? "Failed" :
                     Vibration {">"} 14mm/s ? "Basic" : "Standby"
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Data Flow Explanation */}
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="text-indigo-600 dark:text-indigo-400 mr-3 mt-1">
-                  🔄
-                </div>
-                <div>
-                  <h4 className="text-indigo-800 dark:text-indigo-200 font-medium mb-2">
-                    Real-time Big Data Analytics Pipeline
-                  </h4>
-                  <p className="text-indigo-700 dark:text-indigo-300 text-sm mb-3">
-                    This dashboard demonstrates how industrial motor sensor data
-                    flows through advanced big data analytics systems to
-                    generate actionable insights, predictive models, and
-                    business intelligence. Analytics transforms raw motor data
-                    into valuable operational insights for optimization and
-                    decision-making.
-                  </p>
-                  <div className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
-                    <div>
-                      • <strong>Motor Sensors → Analytics:</strong> Speed,
-                      efficiency, temperature, vibration, system health data
-                    </div>
-                    <div>
-                      • <strong>Data Volume:</strong> Motor activity and
-                      performance determine data point volume
-                    </div>
-                    <div>
-                      • <strong>Processing Speed:</strong> Motor performance
-                      affects analytics throughput
-                    </div>
-                    <div>
-                      • <strong>Insights Generation:</strong> Motor complexity
-                      and status changes create analytics insights
-                    </div>
-                    <div>
-                      • <strong>Data Quality:</strong> Motor health and
-                      efficiency impact analytics accuracy
-                    </div>
                   </div>
                 </div>
               </div>

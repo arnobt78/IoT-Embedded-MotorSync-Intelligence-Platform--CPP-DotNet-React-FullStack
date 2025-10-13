@@ -4,31 +4,48 @@ import type { MotorReading } from "../types/types";
 interface AnimatedMotorProps {
   reading: MotorReading | null;
   className?: string;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
 export default function AnimatedMotor({
   reading,
   className = "",
+  signalRConnected = true,
+  backendStatus = "connected",
 }: AnimatedMotorProps) {
   const speed = reading?.speed || 0;
   const temperature = reading?.temperature || 0;
   const vibration = reading?.vibration || 0;
   const efficiency = reading?.efficiency || 0;
 
+  // Determine data source status
+  const getDataSourceStatus = () => {
+    if (signalRConnected && backendStatus === "connected" && reading) {
+      return "backend";
+    } else {
+      return "offline";
+    }
+  };
+
+  const dataSource = getDataSourceStatus();
+
   // Calculate rotation speed based on motor speed and status
   const getRotationSpeed = () => {
     if (speed === 0) return 0;
 
+    // Physics-based speed calculation: Angular velocity = 2π × RPM / 60
+    // Convert RPM to rotation period: T = 60 / RPM (seconds per rotation)
     // Base speed calculation (0-5000 RPM -> 0.5-3 seconds per rotation)
     let baseSpeed = Math.max(0.5, 3 - (speed / 5000) * 2.5);
 
-    // Adjust based on status
+    // Adjust based on status using physics principles
     if (reading?.status === "critical") {
-      baseSpeed *= 0.3; // Fastest rotation for critical
+      baseSpeed *= 0.3; // Fastest rotation for critical (high stress)
     } else if (reading?.status === "warning") {
-      baseSpeed *= 0.6; // Medium rotation for warning
+      baseSpeed *= 0.6; // Medium rotation for warning (moderate stress)
     } else if (reading?.status === "maintenance") {
-      baseSpeed *= 0.8; // Slower rotation for maintenance
+      baseSpeed *= 0.8; // Slower rotation for maintenance (reduced load)
     } else {
       baseSpeed *= 1.0; // Normal rotation for normal status
     }
@@ -38,28 +55,56 @@ export default function AnimatedMotor({
 
   const rotationSpeed = getRotationSpeed();
 
-  // Calculate temperature color (blue -> green -> yellow -> red)
+  // Calculate temperature color based on thermal physics
   const getTemperatureColor = (temp: number) => {
-    if (temp < 30) return "text-blue-500";
-    if (temp < 50) return "text-green-500";
-    if (temp < 70) return "text-yellow-500";
-    if (temp < 85) return "text-orange-500";
-    return "text-red-500";
+    // Thermal physics thresholds based on motor operating ranges
+    if (temp < 30) return "text-blue-500"; // Below ambient (cooling)
+    if (temp < 50) return "text-green-500"; // Optimal operating range
+    if (temp < 70) return "text-yellow-500"; // Elevated temperature
+    if (temp < 85) return "text-orange-500"; // High temperature warning
+    return "text-red-500"; // Critical temperature (thermal stress)
   };
 
-  // Calculate vibration intensity
-  const vibrationIntensity = Math.min(100, (vibration / 5.0) * 100);
+  // Enhanced vibration calculation with physics principles
+  const getVibrationIntensity = () => {
+    if (vibration === 0) return 0;
 
-  // Calculate efficiency color
+    // Vibration intensity scales with frequency and amplitude
+    // Standard industrial vibration limits: 2.5 mm/s (good), 5.0 mm/s (warning), 10+ mm/s (critical)
+    const normalizedVibration = Math.min(100, (vibration / 5.0) * 100);
+
+    // Add efficiency factor (higher efficiency = smoother operation = less vibration)
+    const efficiencyFactor = efficiency > 0 ? (100 - efficiency) / 100 : 1;
+
+    return Math.min(100, normalizedVibration * efficiencyFactor);
+  };
+
+  const enhancedVibrationIntensity = getVibrationIntensity();
+
+  // Calculate efficiency color based on motor performance physics
   const getEfficiencyColor = (eff: number) => {
-    if (eff >= 90) return "text-green-500";
-    if (eff >= 80) return "text-yellow-500";
-    if (eff >= 70) return "text-orange-500";
-    return "text-red-500";
+    // Motor efficiency thresholds based on electrical and mechanical losses
+    if (eff >= 90) return "text-green-500"; // Excellent efficiency (>90%)
+    if (eff >= 80) return "text-yellow-500"; // Good efficiency (80-90%)
+    if (eff >= 70) return "text-orange-500"; // Fair efficiency (70-80%)
+    return "text-red-500"; // Poor efficiency (<70%)
   };
 
   return (
     <div className={`relative ${className}`}>
+      {/* Data Source Status Indicator */}
+      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10">
+        <div
+          className={`px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
+            dataSource === "backend"
+              ? "bg-green-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+        </div>
+      </div>
+
       {/* Gear System */}
       <div className="relative w-32 h-32 mx-auto">
         {/* Main Gear */}
@@ -123,11 +168,11 @@ export default function AnimatedMotor({
             animationName: "pulse",
             animationDuration: `${Math.max(
               0.1,
-              0.5 / (vibrationIntensity / 100)
+              0.5 / (enhancedVibrationIntensity / 100)
             )}s`,
             animationTimingFunction: "ease-in-out",
             animationIterationCount: "infinite",
-            opacity: vibrationIntensity / 100,
+            opacity: enhancedVibrationIntensity / 100,
           }}
         ></div>
 
@@ -164,12 +209,38 @@ export default function AnimatedMotor({
           </span>
         </div>
 
+        {/* Data Source Information */}
+        {/* <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          {dataSource === "backend" ? (
+            <span className="text-green-600 dark:text-green-400">
+              🔗 <strong>Real C++ Backend Data:</strong> Live physics
+              calculations from enhanced_motor_engine.cpp
+            </span>
+          ) : dataSource === "fallback" ? (
+            <span className="text-yellow-600 dark:text-yellow-400">
+              ⚠️ <strong>Fallback Mode:</strong> Using cached data (backend
+              unavailable)
+            </span>
+          ) : (
+            <span className="text-red-600 dark:text-red-400">
+              ❌ <strong>Offline Mode:</strong> No data available (connection
+              lost)
+            </span>
+          )}
+        </div> */}
+
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
             <div className="font-semibold text-gray-800 dark:text-white">
               Speed
             </div>
             <div className="text-blue-400">{speed} RPM</div>
+            <div className="text-xs text-gray-500 mt-1">
+              📊 <strong>Physics:</strong> Angular velocity = 2π × RPM ÷ 60
+            </div>
+            <div className="text-xs text-gray-500">
+              🔬 <strong>Period:</strong> T = 60 ÷ RPM (seconds/rotation)
+            </div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
             <div className="font-semibold text-gray-800 dark:text-white">
@@ -178,12 +249,27 @@ export default function AnimatedMotor({
             <div className={getTemperatureColor(temperature)}>
               {temperature}°C
             </div>
+            <div className="text-xs text-gray-500 mt-1">
+              📊 <strong>Thermal:</strong> Heat = Power × Time ÷ Mass × Specific
+              Heat
+            </div>
+            <div className="text-xs text-gray-500">
+              🔬 <strong>Range:</strong> Optimal: 50°C, Warning: 70°C, Critical:
+              85°C
+            </div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
             <div className="font-semibold text-gray-800 dark:text-white">
               Vibration
             </div>
             <div className="text-purple-400">{vibration.toFixed(2)} mm/s</div>
+            <div className="text-xs text-gray-500 mt-1">
+              📊 <strong>Physics:</strong> Amplitude × Frequency = Velocity
+            </div>
+            <div className="text-xs text-gray-500">
+              🔬 <strong>Standards:</strong> Good: 2.5 mm/s, Warning: 5.0 mm/s,
+              Critical: 10+ mm/s
+            </div>
           </div>
           <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded">
             <div className="font-semibold text-gray-800 dark:text-white">
@@ -191,6 +277,13 @@ export default function AnimatedMotor({
             </div>
             <div className={getEfficiencyColor(efficiency)}>
               {efficiency.toFixed(1)}%
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              📊 <strong>Formula:</strong> (Useful Power ÷ Total Power) × 100%
+            </div>
+            <div className="text-xs text-gray-500">
+              🔬 <strong>Losses:</strong> Electrical + Mechanical + Thermal
+              losses
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 # Embedded Motor Engine Speed Temperature Measurement Dashboard C++, .Net, React Project
 
 ![Screenshot 2025-07-25 at 23 11 13](https://github.com/user-attachments/assets/7eb6ad46-73a4-4170-a10e-75ff6b4b9966)
@@ -99,7 +98,8 @@ motor-dashboard/
 
 ## How It Works: C++ → C# → React
 
-1. **C++ EngineMock:**  
+1. **C++ EngineMock:**
+
    - Simulates a real motor controller, exporting `GetMotorSpeed()` and `GetMotorTemperature()` via a shared library (DLL/SO/DYLIB).
    - In a real project, this could be replaced with a library that reads from CAN, USB, EtherCAT, or other industrial protocols.
    - **Example:**
@@ -111,7 +111,8 @@ motor-dashboard/
      }
      ```
 
-2. **.NET Backend:**  
+2. **.NET Backend:**
+
    - Uses P/Invoke (`[DllImport]`) to call the C++ functions directly from C#.
    - `EngineService` samples the engine, stores readings in SQLite (via EF Core), and broadcasts new readings to all clients using SignalR.
    - API endpoints allow fetching all readings, sampling new data, and health checks.
@@ -122,7 +123,7 @@ motor-dashboard/
      public static extern int GetMotorSpeed();
      ```
 
-3. **React Frontend:**  
+3. **React Frontend:**
    - Connects to the backend SignalR hub for real-time updates.
    - Fetches historical data via REST API (using axios).
    - Displays readings in charts, lists, and notifications, with CSV export and settings.
@@ -133,14 +134,14 @@ motor-dashboard/
 
 ### C++ Mock Engine
 
-- `EngineMock/motor_engine.cpp` and `motor_engine.hpp` define and export mock functions.
-- Compiled as a shared library (`libmotor_engine.dylib`, `.so`, or `.dll`).
+- `EngineMock/enhanced_motor_engine.cpp` and `enhanced_motor_engine.hpp` define and export mock functions.
+- Compiled as a shared library (`enhanced_motor_engine.dylib`, `.so`, or `.dll`).
 
 ### P/Invoke in C#
 
 - `EngineService.cs` uses `[DllImport]` to call C++ functions.
 - Example:
-  
+
   ```csharp
   [DllImport(LIB_NAME)]
   public static extern int GetMotorSpeed();
@@ -238,14 +239,14 @@ npm run dev
 
 - Unit and integration tests are in `motor-speed-backend/Tests/` and `motor-speed-backend/Server/Tests/`.
 - To run all backend tests:
-  
+
   ```sh
   dotnet test motor-speed-backend/Tests/
   dotnet test motor-speed-backend/Server/Tests/
   ```
 
 - Example test (C#):
-  
+
   ```csharp
   [Fact]
   public async Task Sample_ShouldReturnValidReading() {
@@ -259,18 +260,18 @@ npm run dev
 
 - Tests are in `motor-speed-frontend/src/components/__tests__/`.
 - To run all frontend tests:
-  
+
   ```sh
   cd motor-speed-frontend
   npm test
   ```
 
 - Example test (React):
-  
+
   ```tsx
-  import { render } from '@testing-library/react';
-  import AnimatedMotor from '../AnimatedMotor';
-  test('renders without crashing', () => {
+  import { render } from "@testing-library/react";
+  import AnimatedMotor from "../AnimatedMotor";
+  test("renders without crashing", () => {
     render(<AnimatedMotor rpm={1200} />);
   });
   ```
@@ -351,10 +352,10 @@ CMD ["npm", "run", "preview"]
 
 ## Real-World Practical Notes
 
-- **Hardware Integration:**  Replace the mock C++ engine with your real hardware library. Use P/Invoke or C++/CLI as needed.
-- **Protocols:**  For CAN/USB/EtherCAT, use a vendor SDK or open-source stack, and expose a C API for .NET interop.
-- **Security:**  Add authentication/authorization for production.
-- **Scalability:**  Swap SQLite for a production DB, use Redis for SignalR backplane if scaling out.
+- **Hardware Integration:** Replace the mock C++ engine with your real hardware library. Use P/Invoke or C++/CLI as needed.
+- **Protocols:** For CAN/USB/EtherCAT, use a vendor SDK or open-source stack, and expose a C API for .NET interop.
+- **Security:** Add authentication/authorization for production.
+- **Scalability:** Swap SQLite for a production DB, use Redis for SignalR backplane if scaling out.
 
 ---
 

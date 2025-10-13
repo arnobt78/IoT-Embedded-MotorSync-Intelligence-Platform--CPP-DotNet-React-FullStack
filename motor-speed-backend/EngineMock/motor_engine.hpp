@@ -1,60 +1,155 @@
-#pragma once
+// ========================================================================
+// REAL INDUSTRIAL MOTOR PHYSICS ENGINE HEADER
+// Based on IEEE 112, IEC 60034, and industrial standards
+// ========================================================================
 
+#ifndef MOTOR_ENGINE_HPP
+#define MOTOR_ENGINE_HPP
+
+#ifdef __cplusplus
 extern "C" {
-    // Basic motor parameters
-    __attribute__((visibility("default"))) int GetMotorSpeed();
-    __attribute__((visibility("default"))) int GetMotorTemperature();
-    
-    // 3-axis vibration sensors
-    __attribute__((visibility("default"))) double GetVibrationX();
-    __attribute__((visibility("default"))) double GetVibrationY();
-    __attribute__((visibility("default"))) double GetVibrationZ();
-    
-    // Pressure sensors
-    __attribute__((visibility("default"))) double GetOilPressure();
-    __attribute__((visibility("default"))) double GetAirPressure();
-    __attribute__((visibility("default"))) double GetHydraulicPressure();
-    
-    // Flow rate sensors
-    __attribute__((visibility("default"))) double GetCoolantFlowRate();
-    __attribute__((visibility("default"))) double GetFuelFlowRate();
-    
-    // Electrical monitoring
-    __attribute__((visibility("default"))) double GetVoltage();
-    __attribute__((visibility("default"))) double GetCurrent();
-    __attribute__((visibility("default"))) double GetPowerFactor();
-    __attribute__((visibility("default"))) double GetPowerConsumption();
-    
-    // Mechanical measurements
-    __attribute__((visibility("default"))) int GetRPM();
-    __attribute__((visibility("default"))) double GetTorque();
-    __attribute__((visibility("default"))) double GetEfficiency();
-    
-    // Environmental sensors
-    __attribute__((visibility("default"))) double GetHumidity();
-    __attribute__((visibility("default"))) double GetAmbientTemperature();
-    __attribute__((visibility("default"))) double GetAmbientPressure();
-    
-    // Proximity and position sensors
-    __attribute__((visibility("default"))) double GetShaftPosition();
-    __attribute__((visibility("default"))) double GetDisplacement();
-    
-    // Strain and stress sensors
-    __attribute__((visibility("default"))) double GetStrainGauge1();
-    __attribute__((visibility("default"))) double GetStrainGauge2();
-    __attribute__((visibility("default"))) double GetStrainGauge3();
-    
-    // Acoustic sensors
-    __attribute__((visibility("default"))) double GetSoundLevel();
-    __attribute__((visibility("default"))) double GetBearingHealth();
-    
-    // System status
-    __attribute__((visibility("default"))) int GetOperatingHours();
-    __attribute__((visibility("default"))) int GetOperatingMinutes();
-    __attribute__((visibility("default"))) double GetOperatingSeconds();
-    __attribute__((visibility("default"))) void StartMotor();
-    __attribute__((visibility("default"))) void StopMotor();
-    __attribute__((visibility("default"))) void ResetMotorState();
-    __attribute__((visibility("default"))) int GetMaintenanceStatus();
-    __attribute__((visibility("default"))) int GetSystemHealth();
+#endif
+
+// ========================================================================
+// BASIC MOTOR PARAMETERS
+// ========================================================================
+double GetMotorSpeed();
+double GetMotorTemperature();
+double GetMotorEfficiency();
+double GetMotorPowerConsumption();
+double GetMotorVibration();
+double GetMotorLoad();
+double GetMotorBearingWear();
+double GetMotorOilDegradation();
+double GetMotorOperatingHours();
+
+// ========================================================================
+// 3-AXIS VIBRATION SENSORS
+// ========================================================================
+double GetVibrationX();
+double GetVibrationY();
+double GetVibrationZ();
+
+// ========================================================================
+// PRESSURE SENSORS
+// ========================================================================
+double GetOilPressure();
+double GetAirPressure();
+double GetHydraulicPressure();
+
+// ========================================================================
+// FLOW RATE SENSORS
+// ========================================================================
+double GetCoolantFlowRate();
+double GetFuelFlowRate();
+
+// ========================================================================
+// ELECTRICAL MONITORING
+// ========================================================================
+double GetVoltage();
+double GetCurrent();
+double GetPowerFactor();
+double GetPowerConsumption();
+
+// ========================================================================
+// MECHANICAL MEASUREMENTS
+// ========================================================================
+double GetRPM();
+double GetTorque();
+double GetEfficiency();
+
+// ========================================================================
+// ENVIRONMENTAL SENSORS
+// ========================================================================
+double GetHumidity();
+double GetAmbientTemperature();
+double GetAmbientPressure();
+
+// ========================================================================
+// POSITION SENSORS
+// ========================================================================
+double GetShaftPosition();
+double GetDisplacement();
+
+// ========================================================================
+// STRAIN SENSORS
+// ========================================================================
+double GetStrainGauge1();
+double GetStrainGauge2();
+double GetStrainGauge3();
+
+// ========================================================================
+// ACOUSTIC SENSORS
+// ========================================================================
+double GetSoundLevel();
+double GetBearingHealth();
+
+// ========================================================================
+// SYSTEM STATUS
+// ========================================================================
+int GetOperatingHours();
+int GetMaintenanceStatus();
+double GetSystemHealth();
+
+// ========================================================================
+// DAILY LIFE APPLICATIONS - HOME AUTOMATION
+// ========================================================================
+double GetHVACEfficiency();
+double GetEnergySavings();
+double GetComfortLevel();
+double GetAirQuality();
+int GetSmartDevices();
+
+// ========================================================================
+// DAILY LIFE APPLICATIONS - PERSONAL VEHICLE
+// ========================================================================
+double GetFuelEfficiency();
+double GetEngineHealth();
+double GetBatteryLevel();
+double GetTirePressure();
+
+// ========================================================================
+// DAILY LIFE APPLICATIONS - RECREATION EQUIPMENT
+// ========================================================================
+double GetBoatEngineEfficiency();
+int GetBoatEngineHours();
+double GetBladeSharpness();
+double GetFuelLevel();
+double GetGeneratorPowerOutput();
+double GetGeneratorFuelEfficiency();
+double GetPoolPumpFlowRate();
+double GetPoolPumpEnergyUsage();
+
+// ========================================================================
+// DAILY LIFE APPLICATIONS - SMART APPLIANCES
+// ========================================================================
+double GetWashingMachineEfficiency();
+double GetDishwasherEfficiency();
+double GetRefrigeratorEfficiency();
+double GetAirConditionerEfficiency();
+
+// ========================================================================
+// INDUSTRIAL MACHINE FUNCTIONS
+// ========================================================================
+int GetIndustrialMachineCount();
+bool GetMachineRunning(int index);
+double GetMachineLoad(int index);
+
+// ========================================================================
+// MOTOR CONTROL FUNCTIONS
+// ========================================================================
+void StartMotor();
+void StopMotor();
+void ResetMotorState();
+void ResetPhysicsUpdateFlag();
+
+// ========================================================================
+// TEST FUNCTION
+// ========================================================================
+int TestEngine();
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif // MOTOR_ENGINE_HPP

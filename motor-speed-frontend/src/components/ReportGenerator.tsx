@@ -61,8 +61,8 @@ export default function ReportGenerator({
 
   const generateProfessionalReport = async (): Promise<ReportData> => {
     // Simulate report generation with realistic timing
-    await new Promise((resolve) =>
-      setTimeout(resolve, 2000 + Math.random() * 1000)
+    await new Promise(
+      (resolve) => setTimeout(resolve, 2000 + 500) // Fixed timing instead of random
     );
 
     const currentTime = new Date();
@@ -215,10 +215,10 @@ export default function ReportGenerator({
       console.error("Report generation failed:", error);
 
       const errorType =
-        Math.random() > 0.5
+        Math.sin(Date.now() * 0.001) > 0
           ? "Data Processing Error"
-          : "Analysis Engine Failure";
-      const retryTime = Math.floor(3 + Math.random() * 5);
+          : "Analysis Engine Failure"; // Use sine wave instead of random
+      const retryTime = Math.floor(4); // Fixed retry time
 
       toast.error(
         `🚨 Report Generation Failed - ${errorType}`,
@@ -271,7 +271,7 @@ export default function ReportGenerator({
     points += 3; // Trend metrics
 
     // Additional calculated insights
-    points += Math.floor(Math.random() * 10) + 5; // Random additional insights
+    points += Math.floor(Math.sin(Date.now() * 0.0005) * 5) + 5; // Use sine wave for realistic variation
 
     return points;
   };
@@ -296,7 +296,10 @@ export default function ReportGenerator({
     if (reportData.trends.efficiencyTrend < 0) insights += 1;
     if (reportData.trends.temperatureTrend > 0) insights += 1;
 
-    return Math.max(3, insights + Math.floor(Math.random() * 3));
+    return Math.max(
+      3,
+      insights + Math.floor(Math.sin(Date.now() * 0.0003) * 1.5)
+    ); // Use sine wave for realistic variation
   };
 
   const downloadReport = () => {

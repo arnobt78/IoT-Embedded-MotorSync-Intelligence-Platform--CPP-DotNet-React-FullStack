@@ -18,6 +18,9 @@ export interface IndustrialMachine {
   load: number;
   efficiency: number;
   powerConsumption: number;
+  voltage: number;
+  current: number;
+  powerFactor: number;
   vibration: number;
   pressure: number;
   flowRate: number;
@@ -235,7 +238,7 @@ export class EnhancedApiService {
   async getIndustrialMachines(): Promise<IndustrialMachine[]> {
     try {
       const response = await axios.get<IndustrialMachine[]>(
-        `${this.baseURL}/api/EnhancedIndustrial/machines`
+        `${this.baseURL}/api/motor/machines`
       );
       return response.data;
     } catch (error) {
@@ -248,7 +251,7 @@ export class EnhancedApiService {
   async getMachine(index: number): Promise<IndustrialMachine> {
     try {
       const response = await axios.get<IndustrialMachine>(
-        `${this.baseURL}/api/EnhancedIndustrial/machines/${index}`
+        `${this.baseURL}/api/motor/machines/${index}`
       );
       return response.data;
     } catch (error) {
@@ -260,9 +263,7 @@ export class EnhancedApiService {
   // Start a machine
   async startMachine(index: number): Promise<boolean> {
     try {
-      await axios.post(
-        `${this.baseURL}/api/EnhancedIndustrial/machines/${index}/start`
-      );
+      await axios.post(`${this.baseURL}/api/motor/machines/${index}/start`);
       return true;
     } catch (error) {
       console.error(`Error starting machine ${index}:`, error);
@@ -273,9 +274,7 @@ export class EnhancedApiService {
   // Stop a machine
   async stopMachine(index: number): Promise<boolean> {
     try {
-      await axios.post(
-        `${this.baseURL}/api/EnhancedIndustrial/machines/${index}/stop`
-      );
+      await axios.post(`${this.baseURL}/api/motor/machines/${index}/stop`);
       return true;
     } catch (error) {
       console.error(`Error stopping machine ${index}:`, error);
@@ -286,10 +285,9 @@ export class EnhancedApiService {
   // Set machine target speed
   async setMachineSpeed(index: number, speed: number): Promise<boolean> {
     try {
-      await axios.post(
-        `${this.baseURL}/api/EnhancedIndustrial/machines/${index}/speed`,
-        { speed }
-      );
+      await axios.post(`${this.baseURL}/api/motor/machines/${index}/speed`, {
+        speed,
+      });
       return true;
     } catch (error) {
       console.error(`Error setting machine ${index} speed:`, error);
@@ -301,7 +299,7 @@ export class EnhancedApiService {
   async getEdgeNodes(): Promise<EdgeNode[]> {
     try {
       const response = await axios.get<EdgeNode[]>(
-        `${this.baseURL}/api/EnhancedIndustrial/edge-nodes`
+        `${this.baseURL}/api/motor/edge-nodes`
       );
       return response.data;
     } catch (error) {
@@ -314,7 +312,7 @@ export class EnhancedApiService {
   async getMLModels(): Promise<MLModel[]> {
     try {
       const response = await axios.get<MLModel[]>(
-        `${this.baseURL}/api/EnhancedIndustrial/ml-models`
+        `${this.baseURL}/api/motor/ml-models`
       );
       return response.data;
     } catch (error) {
@@ -327,7 +325,7 @@ export class EnhancedApiService {
   async getSystemOverview(): Promise<SystemOverview> {
     try {
       const response = await axios.get<SystemOverview>(
-        `${this.baseURL}/api/EnhancedIndustrial/system-overview`
+        `${this.baseURL}/api/motor/system-overview`
       );
       return response.data;
     } catch (error) {
@@ -340,7 +338,7 @@ export class EnhancedApiService {
   async getEnhancedReading(): Promise<EnhancedMotorReading> {
     try {
       const response = await axios.get<EnhancedMotorReading>(
-        `${this.baseURL}/api/EnhancedIndustrial/enhanced-reading`
+        `${this.baseURL}/api/motor/enhanced-reading`
       );
       return response.data;
     } catch (error) {
@@ -355,7 +353,7 @@ export class EnhancedApiService {
   ): Promise<ProductionLineAnalysis> {
     try {
       const response = await axios.get<ProductionLineAnalysis>(
-        `${this.baseURL}/api/EnhancedIndustrial/production-line/${lineId}/business-insights`
+        `${this.baseURL}/api/motor/production-line/${lineId}/business-insights`
       );
       return response.data;
     } catch (error) {
@@ -373,7 +371,7 @@ export class EnhancedApiService {
   ): Promise<MaintenanceSchedule> {
     try {
       const response = await axios.get<MaintenanceSchedule>(
-        `${this.baseURL}/api/EnhancedIndustrial/maintenance-schedule/${facilityId}`
+        `${this.baseURL}/api/motor/maintenance-schedule/${facilityId}`
       );
       return response.data;
     } catch (error) {
@@ -391,7 +389,7 @@ export class EnhancedApiService {
   ): Promise<QualityControlMetrics> {
     try {
       const response = await axios.get<QualityControlMetrics>(
-        `${this.baseURL}/api/EnhancedIndustrial/quality-control/${machineId}`
+        `${this.baseURL}/api/motor/quality-control/${machineId}`
       );
       return response.data;
     } catch (error) {
@@ -409,7 +407,7 @@ export class EnhancedApiService {
   ): Promise<SupplyChainOptimization> {
     try {
       const response = await axios.get<SupplyChainOptimization>(
-        `${this.baseURL}/api/EnhancedIndustrial/supply-chain/${facilityId}`
+        `${this.baseURL}/api/motor/supply-chain/${facilityId}`
       );
       return response.data;
     } catch (error) {
@@ -425,7 +423,7 @@ export class EnhancedApiService {
   async getFacilityOverview(facilityId: string): Promise<FacilityOverview> {
     try {
       const response = await axios.get<FacilityOverview>(
-        `${this.baseURL}/api/EnhancedIndustrial/facility-overview/${facilityId}`
+        `${this.baseURL}/api/motor/facility-overview/${facilityId}`
       );
       return response.data;
     } catch (error) {

@@ -122,7 +122,12 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
       });
 
       if (currentSection) {
-        setActiveSection(currentSection.id);
+        setActiveSection((prev) => {
+          if (prev !== currentSection.id) {
+            return currentSection.id;
+          }
+          return prev;
+        });
       }
     };
 
@@ -190,7 +195,10 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
             <div
               className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => {
-                if (currentPage === "health") {
+                if (
+                  currentPage === "health" ||
+                  currentPage === "business-insights"
+                ) {
                   window.history.pushState({}, "", "?page=dashboard");
                   window.dispatchEvent(new PopStateEvent("popstate"));
                 } else {
@@ -198,7 +206,7 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
                 }
               }}
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-500 group-hover:to-blue-700 transition-all duration-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-300 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm group-hover:from-blue-500 group-hover:to-blue-700 transition-all duration-200">
                 IoT
               </div>
               <div
@@ -210,7 +218,9 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
                     : "text-white"
                 }`}
               >
-                {currentPage === "health" ? "Home" : "MotorSync Intelligence"}
+                {currentPage === "health" || currentPage === "business-insights"
+                  ? "Home"
+                  : "MotorSync Intelligence"}
               </div>
             </div>
 
@@ -393,6 +403,66 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
 
             {/* External Links */}
             <div className="hidden lg:flex items-center space-x-3">
+              {/* Business Insights - Always show */}
+              <button
+                onClick={() => {
+                  window.history.pushState({}, "", "?page=business-insights");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isScrolled
+                    ? darkMode
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <span>Business Insights</span>
+              </button>
+
+              {/* System Health - Always show */}
+              <button
+                onClick={() => {
+                  window.history.pushState({}, "", "?page=health");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                  isScrolled
+                    ? darkMode
+                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
+                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-white/90 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>System Health</span>
+              </button>
+
               {/* API Docs - Only show on dashboard */}
               {currentPage === "dashboard" && (
                 <a
@@ -424,8 +494,9 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
                 </a>
               )}
 
-              {/* Home - Only show on health page */}
-              {currentPage === "health" && (
+              {/* Home - Only show on health or business-insights page */}
+              {(currentPage === "health" ||
+                currentPage === "business-insights") && (
                 <button
                   onClick={() => {
                     window.history.pushState({}, "", "?page=dashboard");
@@ -455,36 +526,6 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
                   <span>Home</span>
                 </button>
               )}
-
-              {/* System Health - Always show */}
-              <button
-                onClick={() => {
-                  window.history.pushState({}, "", "?page=health");
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                  isScrolled
-                    ? darkMode
-                      ? "text-gray-300 hover:text-white hover:bg-gray-800"
-                      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                    : "text-white/90 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>System Health</span>
-              </button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -558,61 +599,32 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
 
               {/* Mobile External Links */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 space-y-2">
-                {/* API Docs - Only show on dashboard */}
-                {currentPage === "dashboard" && (
-                  <a
-                    href={apiDocsUrl}
-                    className="block w-full text-left px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                        />
-                      </svg>
-                      <span>API Documentation</span>
-                    </div>
-                  </a>
-                )}
-
-                {/* Home - Only show on health page */}
-                {currentPage === "health" && (
-                  <button
-                    onClick={() => {
-                      window.history.pushState({}, "", "?page=dashboard");
-                      window.dispatchEvent(new PopStateEvent("popstate"));
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                        />
-                      </svg>
-                      <span>Home</span>
-                    </div>
-                  </button>
-                )}
+                {/* Business Insights - Always show */}
+                <button
+                  onClick={() => {
+                    window.history.pushState({}, "", "?page=business-insights");
+                    window.dispatchEvent(new PopStateEvent("popstate"));
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    <span>Business Insights</span>
+                  </div>
+                </button>
 
                 {/* System Health - Always show */}
                 <button
@@ -640,6 +652,63 @@ export default function NavBar({ darkMode = false }: NavBarProps) {
                     <span>System Health</span>
                   </div>
                 </button>
+
+                {/* API Docs - Only show on dashboard */}
+                {currentPage === "dashboard" && (
+                  <a
+                    href={apiDocsUrl}
+                    className="block w-full text-left px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                      <span>API Documentation</span>
+                    </div>
+                  </a>
+                )}
+
+                {/* Home - Only show on health or business-insights page */}
+                {(currentPage === "health" ||
+                  currentPage === "business-insights") && (
+                  <button
+                    onClick={() => {
+                      window.history.pushState({}, "", "?page=dashboard");
+                      window.dispatchEvent(new PopStateEvent("popstate"));
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-3 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                      <span>Home</span>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
           </div>

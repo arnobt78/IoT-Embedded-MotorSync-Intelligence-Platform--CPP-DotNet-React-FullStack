@@ -19,77 +19,89 @@ namespace MotorServer.Migrations
 
             modelBuilder.Entity("MotorServer.Models.IndustrialMachine", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
 
-                    b.Property<double>("AverageEfficiency")
+                    b.Property<double>("Current")
                         .HasColumnType("REAL");
 
-                    b.Property<decimal>("CostPerHour")
-                        .HasColumnType("TEXT");
+                    b.Property<double>("CurrentSpeed")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Department")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("EnergyConsumption")
+                    b.Property<double>("Efficiency")
                         .HasColumnType("REAL");
 
-                    b.Property<string>("FacilityId")
+                    b.Property<double>("FlowRate")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("HealthScore")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("InstallationDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("InstallationDate")
-                        .HasColumnType("TEXT");
+                    b.Property<bool>("IsRunning")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("LastMaintenanceDate")
+                    b.Property<DateTime>("LastMaintenance")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("LastSeen")
                         .HasColumnType("TEXT");
 
+                    b.Property<double>("Load")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("MachineId")
+                    b.Property<int>("MaintenanceStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Manufacturer")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("MaintenanceSchedule")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Manufacturer")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Model")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("NextMaintenanceDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<double>("OperatingHours")
                         .HasColumnType("REAL");
 
-                    b.Property<double?>("PowerFactor")
+                    b.Property<double>("PowerConsumption")
                         .HasColumnType("REAL");
 
-                    b.Property<string>("ProductionLineId")
-                        .HasColumnType("TEXT");
+                    b.Property<double>("PowerFactor")
+                        .HasColumnType("REAL");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<double>("Pressure")
+                        .HasColumnType("REAL");
 
-                    b.Property<int>("TotalReadings")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("TargetSpeed")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Temperature")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<double>("Vibration")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("Voltage")
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
@@ -102,7 +114,13 @@ namespace MotorServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("AirConditionerEfficiency")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("AirPressure")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("AirQuality")
                         .HasColumnType("REAL");
 
                     b.Property<double?>("AmbientPressure")
@@ -111,7 +129,25 @@ namespace MotorServer.Migrations
                     b.Property<double?>("AmbientTemperature")
                         .HasColumnType("REAL");
 
+                    b.Property<double?>("BatteryLevel")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("BearingHealth")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BearingWear")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BladeSharpness")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BoatEngineEfficiency")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("BoatEngineHours")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double?>("ComfortLevel")
                         .HasColumnType("REAL");
 
                     b.Property<double?>("CoolantFlowRate")
@@ -120,13 +156,37 @@ namespace MotorServer.Migrations
                     b.Property<double?>("Current")
                         .HasColumnType("REAL");
 
+                    b.Property<double?>("DishwasherEfficiency")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("Displacement")
                         .HasColumnType("REAL");
 
                     b.Property<double?>("Efficiency")
                         .HasColumnType("REAL");
 
+                    b.Property<double?>("EnergySavings")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("EngineHealth")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("FuelEfficiency")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("FuelFlowRate")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("FuelLevel")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("GeneratorFuelEfficiency")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("GeneratorPowerOutput")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("HVACEfficiency")
                         .HasColumnType("REAL");
 
                     b.Property<double?>("Humidity")
@@ -142,6 +202,9 @@ namespace MotorServer.Migrations
                     b.Property<int?>("MaintenanceStatus")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("OilDegradation")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("OilPressure")
                         .HasColumnType("REAL");
 
@@ -154,6 +217,12 @@ namespace MotorServer.Migrations
                     b.Property<double?>("OperatingSeconds")
                         .HasColumnType("REAL");
 
+                    b.Property<double?>("PoolPumpEnergyUsage")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("PoolPumpFlowRate")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("PowerConsumption")
                         .HasColumnType("REAL");
 
@@ -163,8 +232,14 @@ namespace MotorServer.Migrations
                     b.Property<int?>("RPM")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("RefrigeratorEfficiency")
+                        .HasColumnType("REAL");
+
                     b.Property<double?>("ShaftPosition")
                         .HasColumnType("REAL");
+
+                    b.Property<int?>("SmartDevices")
+                        .HasColumnType("INTEGER");
 
                     b.Property<double?>("SoundLevel")
                         .HasColumnType("REAL");
@@ -194,6 +269,9 @@ namespace MotorServer.Migrations
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("TirePressure")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Title")
                         .HasColumnType("TEXT");
 
@@ -213,6 +291,9 @@ namespace MotorServer.Migrations
                         .HasColumnType("REAL");
 
                     b.Property<double?>("Voltage")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("WashingMachineEfficiency")
                         .HasColumnType("REAL");
 
                     b.HasKey("Id");

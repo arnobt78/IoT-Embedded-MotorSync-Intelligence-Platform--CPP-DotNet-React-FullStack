@@ -1,0 +1,64 @@
+# ========================================================================
+# DOCKER IGNORE FILE
+# Optimizes Docker build by excluding unnecessary files
+# ========================================================================
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+*.cache
+
+# Test files
+Tests/
+test_*
+*_test.*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Backup files
+*.bak
+*.backup
+
+# Database files (will be created at runtime)
+*.db
+*.sqlite
+
+# macOS specific
+motor_engine.dylib
+
+# Windows specific
+*.dll
+*.exe
+*.pdb

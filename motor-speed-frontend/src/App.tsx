@@ -1,8 +1,11 @@
 import MainDashboard from "./components/MainDashboard";
 import HealthPage from "./components/HealthPage";
+import BusinessInsightsPage from "./components/BusinessInsightsPage";
 import { ToastProvider } from "./components/ui/ToastProvider";
 import type { MotorReading, Alert, DashboardStats } from "./types";
 import { useEffect, useState } from "react";
+import { SIGNALR_URL } from "./services/api";
+import * as signalR from "@microsoft/signalr";
 
 function App() {
   const [readings, setReadings] = useState<MotorReading[]>([]);
@@ -33,6 +36,33 @@ function App() {
     return urlParams.get("page") || "dashboard";
   });
 
+  // SignalR connection setup - moved from MainDashboard to App level
+  useEffect(() => {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(SIGNALR_URL)
+      .build();
+
+    connection
+      .start()
+      .then(() => {
+        console.log("SignalR Connected");
+        setSignalRConnected(true);
+      })
+      .catch((err) => {
+        console.error("SignalR Connection Error:", err);
+        setSignalRConnected(false);
+      });
+
+    connection.onclose(() => {
+      console.log("SignalR Disconnected");
+      setSignalRConnected(false);
+    });
+
+    return () => {
+      connection.stop();
+    };
+  }, []);
+
   // Listen for URL changes
   useEffect(() => {
     const handleUrlChange = () => {
@@ -47,7 +77,15 @@ function App() {
   return (
     <ToastProvider>
       {currentPage === "health" ? (
-        <HealthPage />
+        <HealthPage
+          signalRConnected={signalRConnected}
+          backendStatus={signalRConnected ? "connected" : "offline"}
+        />
+      ) : currentPage === "business-insights" ? (
+        <BusinessInsightsPage
+          signalRConnected={signalRConnected}
+          backendStatus={signalRConnected ? "connected" : "offline"}
+        />
       ) : (
         <MainDashboard
           readings={readings}
@@ -61,7 +99,7 @@ function App() {
           loading={loading}
           setLoading={setLoading}
           signalRConnected={signalRConnected}
-          setSignalRConnected={setSignalRConnected}
+          _setSignalRConnected={setSignalRConnected}
           _fastSpinCount2={fastSpinCount2}
           setFastSpinCount={setFastSpinCount}
           settingsOpen={settingsOpen}

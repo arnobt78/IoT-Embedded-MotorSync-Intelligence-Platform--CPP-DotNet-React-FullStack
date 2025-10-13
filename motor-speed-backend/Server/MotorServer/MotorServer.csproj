@@ -1,37 +1,92 @@
+<!-- ======================================================================== -->
+<!-- CONSOLIDATED MOTOR SERVER PROJECT FILE -->
+<!-- Real Industrial Motor Physics Engine Backend -->
+<!-- ======================================================================== -->
+
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MotorServer</AssemblyName>
+    <RootNamespace>MotorServer</RootNamespace>
   </PropertyGroup>
 
+  <!-- ======================================================================== -->
+  <!-- PACKAGE REFERENCES -->
+  <!-- ======================================================================== -->
+  
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+    <!-- Core ASP.NET packages -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    
+    <!-- Entity Framework Core -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+    
+    <!-- SignalR for real-time updates -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    
+    <!-- JSON serialization -->
+    <PackageReference Include="System.Text.Json" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Copy the native library for macOS -->
-  <ItemGroup Condition=" '$(OS)' == 'Darwin' ">
-    <None Include="../../EngineMock/libmotor_engine.dylib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>libmotor_engine.dylib</Link>
-    </None>
+  <!-- ======================================================================== -->
+  <!-- PROJECT REFERENCES -->
+  <!-- ======================================================================== -->
+  
+  <!-- No additional project references needed - all consolidated -->
+
+  <!-- ======================================================================== -->
+  <!-- BUILD CONFIGURATION -->
+  <!-- ======================================================================== -->
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>TRACE</DefineConstants>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- ======================================================================== -->
+  <!-- NATIVE LIBRARY CONFIGURATION -->
+  <!-- ======================================================================== -->
+  
+  <!-- Copy native libraries to output directory -->
+  <ItemGroup>
+    <None Include="motor_engine.dylib" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="motor_engine.so" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <!-- Copy the native library for Linux (Docker) - only when .so file exists -->
-  <ItemGroup Condition=" '$(OS)' == 'Unix' AND Exists('../../EngineMock/libmotor_engine.so') ">
-    <None Include="../../EngineMock/libmotor_engine.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>libmotor_engine.so</Link>
-    </None>
-  </ItemGroup>
+  <!-- ======================================================================== -->
+  <!-- BUILD TARGETS -->
+  <!-- ======================================================================== -->
+  
+  <Target Name="CopyNativeLibraries" AfterTargets="Build">
+    <!-- Copy macOS library for local development -->
+    <Copy SourceFiles="motor_engine.dylib" DestinationFolder="$(OutputPath)" Condition="Exists('motor_engine.dylib')" />
+    <!-- Copy Linux library for production (Render) -->
+    <Copy SourceFiles="motor_engine.so" DestinationFolder="$(OutputPath)" Condition="Exists('motor_engine.so')" />
+  </Target>
+
+  <!-- ======================================================================== -->
+  <!-- PRODUCTION DEPLOYMENT -->
+  <!-- ======================================================================== -->
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
 
 </Project>

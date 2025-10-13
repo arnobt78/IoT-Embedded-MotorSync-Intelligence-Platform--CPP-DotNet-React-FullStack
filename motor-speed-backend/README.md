@@ -53,9 +53,9 @@ This backend powers the Motor Dashboard, providing real-time motor data from a n
 ```bash
 motor-speed-backend/
 ├── EngineMock/           # C++ mock engine (DLL/SO/DYLIB)
-│   ├── motor_engine.cpp
-│   ├── motor_engine.hpp
-│   └── libmotor_engine.dylib
+│   ├── enhanced_motor_engine.cpp
+│   ├── enhanced_motor_engine.hpp
+│   └── enhanced_motor_engine.dylib
 ├── Server/
 │   ├── MotorServer/      # ASP.NET Core backend
 │   │   ├── Controllers/  # API endpoints
@@ -75,8 +75,8 @@ motor-speed-backend/
 
 ## C++ Mock Engine
 
-- `EngineMock/motor_engine.cpp` and `motor_engine.hpp` export:
-  
+- `EngineMock/enhanced_motor_engine.cpp` and `enhanced_motor_engine.hpp` export:
+
   ```cpp
   extern "C" {
       int GetMotorSpeed();
@@ -99,7 +99,7 @@ motor-speed-backend/
 ## P/Invoke to C++
 
 - `EngineService.cs` uses `[DllImport]` to call C++ functions:
-  
+
   ```csharp
   [DllImport(LIB_NAME)]
   public static extern int GetMotorSpeed();
@@ -112,7 +112,7 @@ motor-speed-backend/
 - `AppDbContext` manages the `MotorReadings` table.
 - Migrations and schema managed via EF Core CLI.
 - Example model:
-  
+
   ```csharp
   public class MotorReading {
       public int Id { get; set; }
@@ -151,7 +151,7 @@ motor-speed-backend/
 ```sh
 cd Server/MotorServer
 # Build C++ engine if needed
-# e.g. g++ -shared -o libmotor_engine.dylib motor_engine.cpp
+# e.g. g++ -shared -o enhanced_motor_engine.dylib enhanced_motor_engine.cpp
 # Run backend
  dotnet run
 ```
@@ -171,7 +171,7 @@ docker build -t motor-backend ./Server/MotorServer
 - Backend has its own `Dockerfile` for containerization.
 - Use `docker-compose.yml` at project root to orchestrate backend, frontend, and Nginx.
 - Example backend Dockerfile:
-  
+
   ```dockerfile
   FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
   WORKDIR /app
@@ -186,14 +186,14 @@ docker build -t motor-backend ./Server/MotorServer
 
 - Unit and integration tests are in `Tests/` and `Server/Tests/`.
 - To run all backend tests:
-  
+
   ```sh
   dotnet test Tests/
   dotnet test Server/Tests/
   ```
 
 - Example test:
-  
+
   ```csharp
   [Fact]
   public async Task Sample_ShouldReturnValidReading() {

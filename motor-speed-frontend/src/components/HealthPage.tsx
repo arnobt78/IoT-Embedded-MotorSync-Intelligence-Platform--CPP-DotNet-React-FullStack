@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "../hooks/useToast";
 import NavBar from "./NavBar";
 import AnimatedGearIcon from "./ui/AnimatedGearIcon";
@@ -53,7 +53,17 @@ interface ServiceStatus {
   lastChecked: string;
 }
 
-export default function HealthPage() {
+interface HealthPageProps {
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
+  onDataSourceChange?: (_source: "backend" | "offline") => void;
+}
+
+export default function HealthPage({
+  signalRConnected = true,
+  backendStatus = "connected",
+  onDataSourceChange,
+}: HealthPageProps) {
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [systemOverview, setSystemOverview] = useState<SystemOverview | null>(
     null
@@ -64,8 +74,14 @@ export default function HealthPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLive, setIsLive] = useState(true);
+  const [dataSource, setDataSource] = useState<"backend" | "offline">(
+    "backend"
+  );
 
   const toast = useToast();
+  const loadHealthDataRef = useRef<
+    ((_showToast?: boolean) => Promise<void>) | undefined
+  >(undefined);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL ||
@@ -73,108 +89,185 @@ export default function HealthPage() {
       ? "https://embedded-motor-engine-speed-temperature.onrender.com"
       : "http://localhost:5001");
 
-  const loadHealthData = async (showToast = false) => {
-    try {
-      setLoading(true);
-
-      // Load all health-related data in parallel
-      const [healthRes, systemRes, machinesRes, edgeNodesRes] =
-        await Promise.all([
-          fetch(`${API_BASE_URL}/health`),
-          fetch(`${API_BASE_URL}/api/EnhancedIndustrial/system-overview`),
-          fetch(`${API_BASE_URL}/api/EnhancedIndustrial/machines`),
-          fetch(`${API_BASE_URL}/api/EnhancedIndustrial/edge-nodes`),
-        ]);
-
-      // Parse responses
-      const healthData = await healthRes.json();
-      const systemData = await systemRes.json();
-      const machinesData = await machinesRes.json();
-      const edgeNodesData = await edgeNodesRes.json();
-
-      // Set data
-      setHealthStatus(healthData);
-      setSystemOverview(systemData);
-      setMachines(machinesData);
-      setEdgeNodes(edgeNodesData);
-
-      // Generate service status based on response times and data
-      const services: ServiceStatus[] = [
-        {
-          name: "API Health",
-          status: healthData.status === "Healthy" ? "healthy" : "critical",
-          responseTime: "< 1ms",
-          lastChecked: new Date().toISOString(),
-        },
-        {
-          name: "Motor Engine",
-          status: machinesData.length > 0 ? "healthy" : "warning",
-          responseTime: "2ms",
-          lastChecked: new Date().toISOString(),
-        },
-        {
-          name: "System Overview",
-          status: systemData.totalMachines > 0 ? "healthy" : "warning",
-          responseTime: "3ms",
-          lastChecked: new Date().toISOString(),
-        },
-        {
-          name: "Edge Computing",
-          status: edgeNodesData.length > 0 ? "healthy" : "warning",
-          responseTime: "4ms",
-          lastChecked: new Date().toISOString(),
-        },
-        {
-          name: "Database",
-          status: "healthy",
-          responseTime: "5ms",
-          lastChecked: new Date().toISOString(),
-        },
-        {
-          name: "SignalR Hub",
-          status: "healthy",
-          responseTime: "1ms",
-          lastChecked: new Date().toISOString(),
-        },
-      ];
-
-      setServices(services);
-      setLastUpdated(new Date());
-
-      // Set live status based on system health
-      const systemHealthy =
-        healthData.status === "Healthy" &&
-        machinesData.length > 0 &&
-        edgeNodesData.length > 0;
-      setIsLive(systemHealthy);
-
-      // Show toast only on manual refresh
-      if (showToast) {
-        toast.success(
-          "🟢 Health Dashboard Updated",
-          `System status: ${healthData.status}. ${machinesData.length} machines, ${edgeNodesData.length} edge nodes monitored.`
-        );
-      }
-    } catch (error) {
-      console.error("Error loading health data:", error);
-      toast.error(
-        "🔴 Health Check Failed",
-        "Unable to load system health data. Please check your connection."
-      );
-    } finally {
-      setLoading(false);
+  // Determine data source status
+  const getDataSourceStatus = useCallback(() => {
+    if (
+      signalRConnected &&
+      backendStatus === "connected" &&
+      machines.length > 0 &&
+      edgeNodes.length > 0
+    ) {
+      return "backend";
+    } else {
+      return "offline";
     }
-  };
+  }, [signalRConnected, backendStatus, machines.length, edgeNodes.length]);
+
+  // Update data source and notify parent
+  useEffect(() => {
+    const currentDataSource = getDataSourceStatus();
+    setDataSource(currentDataSource);
+    if (onDataSourceChange) {
+      onDataSourceChange(currentDataSource);
+    }
+  }, [getDataSourceStatus, onDataSourceChange]);
+
+  const loadHealthData = useCallback(
+    async (showToast = false) => {
+      try {
+        setLoading(true);
+
+        let healthData: HealthStatus | null = null;
+        let systemData: SystemOverview | null = null;
+        let machinesData: Machine[] = [];
+        let edgeNodesData: EdgeNode[] = [];
+        let usingBackendData = false;
+
+        // Try to fetch real data from C++ backend via MotorController
+        if (signalRConnected && backendStatus === "connected") {
+          try {
+            // Load all health-related data in parallel using correct endpoints
+            const [healthRes, systemRes, machinesRes, edgeNodesRes] =
+              await Promise.all([
+                fetch(`${API_BASE_URL}/health`),
+                fetch(`${API_BASE_URL}/api/motor/system-overview`),
+                fetch(`${API_BASE_URL}/api/motor/machines`),
+                fetch(`${API_BASE_URL}/api/motor/edge-nodes`),
+              ]);
+
+            // Parse responses with error handling
+            if (healthRes.ok) healthData = await healthRes.json();
+            if (systemRes.ok) systemData = await systemRes.json();
+            if (machinesRes.ok) machinesData = await machinesRes.json();
+            if (edgeNodesRes.ok) edgeNodesData = await edgeNodesRes.json();
+
+            if (machinesData.length > 0 && edgeNodesData.length > 0) {
+              usingBackendData = true;
+            }
+          } catch (error) {
+            console.error("Failed to fetch health data from backend:", error);
+            usingBackendData = false;
+          }
+        }
+
+        // If no real data available, set to null (offline mode)
+        if (!usingBackendData) {
+          healthData = null;
+          systemData = null;
+          machinesData = [];
+          edgeNodesData = [];
+        }
+
+        // Set data
+        setHealthStatus(healthData);
+        setSystemOverview(systemData);
+        setMachines(machinesData);
+        setEdgeNodes(edgeNodesData);
+
+        // Generate service status based on response times and data
+        const services: ServiceStatus[] = [
+          {
+            name: "API Health",
+            status: healthData?.status === "Healthy" ? "healthy" : "critical",
+            responseTime: "< 1ms",
+            lastChecked: new Date().toISOString(),
+          },
+          {
+            name: "Motor Engine",
+            status: machinesData.length > 0 ? "healthy" : "warning",
+            responseTime: "2ms",
+            lastChecked: new Date().toISOString(),
+          },
+          {
+            name: "System Overview",
+            status:
+              systemData?.totalMachines && systemData.totalMachines > 0
+                ? "healthy"
+                : "warning",
+            responseTime: "3ms",
+            lastChecked: new Date().toISOString(),
+          },
+          {
+            name: "Edge Computing",
+            status: edgeNodesData.length > 0 ? "healthy" : "warning",
+            responseTime: "4ms",
+            lastChecked: new Date().toISOString(),
+          },
+          {
+            name: "Database",
+            status: "healthy",
+            responseTime: "5ms",
+            lastChecked: new Date().toISOString(),
+          },
+          {
+            name: "SignalR Hub",
+            status: "healthy",
+            responseTime: "1ms",
+            lastChecked: new Date().toISOString(),
+          },
+        ];
+
+        setServices(services);
+        setLastUpdated(new Date());
+
+        // Set live status based on system health
+        const systemHealthy =
+          healthData?.status === "Healthy" &&
+          machinesData.length > 0 &&
+          edgeNodesData.length > 0;
+        setIsLive(systemHealthy);
+
+        // Show toast only on manual refresh
+        if (showToast) {
+          if (usingBackendData) {
+            toast.success(
+              "🟢 Health Dashboard Updated",
+              `System status: ${healthData?.status || "Unknown"}. ${
+                machinesData.length
+              } machines, ${
+                edgeNodesData.length
+              } edge nodes monitored. Data source: Real C++ Backend Data.`
+            );
+          } else {
+            toast.error(
+              "🔴 Health Dashboard Offline",
+              "No backend data available. System is offline. Check your connection to the C++ motor engine."
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error loading health data:", error);
+        toast.error(
+          "🔴 Health Check Failed",
+          "Unable to load system health data. Please check your connection."
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [signalRConnected, backendStatus, toast, API_BASE_URL]
+  );
+
+  // Update ref when loadHealthData changes
+  useEffect(() => {
+    loadHealthDataRef.current = loadHealthData;
+  }, [loadHealthData]);
 
   useEffect(() => {
     // Initial load with toast
-    loadHealthData(true);
+    if (loadHealthDataRef.current) {
+      loadHealthDataRef.current(true);
+    }
 
     // Auto-refresh every 30 seconds (silent)
-    const interval = setInterval(() => loadHealthData(false), 30000);
+    const interval = setInterval(() => {
+      if (loadHealthDataRef.current) {
+        loadHealthDataRef.current(false);
+      }
+    }, 30000);
+
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Empty dependency array to prevent infinite loops
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -232,13 +325,41 @@ export default function HealthPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                🏥 System Health Monitoring
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  🏥 System Health Monitoring
+                </h1>
+                {/* Data Source Status Indicator */}
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
+                    dataSource === "backend"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                  }`}
+                >
+                  {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+                </span>
+              </div>
               <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Real-time monitoring of MotorSync Intelligence platform
                 components
               </p>
+              {/* Data source indicator */}
+              {/* <div className="flex items-center space-x-2 mt-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor:
+                      dataSource === "backend" ? "#10b981" : "#6b7280",
+                  }}
+                  title={`Data Source: ${
+                    dataSource === "backend" ? "Real C++ Backend" : "Offline"
+                  }`}
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {dataSource === "backend" ? "🔗 Real Data" : "❌ Offline"}
+                </span>
+              </div> */}
             </div>
             <div className="flex items-center space-x-4">
               {lastUpdated && (

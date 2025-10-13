@@ -74,11 +74,29 @@ export default function AnimatedGearIcon({
           ></div>
         </div>
       ) : (
-        <div
-          className={`${config.gear} ${config.border} border-white rounded-full`}
-        >
+        <div className="relative">
           <div
-            className={`${config.dots} bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2`}
+            className={`${config.gear} ${config.border} border-white rounded-full`}
+          >
+            <div
+              className={`${config.dots} bg-white rounded-full absolute top-0 left-1/2 transform -translate-x-1/2`}
+            ></div>
+            <div
+              className={`${config.dots} bg-white rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2`}
+            ></div>
+            <div
+              className={`${config.dots} bg-white rounded-full absolute left-0 top-1/2 transform -translate-y-1/2`}
+            ></div>
+            <div
+              className={`${config.dots} bg-white rounded-full absolute right-0 top-1/2 transform -translate-y-1/2`}
+            ></div>
+          </div>
+          <div
+            className={`absolute ${config.indicatorOffset} ${
+              config.indicator
+            } ${
+              status === "live" ? "bg-green-400" : "bg-gray-400"
+            } rounded-full animate-pulse`}
           ></div>
         </div>
       )}

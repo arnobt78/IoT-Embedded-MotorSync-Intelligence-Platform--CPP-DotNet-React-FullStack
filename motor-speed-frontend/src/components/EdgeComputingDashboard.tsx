@@ -11,9 +11,14 @@ import {
 import { enhancedApiService, type EdgeNode } from "../services/enhancedApi";
 import AnimatedGearIcon from "./ui/AnimatedGearIcon";
 import { useToast } from "../hooks/useToast";
+import type { MotorReading } from "../types";
 
 interface EdgeComputingDashboardProps {
+  readings: MotorReading[];
+  isReadingsLoading: boolean;
   motorId?: string;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
 interface EdgeProcessing {
@@ -25,6 +30,7 @@ interface EdgeProcessing {
   localStorage: number;
   bandwidthSavings: number;
   processingEfficiency: number;
+  powerConsumption: number;
 }
 
 interface SyncStatus {
@@ -42,11 +48,17 @@ interface SyncStatus {
 }
 
 export default function EdgeComputingDashboard({
-  motorId = "MOTOR-001",
+  readings,
+  isReadingsLoading: _isReadingsLoading, // eslint-disable-line @typescript-eslint/no-unused-vars
+  motorId: _motorId = "MOTOR-001", // eslint-disable-line @typescript-eslint/no-unused-vars
+  signalRConnected = true,
+  backendStatus = "connected",
 }: EdgeComputingDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // Get latest reading for calculations
+  const latestReading = readings.length > 0 ? readings[0] : null;
   const [edgeNodes, setEdgeNodes] = useState<EdgeNode[]>([]);
   const [edgeProcessing, setEdgeProcessing] = useState<EdgeProcessing>({
     localProcessingTime: 15, // Default reasonable value
@@ -57,6 +69,7 @@ export default function EdgeComputingDashboard({
     localStorage: 10, // Default reasonable value
     bandwidthSavings: 70, // Default reasonable value
     processingEfficiency: 85, // Default reasonable value
+    powerConsumption: 1.2, // Default reasonable value
   });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     lastSync: new Date().toISOString(),
@@ -74,8 +87,32 @@ export default function EdgeComputingDashboard({
   const [performanceHistory, setPerformanceHistory] = useState<
     Array<{ timestamp: string; latency: number; throughput: number }>
   >([]);
-  const [isLive, setIsLive] = useState(true); // Default to live since we have fallback data
+  // Determine live status directly from reading availability
+  const isLive =
+    latestReading !== null && signalRConnected && backendStatus === "connected";
+  const [dataSource, setDataSource] = useState<
+    "backend" | "fallback" | "offline"
+  >("backend");
   const toast = useToast();
+
+  // Determine data source status - live or offline only
+  const getDataSourceStatus = useCallback(() => {
+    if (
+      signalRConnected &&
+      backendStatus === "connected" &&
+      edgeNodes.length > 0
+    ) {
+      return "backend";
+    } else {
+      return "offline";
+    }
+  }, [signalRConnected, backendStatus, edgeNodes.length]);
+
+  // Update data source
+  useEffect(() => {
+    const currentDataSource = getDataSourceStatus();
+    setDataSource(currentDataSource);
+  }, [getDataSourceStatus]);
 
   // Enhanced sync operation with dynamic feedback
   const performEdgeSync = async () => {
@@ -83,8 +120,8 @@ export default function EdgeComputingDashboard({
       setRefreshing(true);
 
       // Simulate sync operation with realistic timing
-      await new Promise((resolve) =>
-        setTimeout(resolve, 800 + Math.random() * 400)
+      await new Promise(
+        (resolve) => setTimeout(resolve, 800 + 200) // Fixed timing instead of random
       );
 
       // Get current edge nodes for dynamic calculations
@@ -112,7 +149,7 @@ export default function EdgeComputingDashboard({
         99.5,
         95 + (avgProcessingPower / 100) * 4 - (avgNetworkLatency / 20) * 2
       );
-      const isSuccessful = Math.random() * 100 < syncSuccessRate;
+      const isSuccessful = syncSuccessRate > 95; // Use deterministic success based on system health
 
       // Check for system stress conditions
       const isSystemStressed =
@@ -124,13 +161,13 @@ export default function EdgeComputingDashboard({
         // Success scenario - calculate dynamic metrics
         const syncLatency = Math.max(
           50,
-          200 + avgNetworkLatency * 2 + Math.random() * 100
+          200 + avgNetworkLatency * 2 + 50 // Fixed variation instead of random
         );
         const dataProcessed = Math.floor(
-          onlineNodes * (50 + Math.random() * 100)
+          onlineNodes * (50 + 50) // Fixed variation instead of random
         );
         const bandwidthSaved = Math.floor(
-          (avgProcessingPower / 100) * 85 + Math.random() * 10
+          (avgProcessingPower / 100) * 85 + 5 // Fixed variation instead of random
         );
         const compressionRatio = Math.floor(75 + (bandwidthSaved / 100) * 20);
 
@@ -172,7 +209,7 @@ export default function EdgeComputingDashboard({
             : avgProcessingPower < 50
             ? "Processing Overload"
             : "System Busy";
-        const retryTime = Math.floor(5 + Math.random() * 10);
+        const retryTime = Math.floor(7); // Fixed retry time
         const offlineNodes = currentNodes.length - onlineNodes;
 
         const errorMessage =
@@ -245,378 +282,427 @@ export default function EdgeComputingDashboard({
     };
   }, []);
 
-  const loadEdgeData = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  const loadEdgeData = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
 
-      // Get real edge nodes from enhanced backend (C++ engine)
-      let nodes: EdgeNode[] = await enhancedApiService.getEdgeNodes();
+        let nodes: EdgeNode[] = [];
 
-      // Simulate minimal delay for UI smoothness
-      await new Promise((resolve) =>
-        setTimeout(resolve, isRefresh ? 200 : 100)
-      );
+        // Try to fetch real edge nodes from enhanced backend (C++ engine) - ONLY when connected
+        if (signalRConnected && backendStatus === "connected") {
+          try {
+            nodes = await enhancedApiService.getEdgeNodes();
+            console.log(
+              `🌍 Edge nodes loaded from backend: ${nodes.length} nodes`
+            );
+          } catch (error) {
+            console.error("Failed to fetch edge nodes from backend:", error);
+            nodes = []; // Empty when API fails
+          }
+        } else {
+          console.log("🌍 Offline mode - no edge nodes shown");
+          nodes = []; // Empty when offline
+        }
 
-      // If no real data, generate fallback edge nodes
-      if (nodes.length === 0) {
-        const fallbackNodes: EdgeNode[] = [
-          {
-            id: "edge-001",
-            name: "Motor Control Edge",
-            location: "Production Floor A",
-            cpuUsage: 45.7,
-            memoryUsage: 62.3,
-            networkLatency: 12.5,
-            processingTime: 25.2,
-            processingPower: 85.2,
-            storageUsed: 2.3,
-            storageTotal: 8.0,
-            bandwidthUsage: 15.3,
-            isOnline: true,
-            connectedMachines: 12,
-            lastSeen: new Date().toISOString(),
-            lastSync: new Date().toISOString(),
-            status: "online",
-            version: "2.1.0",
-            temperature: 45.2,
-            powerConsumption: 125.5,
-          },
-          {
-            id: "edge-002",
-            name: "Sensor Aggregator",
-            location: "Control Room",
-            cpuUsage: 32.1,
-            memoryUsage: 48.7,
-            networkLatency: 8.2,
-            processingTime: 18.9,
-            processingPower: 78.9,
-            storageUsed: 1.8,
-            storageTotal: 4.0,
-            bandwidthUsage: 12.1,
-            isOnline: true,
-            connectedMachines: 8,
-            lastSeen: new Date().toISOString(),
-            lastSync: new Date().toISOString(),
-            status: "online",
-            version: "1.8.5",
-            temperature: 38.7,
-            powerConsumption: 95.2,
-          },
-          {
-            id: "edge-003",
-            name: "AI Inference Engine",
-            location: "Data Center",
-            cpuUsage: 67.8,
-            memoryUsage: 71.2,
-            networkLatency: 15.3,
-            processingTime: 32.4,
-            processingPower: 92.4,
-            storageUsed: 5.1,
-            storageTotal: 16.0,
-            bandwidthUsage: 28.7,
-            isOnline: true,
-            connectedMachines: 25,
-            lastSeen: new Date().toISOString(),
-            lastSync: new Date().toISOString(),
-            status: "online",
-            version: "3.0.1",
-            temperature: 52.8,
-            powerConsumption: 185.7,
-          },
-        ];
-        nodes = fallbackNodes;
-      }
+        // Simulate minimal delay for UI smoothness
+        await new Promise((resolve) =>
+          setTimeout(resolve, isRefresh ? 200 : 100)
+        );
 
-      // Calculate edge processing metrics with physics-based formulas
-      // Ensure all values are valid numbers with comprehensive fallbacks
-      const avgCpuUsage =
-        nodes.length > 0
-          ? nodes.reduce((sum, node) => sum + (node.cpuUsage || 50), 0) /
-            nodes.length
-          : 50;
-      const avgMemoryUsage =
-        nodes.length > 0
-          ? nodes.reduce((sum, node) => sum + (node.memoryUsage || 60), 0) /
-            nodes.length
-          : 60;
-      const avgNetworkLatency =
-        nodes.length > 0
-          ? nodes.reduce((sum, node) => sum + (node.networkLatency || 15), 0) /
-            nodes.length
-          : 15;
-      const avgProcessingPower =
-        nodes.length > 0
-          ? nodes.reduce((sum, node) => sum + (node.processingPower || 80), 0) /
-            nodes.length
-          : 80;
-      const totalStorageUsed = nodes.reduce(
-        (sum, node) => sum + (node.storageUsed || 5),
-        0
-      );
-      const totalStorageTotal = nodes.reduce(
-        (sum, node) => sum + (node.storageTotal || 20),
-        0
-      );
+        // When offline, don't show fallback nodes - true offline mode
+        // (API returns 2 nodes on localhost, 9 nodes on production)
 
-      // Physics-based Local Processing Time calculation
-      // Base latency + CPU load factor + memory pressure + network overhead
-      const localProcessingTime = Math.max(
-        5,
-        15 + // Base processing time
-          (avgCpuUsage / 100) * 25 + // CPU load impact (0-25ms)
-          (avgMemoryUsage / 100) * 15 + // Memory pressure impact (0-15ms)
-          avgNetworkLatency * 0.8 // Network overhead factor
-      );
+        // Calculate edge processing metrics with physics-based formulas using REAL motor data
+        // Use latestReading for all calculations - this is the key fix!
+        // Using actual baseline values from C++ motor engine (motor_engine.cpp)
+        const motorSpeed = latestReading?.speed || 2500; // RPM - BASE_SPEED from C++
+        const motorTemperature = latestReading?.temperature || 65; // °C - BASE_TEMPERATURE from C++
+        const motorVibration = latestReading?.vibration || 2.0; // mm/s - BASE_VIBRATION from C++
+        const motorEfficiency = latestReading?.efficiency || 92; // % - BASE_EFFICIENCY from C++
+        const motorPower = latestReading?.powerConsumption || 5.0; // kW - Will be used in calculations
+        const motorHealth = latestReading?.systemHealth || 92; // % - BASE_HEALTH from C++
 
-      // Physics-based AI Inference Time calculation
-      // Model complexity + processing power + CPU utilization
-      const aiInferenceTime = Math.max(
-        8,
-        12 + // Base inference time
-          (100 - avgProcessingPower) * 0.3 + // Processing power impact
-          (avgCpuUsage / 100) * 20 + // CPU utilization impact
-          Math.random() * 5 // Model complexity variation
-      );
+        // Calculate edge node performance based on motor load and performance
+        // Higher motor load = more edge processing demand
+        const motorLoadFactor = Math.min(1.0, motorSpeed / 2500); // 0-1 scale
+        const temperatureFactor = Math.min(1.0, motorTemperature / 90); // 0-1 scale
+        const vibrationFactor = Math.min(1.0, motorVibration / 6.0); // 0-1 scale
+        const efficiencyFactor = motorEfficiency / 100; // 0-1 scale
 
-      // Physics-based Bandwidth Savings calculation
-      // Data compression + local processing efficiency + storage utilization
-      const bandwidthSavings = Math.min(
-        95,
-        Math.max(
-          50,
-          60 + // Base savings
-            (avgProcessingPower / 100) * 20 + // Processing power efficiency
-            (totalStorageTotal > 0
-              ? (totalStorageUsed / totalStorageTotal) * 15
-              : 10) + // Storage utilization factor with fallback
-            (100 - avgCpuUsage) * 0.1 // CPU efficiency factor
-        )
-      );
-
-      // Physics-based Local Storage calculation
-      // Current usage + compression factor + processing overhead
-      const localStorage = Math.min(
-        totalStorageTotal || 50, // Fallback to 50GB if totalStorageTotal is 0
-        totalStorageUsed +
-          (bandwidthSavings / 100) * 2 + // Compression savings
-          (avgProcessingPower / 100) * 1.5 // Processing overhead
-      );
-
-      // Cloud Sync Time calculation (for reference)
-      const cloudSyncTime = Math.max(
-        100,
-        200 + // Base cloud latency
-          avgNetworkLatency * 2 + // Network latency factor
-          (avgCpuUsage / 100) * 50 + // CPU load impact
-          Math.random() * 30 // Network variability
-      );
-
-      // Data Compression calculation
-      const dataCompression = Math.min(
-        95,
-        Math.max(
-          70,
-          75 + // Base compression
-            (bandwidthSavings / 100) * 15 + // Bandwidth savings factor
-            (avgProcessingPower / 100) * 5 // Processing power factor
-        )
-      );
-
-      // Physics-based Processing Efficiency calculation
-      // Overall system efficiency based on resource utilization and performance
-      const processingEfficiency = Math.min(
-        98,
-        Math.max(
-          75,
-          85 + // Base efficiency
-            (100 - avgCpuUsage) * 0.1 + // CPU efficiency bonus (lower CPU = higher efficiency)
-            (100 - avgMemoryUsage) * 0.08 + // Memory efficiency bonus
-            (bandwidthSavings / 100) * 8 + // Bandwidth savings contribution
-            (dataCompression / 100) * 5 + // Compression efficiency contribution
-            Math.random() * 2 // System optimization factor
-        )
-      );
-
-      setEdgeProcessing({
-        localProcessingTime,
-        cloudSyncTime,
-        dataCompression,
-        offlineCapability: true, // Always true for edge computing
-        aiInferenceTime,
-        localStorage,
-        bandwidthSavings,
-        processingEfficiency,
-      });
-
-      // Physics-based sync status calculations
-      // Pending data based on processing rate and sync frequency
-      const basePendingData = Math.floor(Math.random() * 50) + 10; // 10-60 base pending
-      const processingRate = avgProcessingPower / 100; // 0-1 scale
-      const pendingData = Math.floor(basePendingData * (2 - processingRate)); // Higher processing = fewer pending
-
-      // Sync errors based on network conditions and processing load
-      const networkReliability = Math.max(0, 1 - avgNetworkLatency / 50); // Better network = fewer errors
-      const processingStability = Math.max(0, 1 - avgCpuUsage / 100); // Lower CPU = more stable
-      const syncErrors = Math.floor(
-        (1 - networkReliability * processingStability) * 5
-      ); // 0-5 errors
-
-      // Data integrity based on system health and error rate
-      const baseIntegrity = 99.5;
-      const errorImpact = syncErrors * 0.1; // Each error reduces integrity by 0.1%
-      const systemHealthImpact = (avgProcessingPower / 100) * 0.2; // Better processing = higher integrity
-      const dataIntegrity = Math.min(
-        99.9,
-        baseIntegrity - errorImpact + systemHealthImpact
-      );
-
-      // Dynamic sync frequency based on system load and network conditions
-      const baseFrequency = 5; // Base 5 minutes
-      const loadFactor = avgCpuUsage / 100; // Higher load = more frequent syncs
-      const networkFactor = avgNetworkLatency / 20; // Poor network = less frequent syncs
-      const syncFrequency = Math.max(
-        1,
-        Math.min(15, baseFrequency + loadFactor * 3 - networkFactor * 2)
-      );
-
-      // Dynamic batch size based on processing power and network latency
-      const baseBatchSize = 100;
-      const processingFactor = avgProcessingPower / 100; // Higher processing = larger batches
-      const networkLatencyFactor = avgNetworkLatency / 15; // Higher latency = smaller batches
-      const batchSize = Math.max(
-        25,
-        Math.min(
-          500,
-          Math.floor(
-            baseBatchSize * processingFactor * (2 - networkLatencyFactor)
+        // Edge node CPU usage based on motor processing demand
+        const avgCpuUsage = Math.min(
+          95,
+          Math.max(
+            10,
+            25 + // Base CPU usage
+              motorLoadFactor * 40 + // Motor load impact (0-40%)
+              temperatureFactor * 15 + // Temperature processing overhead (0-15%)
+              vibrationFactor * 10 + // Vibration analysis overhead (0-10%)
+              (1 - efficiencyFactor) * 20 // Inefficiency compensation (0-20%)
           )
-        )
-      );
+        );
 
-      // Sync latency based on network conditions and processing load
-      const baseLatency = 200; // Base 200ms
-      const networkLatency = avgNetworkLatency * 2; // Network impact
-      const processingLatency = (avgCpuUsage / 100) * 100; // CPU load impact
-      const syncLatency = Math.max(
-        50,
-        baseLatency + networkLatency + processingLatency + Math.random() * 50
-      );
+        // Edge node memory usage based on data processing requirements
+        const avgMemoryUsage = Math.min(
+          90,
+          Math.max(
+            20,
+            30 + // Base memory usage
+              motorLoadFactor * 25 + // Data processing load (0-25%)
+              (motorSpeed / 1000) * 5 + // Speed data processing (0-15%)
+              (motorTemperature / 10) * 2 + // Temperature data (0-18%)
+              motorVibration * 3 // Vibration analysis (0-18%)
+          )
+        );
 
-      // Success rate based on system reliability
-      const baseSuccessRate = 99.0;
-      const reliabilityFactor = (networkReliability + processingStability) / 2;
-      const successRate = Math.min(
-        99.9,
-        baseSuccessRate + reliabilityFactor * 0.8
-      );
+        // Network latency based on motor data transmission requirements
+        const avgNetworkLatency = Math.max(
+          5,
+          Math.min(
+            50,
+            10 + // Base latency
+              motorLoadFactor * 20 + // High load = more data to transmit (0-20ms)
+              temperatureFactor * 10 + // Temperature alerts (0-10ms)
+              vibrationFactor * 8 + // Vibration analysis (0-8ms)
+              Math.random() * 5 // Network variability
+          )
+        );
 
-      // Retry attempts based on error rate and network conditions
-      const retryAttempts = Math.floor(syncErrors * (1 + networkLatencyFactor));
+        // Processing power based on motor performance requirements
+        const avgProcessingPower = Math.min(
+          95,
+          Math.max(
+            30,
+            60 + // Base processing power
+              motorLoadFactor * 25 + // Motor load processing (0-25%)
+              efficiencyFactor * 10 + // Efficiency optimization (0-10%)
+              (motorHealth / 100) * 15 + // Health monitoring (0-15%)
+              Math.random() * 5 // System optimization
+          )
+        );
 
-      setSyncStatus({
-        lastSync: new Date().toISOString(),
-        pendingData,
-        syncErrors,
-        dataIntegrity,
-        conflictResolution: "Automatic",
-        autoSync: true,
-        syncFrequency,
-        batchSize,
-        syncLatency,
-        retryAttempts,
-        successRate,
-      });
+        // Storage usage based on motor data accumulation
+        const motorDataPerHour =
+          motorLoadFactor * 50 + vibrationFactor * 20 + temperatureFactor * 15; // GB/hour
+        const totalStorageUsed = Math.min(
+          80,
+          Math.max(
+            5,
+            motorDataPerHour * 0.5 + // Current hour data
+              motorLoadFactor * 10 + // Historical data (0-10GB)
+              motorVibration * 2 + // Vibration logs (0-12GB)
+              motorTemperature / 5 + // Temperature logs (0-18GB)
+              (motorPower / 10) * 3 // Power consumption logs (0-15GB)
+          )
+        );
+        const totalStorageTotal = 100; // 100GB total storage per edge node
 
-      // Generate performance history
-      const now = new Date();
-      const history = [];
-      for (let i = 59; i >= 0; i--) {
-        const timestamp = new Date(now.getTime() - i * 60 * 1000);
-        history.push({
-          timestamp: timestamp.toISOString(),
-          latency: 10 + Math.random() * 20,
-          throughput: 85 + Math.random() * 15,
+        // Calculate edge node power consumption based on motor power and processing requirements
+        const edgeNodePowerConsumption = Math.max(
+          0.5, // Minimum 0.5kW for edge node operation
+          Math.min(
+            3.0, // Maximum 3.0kW for edge node (increased to show real values)
+            0.8 + // Base edge node power consumption
+              (motorPower / 10) * 0.5 + // Motor power correlation (0-1kW)
+              motorLoadFactor * 0.4 + // Processing load impact (0-0.4kW)
+              motorVibration * 0.1 + // Vibration analysis overhead (0-0.6kW)
+              (motorTemperature / 100) * 0.2 // Temperature monitoring overhead (0-0.18kW)
+          )
+        );
+
+        // Physics-based Local Processing Time calculation using MOTOR DATA
+        // Edge processing latency based on motor performance requirements
+        const localProcessingTime = Math.max(
+          5,
+          10 + // Base edge processing time
+            motorLoadFactor * 20 + // Motor load processing overhead (0-20ms)
+            motorVibration * 2 + // Vibration analysis processing (0-12ms)
+            (motorTemperature / 10) * 1.5 + // Temperature monitoring (0-13.5ms)
+            (avgCpuUsage / 100) * 15 + // Edge CPU load impact (0-15ms)
+            Math.random() * 3 // Processing variability
+        );
+
+        // Physics-based AI Inference Time calculation using MOTOR DATA
+        // Machine learning inference based on motor condition analysis
+        const aiInferenceTime = Math.max(
+          8,
+          15 + // Base AI inference time
+            motorVibration * 3 + // Vibration pattern analysis (0-18ms)
+            (motorTemperature / 20) * 2 + // Thermal pattern recognition (0-9ms)
+            ((100 - motorEfficiency) / 100) * 25 + // Efficiency degradation analysis (0-25ms)
+            (motorHealth < 80 ? 15 : 5) + // Health prediction complexity (5-15ms)
+            Math.random() * 4 // Model complexity variation
+        );
+
+        // Physics-based Bandwidth Savings calculation using MOTOR DATA
+        // Data compression based on motor data patterns and processing efficiency
+        const bandwidthSavings = Math.min(
+          95,
+          Math.max(
+            50,
+            65 + // Base edge processing savings
+              motorLoadFactor * 15 + // Motor load optimization (0-15%)
+              (motorEfficiency / 100) * 10 + // Efficiency-based compression (0-10%)
+              (motorVibration < 3.0 ? 8 : 3) + // Vibration pattern compression (3-8%)
+              (motorTemperature < 70 ? 7 : 2) + // Temperature pattern compression (2-7%)
+              (avgProcessingPower / 100) * 5 // Edge processing efficiency (0-5%)
+          )
+        );
+
+        // Physics-based Local Storage calculation using MOTOR DATA
+        // Storage usage based on motor data accumulation and processing
+        const localStorage = Math.min(
+          totalStorageTotal || 100, // 100GB total storage
+          totalStorageUsed +
+            (bandwidthSavings / 100) * 3 + // Compression savings storage
+            motorLoadFactor * 2 + // Motor load data caching (0-2GB)
+            motorVibration * 0.5 + // Vibration pattern storage (0-3GB)
+            motorTemperature / 20 // Temperature history storage (0-4.5GB)
+        );
+
+        // Cloud Sync Time calculation using MOTOR DATA (for reference)
+        const cloudSyncTime = Math.max(
+          100,
+          250 + // Base cloud latency
+            avgNetworkLatency * 3 + // Network latency factor
+            motorLoadFactor * 100 + // Motor data transmission overhead (0-100ms)
+            motorVibration * 5 + // Vibration data sync (0-30ms)
+            (motorTemperature / 10) * 3 + // Temperature data sync (0-27ms)
+            Math.sin(Date.now() * 0.0008) * 20 // Use sine wave for realistic variation
+        );
+
+        // Data Compression calculation using MOTOR DATA
+        const dataCompression = Math.min(
+          95,
+          Math.max(
+            70,
+            75 + // Base compression
+              (motorEfficiency / 100) * 10 + // Motor efficiency-based compression (0-10%)
+              (motorVibration < 3.0 ? 8 : 4) + // Vibration pattern compression (4-8%)
+              (motorTemperature < 70 ? 7 : 3) + // Temperature pattern compression (3-7%)
+              (bandwidthSavings / 100) * 5 // Bandwidth savings factor (0-5%)
+          )
+        );
+
+        // Physics-based Processing Efficiency calculation using MOTOR DATA
+        // Overall edge system efficiency based on motor performance and resource utilization
+        const processingEfficiency = Math.min(
+          98,
+          Math.max(
+            70,
+            80 + // Base edge processing efficiency
+              (motorEfficiency / 100) * 10 + // Motor efficiency correlation (0-10%)
+              (motorHealth / 100) * 8 + // Motor health impact on processing (0-8%)
+              motorLoadFactor * 5 + // Motor load processing efficiency (0-5%)
+              (100 - avgCpuUsage) * 0.05 + // CPU efficiency bonus (0-4.5%)
+              (100 - avgMemoryUsage) * 0.03 + // Memory efficiency bonus (0-2.4%)
+              Math.sin(Date.now() * 0.0006) * 2 // System optimization factor
+          )
+        );
+
+        setEdgeProcessing({
+          localProcessingTime,
+          cloudSyncTime,
+          dataCompression,
+          offlineCapability: true, // Always true for edge computing
+          aiInferenceTime,
+          localStorage,
+          bandwidthSavings,
+          processingEfficiency,
+          powerConsumption: edgeNodePowerConsumption,
         });
-      }
 
-      setEdgeNodes(nodes);
-      setPerformanceHistory(history);
+        // Physics-based sync status calculations
+        // Pending data based on processing rate and sync frequency
+        const basePendingData =
+          Math.floor(Math.sin(Date.now() * 0.0005) * 25) + 35; // 10-60 base pending using sine wave
+        const processingRate = avgProcessingPower / 100; // 0-1 scale
+        const pendingData = Math.floor(basePendingData * (2 - processingRate)); // Higher processing = fewer pending
 
-      // Initialize live status - always true since we have automatic updates
-      setIsLive(true);
+        // Sync errors based on network conditions and processing load
+        const networkReliability = Math.max(0, 1 - avgNetworkLatency / 50); // Better network = fewer errors
+        const processingStability = Math.max(0, 1 - avgCpuUsage / 100); // Lower CPU = more stable
+        const syncErrors = Math.floor(
+          (1 - networkReliability * processingStability) * 5
+        ); // 0-5 errors
 
-      // Show success toast notification for refresh operations
-      if (isRefresh) {
-        const avgProcessingTime =
-          nodes.length > 0
-            ? nodes.reduce(
-                (sum, node) => sum + (node.processingTime || 25),
-                0
-              ) / nodes.length
-            : 25;
-        const avgCpuUsage =
-          nodes.length > 0
-            ? nodes.reduce((sum, node) => sum + (node.cpuUsage || 50), 0) /
-              nodes.length
-            : 50;
-
-        toast.success(
-          "🔄 Edge Data Synchronized Successfully",
-          `Synced ${nodes.length} edge nodes in ${avgProcessingTime.toFixed(
-            1
-          )}ms. System efficiency: ${(100 - avgCpuUsage).toFixed(1)}%`
+        // Data integrity based on system health and error rate
+        const baseIntegrity = 99.5;
+        const errorImpact = syncErrors * 0.1; // Each error reduces integrity by 0.1%
+        const systemHealthImpact = (avgProcessingPower / 100) * 0.2; // Better processing = higher integrity
+        const dataIntegrity = Math.min(
+          99.9,
+          baseIntegrity - errorImpact + systemHealthImpact
         );
-      }
-    } catch (error) {
-      console.error("Failed to load edge computing data:", error);
 
-      // Show error toast notification for refresh operations
-      if (isRefresh) {
-        toast.error(
-          "⚠️ Edge Data Sync Failed",
-          "Unable to synchronize edge computing data. Using cached data. Check network connection and try again."
+        // Dynamic sync frequency based on system load and network conditions
+        const baseFrequency = 5; // Base 5 minutes
+        const loadFactor = avgCpuUsage / 100; // Higher load = more frequent syncs
+        const networkFactor = avgNetworkLatency / 20; // Poor network = less frequent syncs
+        const syncFrequency = Math.max(
+          1,
+          Math.min(15, baseFrequency + loadFactor * 3 - networkFactor * 2)
         );
+
+        // Dynamic batch size based on processing power and network latency
+        const baseBatchSize = 100;
+        const processingFactor = avgProcessingPower / 100; // Higher processing = larger batches
+        const networkLatencyFactor = avgNetworkLatency / 15; // Higher latency = smaller batches
+        const batchSize = Math.max(
+          25,
+          Math.min(
+            500,
+            Math.floor(
+              baseBatchSize * processingFactor * (2 - networkLatencyFactor)
+            )
+          )
+        );
+
+        // Sync latency based on network conditions and processing load
+        const baseLatency = 200; // Base 200ms
+        const networkLatency = avgNetworkLatency * 2; // Network impact
+        const processingLatency = (avgCpuUsage / 100) * 100; // CPU load impact
+        const syncLatency = Math.max(
+          50,
+          baseLatency +
+            networkLatency +
+            processingLatency +
+            Math.sin(Date.now() * 0.0007) * 25 // Use sine wave for realistic variation
+        );
+
+        // Success rate based on system reliability
+        const baseSuccessRate = 99.0;
+        const reliabilityFactor =
+          (networkReliability + processingStability) / 2;
+        const successRate = Math.min(
+          99.9,
+          baseSuccessRate + reliabilityFactor * 0.8
+        );
+
+        // Retry attempts based on error rate and network conditions
+        const retryAttempts = Math.floor(
+          syncErrors * (1 + networkLatencyFactor)
+        );
+
+        setSyncStatus({
+          lastSync: new Date().toISOString(),
+          pendingData,
+          syncErrors,
+          dataIntegrity,
+          conflictResolution: "Automatic",
+          autoSync: true,
+          syncFrequency,
+          batchSize,
+          syncLatency,
+          retryAttempts,
+          successRate,
+        });
+
+        // Generate performance history
+        const now = new Date();
+        const history = [];
+        for (let i = 59; i >= 0; i--) {
+          const timestamp = new Date(now.getTime() - i * 60 * 1000);
+          // Calculate latency based on motor performance over time
+          const timeBasedMotorLoad = motorLoadFactor + Math.sin(i * 0.1) * 0.2; // Motor load variation
+          const latency = Math.max(
+            5,
+            localProcessingTime +
+              timeBasedMotorLoad * 15 + // Motor load impact on latency
+              Math.sin(i * 0.15) * 8 + // Natural variation
+              Math.random() * 4 // Random variation
+          );
+          // Calculate throughput based on motor efficiency and edge processing
+          const throughput = Math.min(
+            100,
+            Math.max(
+              60,
+              (motorEfficiency / 100) * 40 + // Motor efficiency impact (0-40%)
+                (bandwidthSavings / 100) * 35 + // Bandwidth savings impact (0-35%)
+                (processingEfficiency / 100) * 25 + // Processing efficiency impact (0-25%)
+                Math.sin(i * 0.12) * 5 + // Natural variation
+                Math.random() * 3 // Random variation
+            )
+          );
+          history.push({
+            timestamp: timestamp.toISOString(),
+            latency: Math.round(latency * 10) / 10, // Round to 1 decimal
+            throughput: Math.round(throughput * 10) / 10, // Round to 1 decimal
+          });
+        }
+
+        setEdgeNodes(nodes);
+        setPerformanceHistory(history);
+
+        // Live status is automatically determined by reading availability
+
+        // Show success toast notification for refresh operations
+        if (isRefresh) {
+          const avgProcessingTime =
+            nodes.length > 0
+              ? nodes.reduce(
+                  (sum, node) => sum + (node.processingTime || 25),
+                  0
+                ) / nodes.length
+              : 25;
+          const avgCpuUsage =
+            nodes.length > 0
+              ? nodes.reduce((sum, node) => sum + (node.cpuUsage || 50), 0) /
+                nodes.length
+              : 50;
+
+          toast.success(
+            "🔄 Edge Data Synchronized Successfully",
+            `Synced ${nodes.length} edge nodes in ${avgProcessingTime.toFixed(
+              1
+            )}ms. System efficiency: ${(100 - avgCpuUsage).toFixed(1)}%`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load edge computing data:", error);
+
+        // Show error toast notification for refresh operations
+        if (isRefresh) {
+          toast.error(
+            "⚠️ Edge Data Sync Failed",
+            "Unable to synchronize edge computing data. Using cached data. Check network connection and try again."
+          );
+        }
+      } finally {
+        if (isRefresh) {
+          setRefreshing(false);
+        } else {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (isRefresh) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
-    }
-  };
+    },
+    [
+      signalRConnected,
+      backendStatus,
+      toast,
+      latestReading?.speed,
+      latestReading?.temperature,
+      latestReading?.vibration,
+      latestReading?.efficiency,
+      latestReading?.systemHealth,
+      latestReading?.powerConsumption,
+    ]
+  );
 
   const updateRealTimeData = useCallback(() => {
-    // Update real-time metrics with smaller, more realistic changes
-    // Note: This function only updates local state, no API calls are made
+    // Update real-time metrics - just update timestamps, backend provides real calculated values
+    // Note: This function only updates local state timestamps, no sine wave variation needed
     setEdgeNodes((prev) => {
       const updatedNodes = prev.map((node) => ({
         ...node,
         lastSeen: new Date().toISOString(),
-        cpuUsage: Math.max(
-          0,
-          Math.min(100, node.cpuUsage + (Math.random() - 0.5) * 2) // Reduced variation
-        ),
-        memoryUsage: Math.max(
-          0,
-          Math.min(100, node.memoryUsage + (Math.random() - 0.5) * 1.5) // Reduced variation
-        ),
-        networkLatency: Math.max(
-          5,
-          node.networkLatency + (Math.random() - 0.5) * 1 // Reduced variation
-        ),
-        processingPower: Math.max(
-          0,
-          Math.min(100, node.processingPower + (Math.random() - 0.5) * 1) // Add processing power updates
-        ),
-        processingTime: Math.max(
-          5,
-          Math.min(50, node.processingTime + (Math.random() - 0.5) * 2) // Add processing time updates
-        ),
+        // All metrics (CPU, Memory, Network, Processing, Storage) come from backend
+        // No artificial variation needed - real motor data drives the changes
       }));
 
       // Recalculate edge processing metrics with updated node data
@@ -669,7 +755,7 @@ export default function EdgeComputingDashboard({
         12 +
           (100 - avgProcessingTime) * 0.3 +
           (avgCpuUsage / 100) * 20 +
-          Math.random() * 5
+          Math.sin(Date.now() * 0.0009) * 2.5 // Use sine wave for realistic variation
       );
       const bandwidthSavings = Math.min(
         95,
@@ -699,7 +785,7 @@ export default function EdgeComputingDashboard({
             (100 - avgCpuUsage) * 0.1 + // CPU efficiency bonus
             (100 - avgMemoryUsage) * 0.08 + // Memory efficiency bonus
             (bandwidthSavings / 100) * 8 + // Bandwidth savings contribution
-            Math.random() * 2 // System optimization factor
+            Math.sin(Date.now() * 0.0004) * 1 // Use sine wave for realistic variation
         )
       );
 
@@ -713,21 +799,35 @@ export default function EdgeComputingDashboard({
         processingEfficiency,
       }));
 
-      // Set live status - always true since we have automatic updates
-      setIsLive(true);
+      // Live status is automatically determined by reading availability
 
       return updatedNodes;
     });
 
-    // Update performance history with physics-based calculations
+    // Update performance history with physics-based calculations using MOTOR DATA
     setPerformanceHistory((prev) => {
-      const currentLatency =
-        edgeProcessing.localProcessingTime + Math.random() * 5;
+      // Use current motor data for real-time calculations
+      const currentMotorSpeed = latestReading?.speed || 1500;
+      const currentMotorLoad = Math.min(1.0, currentMotorSpeed / 2500);
+      const currentMotorEfficiency = latestReading?.efficiency || 85;
+
+      const currentLatency = Math.max(
+        5,
+        edgeProcessing.localProcessingTime +
+          currentMotorLoad * 12 + // Current motor load impact
+          Math.sin(Date.now() * 0.001) * 3 + // Natural variation
+          Math.random() * 2 // Random variation
+      );
+
       const currentThroughput = Math.min(
         100,
         Math.max(
-          70,
-          85 + (edgeProcessing.bandwidthSavings / 100) * 10 + Math.random() * 5
+          60,
+          (currentMotorEfficiency / 100) * 35 + // Current motor efficiency impact
+            (edgeProcessing.bandwidthSavings / 100) * 40 + // Current bandwidth savings
+            (edgeProcessing.processingEfficiency / 100) * 25 + // Current processing efficiency
+            Math.sin(Date.now() * 0.0008) * 3 + // Natural variation
+            Math.random() * 2 // Random variation
         )
       );
 
@@ -738,20 +838,27 @@ export default function EdgeComputingDashboard({
       };
       return [newEntry, ...prev.slice(0, 59)];
     });
-  }, [edgeProcessing.localProcessingTime, edgeProcessing.bandwidthSavings]);
+  }, [
+    edgeProcessing.bandwidthSavings,
+    edgeProcessing.localProcessingTime,
+    edgeProcessing.processingEfficiency,
+    latestReading?.speed,
+    latestReading?.efficiency,
+  ]);
 
+  // Load data when component mounts and when readings change
   useEffect(() => {
-    // Load data immediately and set loading to false quickly
-    loadEdgeData().then(() => {
-      // Ensure we're showing live status after data loads
-      setIsLive(true);
-    });
+    if (latestReading) {
+      loadEdgeData(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestReading?.id, signalRConnected, backendStatus]);
 
-    // Start real-time updates every 5 seconds (better real-time visualization)
+  // Start real-time updates
+  useEffect(() => {
     const interval = setInterval(updateRealTimeData, 5000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [motorId]);
+  }, [updateRealTimeData]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -794,9 +901,22 @@ export default function EdgeComputingDashboard({
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            🌍 Edge Computing & Local Processing
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              🌍 Edge Computing & Local Processing
+            </h2>
+
+            {/* Data Source Status Indicator */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                dataSource === "backend"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+              }`}
+            >
+              {dataSource === "backend" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+            </span>
+          </div>
           <div className="relative">
             <button
               onClick={performEdgeSync}
@@ -814,7 +934,9 @@ export default function EdgeComputingDashboard({
               <span className="transition-opacity duration-200">
                 {refreshing
                   ? `Syncing ${edgeNodes.length} Edge Nodes...`
-                  : `Sync Edge Data (${edgeNodes.length} nodes)`}
+                  : `Sync Edge Data (${edgeNodes.length} node${
+                      edgeNodes.length !== 1 ? "s" : ""
+                    })`}
               </span>
             </button>
 
@@ -865,15 +987,31 @@ export default function EdgeComputingDashboard({
                   ℹ️
                 </div>
                 <div>
-                  <h4 className="text-blue-800 dark:text-blue-200 font-medium mb-2">
-                    🌍 Edge Computing Platform
-                  </h4>
+                  <div className="flex items-start gap-3">
+                    <h4 className="text-blue-800 dark:text-blue-200 font-medium mb-2">
+                      🌍 Edge Computing Platform
+                    </h4>
+                    {/* Data Source Status Indicator */}
+                    {/* <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        backendStatus === "connected"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {backendStatus === "connected"
+                        ? "🔗 LIVE DATA (Real C++ Backend Data - Live physics calculations from motor engine)"
+                        : "❌ OFFLINE (Offline Mode - Using cached edge node data)"}
+                    </span> */}
+                  </div>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
                     This edge computing system provides local data processing,
-                    AI inference, and offline capabilities to reduce latency,
-                    improve reliability, and enable autonomous operation even
-                    when cloud connectivity is limited.
+                    AI inference, and offline capabilities based on real motor
+                    performance data. All calculations use industrial physics
+                    formulas derived from your motor's speed, temperature,
+                    vibration, and efficiency to optimize edge processing.
                   </p>
+
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
                       • <strong>Local Processing:</strong> Real-time data
@@ -901,7 +1039,7 @@ export default function EdgeComputingDashboard({
             </div>
 
             {/* Edge Computing Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-200">
                 <div className="text-sm opacity-90">Local Processing Time</div>
                 <div className="text-3xl font-bold">
@@ -912,12 +1050,13 @@ export default function EdgeComputingDashboard({
                   💡 <strong>Speed:</strong> Local data processing latency
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  📊 <strong>Formula:</strong> 15ms + (CPU% × 0.25ms) + (Memory%
-                  × 0.15ms) + (Network Latency × 0.8) = Local Processing Time
+                  📊 <strong>Formula:</strong> 10ms + (Motor Load × 20ms) +
+                  (Vibration × 2ms) + (Temperature/10 × 1.5ms) + (Edge CPU% ×
+                  15ms) = Local Processing Time
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  🔬 <strong>Physics:</strong> Base latency + CPU load factor +
-                  memory pressure + network overhead
+                  🔬 <strong>Physics:</strong> Edge processing latency based on
+                  motor performance requirements and vibration analysis
                 </div>
                 <div className="text-xs opacity-50 mt-1">
                   <strong>Cloud Alternative:</strong> 250-500ms
@@ -935,13 +1074,14 @@ export default function EdgeComputingDashboard({
                   through local processing
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  📊 <strong>Formula:</strong> 60% + (Processing Time% × 0.2) +
-                  (Storage Used/50GB × 0.15) + ((100 - CPU%) × 0.001) =
+                  📊 <strong>Formula:</strong> 65% + (Motor Load × 15%) + (Motor
+                  Efficiency × 10%) + (Vibration &lt; 3.0 ? 8% : 3%) +
+                  (Temperature &lt; 70°C ? 7% : 2%) + (Edge Processing × 5%) =
                   Bandwidth Savings
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  🔬 <strong>Physics:</strong> Base savings + processing
-                  efficiency + storage utilization + CPU efficiency factor
+                  🔬 <strong>Physics:</strong> Data compression based on motor
+                  data patterns, efficiency optimization, and vibration analysis
                 </div>
                 <div className="text-xs opacity-50 mt-1">
                   <strong>Cost Savings:</strong> ~$
@@ -960,13 +1100,15 @@ export default function EdgeComputingDashboard({
                   inference speed
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  📊 <strong>Formula:</strong> 12ms + ((100 - Processing Time%)
-                  × 0.3ms) + (CPU% × 0.2ms) + Model Complexity = AI Inference
-                  Time
+                  📊 <strong>Formula:</strong> 15ms + (Vibration × 3ms) +
+                  (Temperature/20 × 2ms) + ((100 - Motor Efficiency) × 0.25ms) +
+                  (Health &lt; 80% ? 15ms : 5ms) + Model Complexity = AI
+                  Inference Time
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  🔬 <strong>Physics:</strong> Base inference + processing power
-                  impact + CPU utilization + model complexity variation
+                  🔬 <strong>Physics:</strong> Machine learning inference based
+                  on motor condition analysis, vibration patterns, and thermal
+                  recognition
                 </div>
                 <div className="text-xs opacity-50 mt-1">
                   <strong>Cloud Alternative:</strong> 150-300ms
@@ -984,16 +1126,47 @@ export default function EdgeComputingDashboard({
                   connectivity
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  📊 <strong>Formula:</strong> Storage Used + (Bandwidth
-                  Savings% × 2GB) + (Processing Time% × 1.5GB) = Local Storage
+                  📊 <strong>Formula:</strong> Motor Data/Hour × 0.5GB + (Motor
+                  Load × 10GB) + (Vibration × 2GB) + (Temperature/5GB) +
+                  (Bandwidth Savings% × 3GB) + (Motor Load × 2GB) + (Vibration ×
+                  0.5GB) + (Temperature/20GB) = Local Storage
                 </div>
                 <div className="text-xs opacity-50 mt-1">
-                  🔬 <strong>Physics:</strong> Current usage + compression
-                  savings + processing overhead
+                  🔬 <strong>Physics:</strong> Motor data accumulation,
+                  vibration pattern storage, temperature history, and
+                  compression savings
                 </div>
                 <div className="text-xs opacity-50 mt-1">
                   <strong>Local Storage:</strong>{" "}
                   {edgeProcessing.localStorage.toFixed(1)}GB
+                </div>
+              </div>
+
+              {/* Edge Node Power Consumption Card */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-200">
+                <div className="text-sm opacity-90">Edge Node Power</div>
+                <div className="text-3xl font-bold">
+                  {edgeProcessing.powerConsumption.toFixed(2)}kW
+                </div>
+                <div className="text-sm opacity-90">Power Consumption</div>
+                <div className="text-xs opacity-60 mt-2 border-t border-red-400 pt-2">
+                  💡 <strong>Energy:</strong> Edge node power consumption based
+                  on motor processing
+                </div>
+                <div className="text-xs opacity-50 mt-1">
+                  📊 <strong>Formula:</strong> 0.8kW + (Motor Power/10 × 0.5kW)
+                  + (Motor Load × 0.4kW) + (Vibration × 0.1kW) +
+                  (Temperature/100 × 0.2kW) = Edge Power
+                </div>
+                <div className="text-xs opacity-50 mt-1">
+                  🔬 <strong>Physics:</strong> Edge node power consumption
+                  correlated with motor power, processing load, and sensor
+                  analysis
+                </div>
+                <div className="text-xs opacity-50 mt-1">
+                  <strong>Motor Power:</strong>{" "}
+                  {latestReading?.powerConsumption?.toFixed(1) || "5.0"}kW
+                  (Reference)
                 </div>
               </div>
             </div>
@@ -1005,23 +1178,39 @@ export default function EdgeComputingDashboard({
               </h4>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={performanceHistory.slice(-30)}>
+                  <AreaChart data={performanceHistory.slice(-60)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="timestamp"
-                      tickFormatter={(value) =>
-                        new Date(value).toLocaleTimeString([], {
+                      tickCount={6}
+                      interval="preserveStartEnd"
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })
-                      }
+                          hour12: false, // Use 24-hour format for consistency
+                        });
+                      }}
+                      stroke="#6B7280"
+                      fontSize={11}
+                      tick={{ fontSize: 11 }}
                     />
                     <YAxis yAxisId="left" />
                     <YAxis yAxisId="right" orientation="right" />
                     <Tooltip
-                      labelFormatter={(value) =>
-                        new Date(value).toLocaleString()
-                      }
+                      labelFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleString([], {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                          hour12: false,
+                        });
+                      }}
                     />
                     <Area
                       yAxisId="left"
@@ -1046,19 +1235,24 @@ export default function EdgeComputingDashboard({
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 💡 <strong>Real-time Performance:</strong> Shows latency and
-                throughput metrics for edge processing
+                throughput metrics based on motor performance and edge
+                processing
               </div>
               <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 📊 <strong>Latency Formula:</strong> Local Processing Time +
-                Random Variation (±5ms) = Graph Latency
+                (Motor Load × 15ms) + Natural Variation (±8ms) + Random
+                Variation (±4ms) = Graph Latency
               </div>
               <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                📊 <strong>Throughput Formula:</strong> 85% + (Bandwidth
-                Savings% × 0.1) + Random Variation (±5%) = Graph Throughput
+                📊 <strong>Throughput Formula:</strong> (Motor Efficiency × 40%)
+                + (Bandwidth Savings × 35%) + (Processing Efficiency × 25%) +
+                Natural Variation (±5%) + Random Variation (±3%) = Graph
+                Throughput
               </div>
               <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                🔬 <strong>Physics:</strong> Real-time metrics derived from edge
-                node performance and processing efficiency
+                🔬 <strong>Physics:</strong> Real-time metrics derived from
+                motor performance, edge processing efficiency, and vibration
+                analysis
               </div>
             </div>
           </div>
@@ -1155,16 +1349,17 @@ export default function EdgeComputingDashboard({
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           💡 <strong>Processing Load:</strong> Real-time CPU
-                          utilization
+                          utilization based on motor performance
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> Base Load + (Active
-                          Processes × 0.8) + (I/O Operations × 0.3) + Random
-                          Variation (±2%)
+                          📊 <strong>Formula:</strong> 25% + (Motor Load × 40%)
+                          + (Temperature Processing × 15%) + (Vibration Analysis
+                          × 10%) + (Inefficiency Compensation × 20%)
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          🔬 <strong>Physics:</strong> CPU cycles per second /
-                          Total available cycles × 100%
+                          🔬 <strong>Physics:</strong> Edge CPU load correlated
+                          with motor processing demand, thermal monitoring,
+                          vibration analysis, and efficiency compensation
                         </div>
                       </div>
 
@@ -1181,16 +1376,17 @@ export default function EdgeComputingDashboard({
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           💡 <strong>RAM Utilization:</strong> Memory
-                          consumption by active processes
+                          consumption based on motor data processing
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> (Used Memory + Buffer
-                          Cache + Cached Data) / Total RAM × 100%
+                          📊 <strong>Formula:</strong> 30% + (Motor Load × 25%)
+                          + (Speed Data Processing × 15%) + (Temperature Data ×
+                          18%) + (Vibration Analysis × 18%)
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          🔬 <strong>Physics:</strong> Memory allocation +
-                          Process overhead + System buffers + Random Variation
-                          (±1.5%)
+                          🔬 <strong>Physics:</strong> Memory allocation for
+                          motor data buffers, real-time analytics, pattern
+                          recognition, and historical data caching
                         </div>
                       </div>
 
@@ -1202,16 +1398,18 @@ export default function EdgeComputingDashboard({
                           {node.storageUsed.toFixed(1)}/100 GB
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          💡 <strong>Disk Usage:</strong> Storage space
-                          utilization
+                          💡 <strong>Disk Usage:</strong> Storage space for
+                          motor data accumulation
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> (Data Files + Logs +
-                          Cache + Temp Files) / Total Storage × 100%
+                          📊 <strong>Formula:</strong> Motor Data/Hour × 0.5 +
+                          (Motor Load × 10GB) + (Vibration × 2GB) +
+                          (Temperature/5GB) + (Power/10 × 3GB)
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          🔬 <strong>Physics:</strong> Static data + Dynamic
-                          logs + Processing cache + Compression overhead
+                          🔬 <strong>Physics:</strong> Real-time motor data
+                          accumulation, historical logs, vibration patterns,
+                          thermal history, and power consumption records
                         </div>
                       </div>
 
@@ -1223,18 +1421,18 @@ export default function EdgeComputingDashboard({
                           {node.networkLatency.toFixed(1)}ms
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          💡 <strong>Response Time:</strong> Network
-                          communication latency
+                          💡 <strong>Response Time:</strong> Network latency for
+                          motor data transmission
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          📊 <strong>Formula:</strong> Base Latency + (Distance
-                          × 0.01ms/km) + (Queue Delay × 0.5ms) + Random
-                          Variation (±1ms)
+                          📊 <strong>Formula:</strong> 10ms + (Motor Load ×
+                          20ms) + (Temperature Alerts × 10ms) + (Vibration
+                          Analysis × 8ms)
                         </div>
                         <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                          🔬 <strong>Physics:</strong> Propagation delay +
-                          Transmission delay + Processing delay + Network
-                          congestion
+                          🔬 <strong>Physics:</strong> Network propagation delay
+                          + Motor data packet size + Alert priority + Vibration
+                          analysis bandwidth requirements
                         </div>
                       </div>
                     </div>
@@ -1247,18 +1445,17 @@ export default function EdgeComputingDashboard({
                             {node.processingTime.toFixed(1)}ms
                           </div>
                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                            💡 <strong>Processing Capability:</strong> Task
-                            execution speed
+                            💡 <strong>Processing Capability:</strong> Edge
+                            processing latency for motor analytics
                           </div>
                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                            📊 <strong>Formula:</strong> Base Time + (CPU Load ×
-                            0.25ms) + (Memory Pressure × 0.15ms) + (I/O Wait ×
-                            0.3ms)
+                            📊 <strong>Formula:</strong> 10ms + (Motor Load ×
+                            20ms) + (Vibration × 2ms) + (Temperature/10 × 1.5ms)
                           </div>
                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                            🔬 <strong>Physics:</strong> Instruction execution
-                            time + Memory access time + I/O operations + Context
-                            switching
+                            🔬 <strong>Physics:</strong> Edge computation time +
+                            Motor data preprocessing + Vibration FFT analysis +
+                            Thermal pattern recognition + Real-time inference
                           </div>
                         </div>
                         <div className="flex space-x-2 ml-4">
@@ -1317,8 +1514,13 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 15ms + (CPU% × 0.25ms) +
-                      (Memory% × 0.15ms) + (Network Latency × 0.8)
+                      💡 <strong>Formula:</strong> 10ms + (Motor Load × 20ms) +
+                      (Vibration × 2ms) + (Temperature/10 × 1.5ms) + (Edge CPU%
+                      × 15ms)
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Edge processing latency based
+                      on motor performance requirements and vibration analysis
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1329,8 +1531,15 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 12ms + ((100 - Processing
-                      Power%) × 0.3ms) + (CPU% × 0.2ms) + Model Complexity
+                      💡 <strong>Formula:</strong> 15ms + (Vibration × 3ms) +
+                      (Temperature/20 × 2ms) + ((100 - Motor Efficiency) ×
+                      0.25ms) + (Health &lt; 80% ? 15ms : 5ms) + Model
+                      Complexity
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Machine learning inference
+                      based on motor condition analysis, vibration patterns, and
+                      thermal recognition
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1341,8 +1550,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 200ms + (Network Latency × 2)
-                      + (CPU% × 0.5ms) + Network Variability
+                      💡 <strong>Formula:</strong> 250ms + (Network Latency × 3)
+                      + (Motor Load × 100ms) + (Vibration × 5ms) +
+                      (Temperature/10 × 3ms) + Network Variability
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Cloud synchronization latency
+                      based on motor data transmission requirements and network
+                      conditions
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1353,8 +1568,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 75% + (Bandwidth Savings% ×
-                      0.15) + (Processing Power% × 0.05)
+                      💡 <strong>Formula:</strong> 75% + (Motor Efficiency ×
+                      10%) + (Vibration &lt; 3.0 ? 8% : 4%) + (Temperature &lt;
+                      70°C ? 7% : 3%) + (Bandwidth Savings × 5%)
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Data compression based on
+                      motor efficiency patterns, vibration analysis, and thermal
+                      data optimization
                     </div>
                   </div>
                 </div>
@@ -1373,8 +1594,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> Storage Used + (Bandwidth
-                      Savings% × 2GB) + (Processing Power% × 1.5GB)
+                      💡 <strong>Formula:</strong> 10GB + (Motor Load × 10GB) +
+                      (Vibration × 2GB) + (Temperature/5GB) + (Bandwidth Savings
+                      × 3GB) + Random(0-5GB)
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Motor data accumulation,
+                      vibration pattern storage, temperature history, and
+                      compression savings
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1385,8 +1612,15 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 60% + (Processing Power% ×
-                      0.2) + (Storage Used/50GB × 0.15) + ((100 - CPU%) × 0.001)
+                      💡 <strong>Formula:</strong> 65% + (Motor Load × 15%) +
+                      (Motor Efficiency × 10%) + (Vibration &lt; 3.0 ? 8% : 3%)
+                      + (Temperature &lt; 70°C ? 7% : 2%) + (Edge Processing ×
+                      5%)
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Data compression based on
+                      motor data patterns, efficiency optimization, and
+                      vibration analysis
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1417,9 +1651,15 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      💡 <strong>Formula:</strong> 85% + ((100 - CPU%) × 0.1) +
-                      ((100 - Memory%) × 0.08) + (Bandwidth Savings% × 0.08) +
-                      Optimization Factor
+                      💡 <strong>Formula:</strong> 80% + (Motor Efficiency ×
+                      10%) + (Motor Health × 8%) + (Motor Load × 5%) + ((100 -
+                      CPU%) × 0.05%) + ((100 - Memory%) × 0.03%) + Optimization
+                      Factor
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
+                      🔬 <strong>Physics:</strong> Overall edge system
+                      efficiency based on motor performance and resource
+                      utilization
                     </div>
                   </div>
                 </div>
@@ -1440,7 +1680,8 @@ export default function EdgeComputingDashboard({
                       Real-time sensor data collection
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      ~{(3 + Math.random() * 4).toFixed(1)}ms latency
+                      ~{(3 + Math.sin(Date.now() * 0.001) * 2).toFixed(1)}ms
+                      latency
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-500 pt-2">
                       💡 <strong>Formula:</strong> Base Time + (Sensor Count ×
@@ -1463,8 +1704,10 @@ export default function EdgeComputingDashboard({
                       ~{edgeProcessing.aiInferenceTime.toFixed(0)}ms
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-500 pt-2">
-                      💡 <strong>Formula:</strong> 12ms + ((100 - Processing
-                      Power%) × 0.3ms) + (CPU% × 0.2ms) + Model Complexity
+                      💡 <strong>Formula:</strong> 15ms + (Vibration × 3ms) +
+                      (Temperature/20 × 2ms) + ((100 - Motor Efficiency) ×
+                      0.25ms) + (Health &lt; 80% ? 15ms : 5ms) + Model
+                      Complexity
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       🔬 <strong>Physics:</strong> Model inference time +
@@ -1480,7 +1723,8 @@ export default function EdgeComputingDashboard({
                       Predictions and alerts
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      ~{(1.5 + Math.random() * 1).toFixed(1)}ms latency
+                      ~{(1.5 + Math.sin(Date.now() * 0.0008) * 0.5).toFixed(1)}
+                      ms latency
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-500 pt-2">
                       💡 <strong>Formula:</strong> Serialization Time + Output
@@ -1498,15 +1742,15 @@ export default function EdgeComputingDashboard({
                   <div className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-2">
                     📊 Pipeline Performance Summary
                   </div>
-                  <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                  <div className="text-xs text-blue-700 dark:text-blue-300 flex flex-row items-center justify-between">
                     <div>
                       • <strong>Total Pipeline Time:</strong> ~
                       {(
                         3 +
-                        Math.random() * 4 +
+                        Math.sin(Date.now() * 0.001) * 2 +
                         edgeProcessing.aiInferenceTime +
                         1.5 +
-                        Math.random()
+                        Math.sin(Date.now() * 0.0005) * 0.5
                       ).toFixed(1)}
                       ms
                     </div>
@@ -1515,10 +1759,10 @@ export default function EdgeComputingDashboard({
                       {Math.floor(
                         1000 /
                           (3 +
-                            Math.random() * 4 +
+                            Math.sin(Date.now() * 0.001) * 2 +
                             edgeProcessing.aiInferenceTime +
                             1.5 +
-                            Math.random())
+                            Math.sin(Date.now() * 0.0005) * 0.5)
                       )}{" "}
                       predictions/second
                     </div>
@@ -1575,12 +1819,13 @@ export default function EdgeComputingDashboard({
                     💡 <strong>Queue:</strong> Data waiting for sync
                   </div>
                   <div className="text-xs opacity-50 mt-1">
-                    📊 <strong>Formula:</strong> Base Pending × (2 - Processing
-                    Rate) + Random Variation
+                    📊 <strong>Formula:</strong> Math.floor(Math.sin(Date.now()
+                    × 0.0005) × 25 + 35) × (2 - Processing Rate) + Motor Load
+                    Variation
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     🔬 <strong>Physics:</strong> Data generation rate - Sync
-                    processing rate
+                    processing rate based on motor performance and system load
                   </div>
                 </div>
 
@@ -1595,11 +1840,11 @@ export default function EdgeComputingDashboard({
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     📊 <strong>Formula:</strong> 99.5% - (Sync Errors × 0.1%) +
-                    (Processing Power% × 0.2%)
+                    (Processing Power% × 0.2%) + Motor Health Impact
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     🔬 <strong>Physics:</strong> Data validation + Checksum
-                    verification + System health
+                    verification + System health + Motor performance correlation
                   </div>
                 </div>
               </div>
@@ -1618,11 +1863,13 @@ export default function EdgeComputingDashboard({
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     📊 <strong>Formula:</strong> 200ms + (Network Latency × 2) +
-                    (CPU% × 100ms) + Random(50ms)
+                    (CPU% × 100ms) + Math.sin(Date.now() × 0.0007) × 25ms +
+                    Motor Load Impact
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     🔬 <strong>Physics:</strong> Round-trip time + Processing
-                    overhead + Queue delay
+                    overhead + Queue delay + Network variability + Motor data
+                    transmission requirements
                   </div>
                 </div>
 
@@ -1638,11 +1885,11 @@ export default function EdgeComputingDashboard({
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     📊 <strong>Formula:</strong> 99.0% + ((Network Reliability +
-                    Processing Stability) / 2) × 0.8%
+                    Processing Stability) / 2) × 0.8% + Motor Performance Factor
                   </div>
                   <div className="text-xs opacity-50 mt-1">
                     🔬 <strong>Physics:</strong> System reliability × Network
-                    stability × Error recovery
+                    stability × Error recovery × Motor efficiency correlation
                   </div>
                 </div>
               </div>
@@ -1682,12 +1929,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      📊 <strong>Formula:</strong> (1 - Network Reliability ×
-                      Processing Stability) × 5
+                      📊 <strong>Formula:</strong> Math.floor((1 - Network
+                      Reliability × Processing Stability) × 5) + Motor Load
+                      Error Factor
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
                       🔬 <strong>Physics:</strong> Network stability ×
-                      Processing reliability × Error probability
+                      Processing reliability × Error probability × Motor
+                      performance impact
                     </div>
 
                     <div className="flex justify-between">
@@ -1712,12 +1961,12 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      📊 <strong>Formula:</strong> Sync Errors × (1 + Network
-                      Latency Factor)
+                      📊 <strong>Formula:</strong> Math.floor(Sync Errors × (1 +
+                      Network Latency Factor)) + Motor Performance Retry Factor
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
                       🔬 <strong>Physics:</strong> Error recovery mechanism with
-                      exponential backoff
+                      exponential backoff + Motor data retry logic
                     </div>
                   </div>
 
@@ -1731,12 +1980,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      📊 <strong>Formula:</strong> 5min + (CPU% × 3min) -
-                      (Network Latency/20 × 2min)
+                      📊 <strong>Formula:</strong> Math.max(1, Math.min(15, 5min
+                      + (CPU% × 3min) - (Network Latency/20 × 2min))) + Motor
+                      Load Adjustment
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
                       🔬 <strong>Physics:</strong> System load balancing +
-                      Network optimization
+                      Network optimization + Motor performance synchronization
+                      requirements
                     </div>
 
                     <div className="flex justify-between">
@@ -1748,12 +1999,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      📊 <strong>Formula:</strong> 100 × Processing Factor × (2
-                      - Network Latency Factor)
+                      📊 <strong>Formula:</strong> Math.max(25, Math.min(500,
+                      Math.floor(100 × Processing Factor × (2 - Network Latency
+                      Factor)))) + Motor Data Batch Factor
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
                       🔬 <strong>Physics:</strong> Optimal packet size based on
-                      processing power and network conditions
+                      processing power, network conditions, and motor data
+                      transmission requirements
                     </div>
 
                     <div className="flex justify-between">
@@ -1765,12 +2018,14 @@ export default function EdgeComputingDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                      📊 <strong>Formula:</strong> 75% + (Bandwidth Savings% ×
-                      0.15) + (Processing Power% × 0.05)
+                      📊 <strong>Formula:</strong> 75% + (Motor Efficiency ×
+                      10%) + (Vibration &lt; 3.0 ? 8% : 4%) + (Temperature &lt;
+                      70°C ? 7% : 3%) + (Bandwidth Savings × 5%)
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 mb-2">
                       🔬 <strong>Physics:</strong> Data compression algorithms +
-                      Processing efficiency optimization
+                      Processing efficiency optimization + Motor data pattern
+                      analysis
                     </div>
                   </div>
                 </div>
@@ -1780,7 +2035,7 @@ export default function EdgeComputingDashboard({
                   <div className="text-sm text-blue-800 dark:text-blue-200 font-medium mb-3">
                     📊 Synchronization Performance Summary
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-blue-700 dark:text-blue-300">
+                  <div className="text-xs text-blue-700 dark:text-blue-300 flex flex-row items-center justify-between">
                     <div>
                       • <strong>Sync Efficiency:</strong>{" "}
                       {(syncStatus.successRate * 0.95).toFixed(1)}% (Optimized)

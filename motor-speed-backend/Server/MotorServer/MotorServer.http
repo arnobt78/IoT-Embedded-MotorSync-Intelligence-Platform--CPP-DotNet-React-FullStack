@@ -1,6 +1,71 @@
-@MotorServer_HostAddress = http://localhost:5001
+# ========================================================================
+# MOTOR SERVER API TESTING
+# Supports both localhost and production (Render)
+# ========================================================================
 
-GET {{MotorServer_HostAddress}}/weatherforecast/
+# Local Development
+@LocalHost = http://localhost:5001
+
+# Production (Render) - Replace with your actual Render URL
+@ProductionHost = https://embedded-motor-engine-speed-temperature.onrender.com
+
+# Choose which environment to test
+@MotorServer_HostAddress = {{LocalHost}}
+
+### Test basic endpoint
+GET {{MotorServer_HostAddress}}/api/motor/test
 Accept: application/json
+
+### Health check
+GET {{MotorServer_HostAddress}}/health
+Accept: application/json
+
+### Root endpoint
+GET {{MotorServer_HostAddress}}/
+Accept: application/json
+
+### Get motor sample reading
+GET {{MotorServer_HostAddress}}/api/motor/sample
+Accept: application/json
+
+### Generate new motor reading
+POST {{MotorServer_HostAddress}}/api/motor/generate
+Accept: application/json
+
+### Get all motor readings
+GET {{MotorServer_HostAddress}}/api/motor
+Accept: application/json
+
+### Get dashboard stats
+GET {{MotorServer_HostAddress}}/api/motor/stats
+Accept: application/json
+
+### Get industrial machines
+GET {{MotorServer_HostAddress}}/api/motor/machines
+Accept: application/json
+
+### Get system overview
+GET {{MotorServer_HostAddress}}/api/motor/system-overview
+Accept: application/json
+
+### Get predictive analysis
+GET {{MotorServer_HostAddress}}/api/motor/predictive/analysis/MOTOR-001
+Accept: application/json
+
+### Get OEE analysis
+GET {{MotorServer_HostAddress}}/api/motor/predictive/oee/MOTOR-001
+Accept: application/json
+
+### Clear all readings
+POST {{MotorServer_HostAddress}}/api/motor/clear
+Accept: application/json
+
+# ========================================================================
+# PRODUCTION TESTING (Uncomment to test production)
+# ========================================================================
+
+# @MotorServer_HostAddress = {{ProductionHost}}
+# GET {{MotorServer_HostAddress}}/health
+# Accept: application/json
 
 ###

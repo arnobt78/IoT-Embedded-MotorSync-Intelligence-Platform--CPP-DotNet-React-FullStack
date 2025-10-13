@@ -8,12 +8,15 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { enhancedApiService } from "../services/enhancedApi";
 import AnimatedGearIcon from "./ui/AnimatedGearIcon";
 import { useToast } from "../hooks/useToast";
+import type { MotorReading } from "../types";
 
 interface MotorControlDashboardProps {
+  reading: MotorReading | null;
   motorId?: string;
+  signalRConnected?: boolean;
+  backendStatus?: "connected" | "offline";
 }
 
 interface ControlCommand {
@@ -52,7 +55,10 @@ interface MotorStatus {
 }
 
 export default function MotorControlDashboard({
+  reading,
   motorId = "MOTOR-001",
+  signalRConnected = false,
+  backendStatus = "offline",
 }: MotorControlDashboardProps) {
   const [activeTab, setActiveTab] = useState("control");
   const [loading, setLoading] = useState(true);
@@ -89,14 +95,18 @@ export default function MotorControlDashboard({
   const [speedSetpoint, setSpeedSetpoint] = useState(2500);
   const toast = useToast();
 
+  // Determine live status based on reading availability and connection status
+  const isLive =
+    reading !== null && signalRConnected && backendStatus === "connected";
+
   // Enhanced motor sync operation with dynamic feedback
   const performMotorSync = async () => {
     try {
       setRefreshing(true);
 
       // Simulate sync operation with realistic timing
-      await new Promise((resolve) =>
-        setTimeout(resolve, 600 + Math.random() * 300)
+      await new Promise(
+        (resolve) => setTimeout(resolve, 600 + 150) // Fixed timing instead of random
       );
 
       // Get current motor status for dynamic calculations
@@ -122,7 +132,7 @@ export default function MotorControlDashboard({
         99.5,
         90 + (systemHealth / 100) * 8 + (motorEfficiency / 100) * 2
       );
-      const isSuccessful = Math.random() * 100 < syncSuccessRate;
+      const isSuccessful = syncSuccessRate > 95; // Use deterministic success based on system health
 
       // Check for system stress conditions
       const isSystemStressed = temperature > 70 || motorEfficiency < 85;
@@ -133,10 +143,10 @@ export default function MotorControlDashboard({
         // Success scenario - calculate dynamic metrics
         const syncLatency = Math.max(
           30,
-          100 + (temperature - 22) * 2 + Math.random() * 50
+          100 + (temperature - 22) * 2 + 25 // Fixed variation instead of random
         );
         const dataPoints = Math.floor(
-          operatingHours * 100 + Math.random() * 50
+          operatingHours * 100 + 25 // Fixed variation instead of random
         );
         const safetyScore = Math.floor(systemHealth);
 
@@ -180,7 +190,7 @@ export default function MotorControlDashboard({
             : isEmergencyStop
             ? "Emergency Stop Active"
             : "System Busy";
-        const retryTime = Math.floor(3 + Math.random() * 7);
+        const retryTime = Math.floor(5); // Fixed retry time
 
         const errorMessage = isEmergencyStop
           ? `Motor sync blocked due to emergency stop activation. All safety systems active. Reset emergency stop to continue.`
@@ -207,8 +217,7 @@ export default function MotorControlDashboard({
         }
       }
 
-      // Always reload data after sync attempt
-      await loadMotorControlData(false);
+      // Data is already loaded from reading prop - no need to reload
     } catch (error) {
       console.error("Motor sync operation failed:", error);
       toast.error(
@@ -255,100 +264,112 @@ export default function MotorControlDashboard({
     };
   }, []);
 
-  const loadMotorControlData = useCallback(
-    async (isRefresh = false) => {
-      try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+  // Load motor control data from reading prop (C++ → C# → React)
+  useEffect(() => {
+    if (!reading || !isLive) {
+      // No reading available or offline - set to offline state
+      setMotorStatus({
+        isRunning: false,
+        currentSpeed: 0,
+        targetSpeed: 2500,
+        load: 0,
+        temperature: 22, // Ambient temperature
+        voltage: 480, // Default voltage
+        current: 0,
+        power: 0,
+        efficiency: 92,
+        operatingHours: 0,
+        vibration: 0,
+        lastMaintenance: "N/A",
+        nextMaintenance: "N/A",
+      });
+      setLoading(false);
+      return;
+    }
 
-        // Get real industrial machines from enhanced backend
-        await enhancedApiService.getIndustrialMachines();
+    // Initialize simulation state from C++ backend reading, but start with STOPPED motor
+    setMotorStatus({
+      isRunning: false, // Always start STOPPED for simulation
+      currentSpeed: 0, // Always start at 0 RPM for simulation
+      targetSpeed: speedSetpoint, // Use current speed setpoint
+      load: 0, // Start with no load
+      temperature: 22, // Start at ambient temperature
+      voltage: 480, // System voltage (always 480V for 3-phase)
+      current: 0, // Start with no current
+      power: 0, // Start with no power
+      efficiency: 92, // Motor efficiency (always 92% for this motor)
+      operatingHours: reading.operatingHours || 0, // Use backend operating hours
+      vibration: 0, // Start with no vibration
+      lastMaintenance: "2024-01-15", // This would come from backend in real system
+      nextMaintenance: "2024-04-15", // This would be calculated based on maintenance schedule
+    });
 
-        // Simulate API delay
-        await new Promise((resolve) =>
-          setTimeout(resolve, isRefresh ? 1000 : 500)
-        );
+    // Initialize speed history starting from 0 RPM
+    const now = new Date();
+    const history = [];
+    for (let i = 59; i >= 0; i--) {
+      const timestamp = new Date(now.getTime() - i * 1000);
+      history.push({
+        timestamp: timestamp.toISOString(),
+        speed: 0, // Start all history at 0 RPM
+      });
+    }
+    setSpeedHistory(history);
 
-        // Generate realistic motor status
-        const now = new Date();
-        const baseSpeed = motorStatus.isRunning ? 2500 : 0;
-        const baseLoad = motorStatus.isRunning ? 0.7 : 0;
-        const baseTemp = motorStatus.isRunning ? 65 + Math.random() * 10 : 22;
+    setLoading(false);
+  }, [reading, isLive, speedSetpoint]);
 
-        setMotorStatus({
-          isRunning: motorStatus.isRunning,
-          currentSpeed:
-            baseSpeed + (motorStatus.isRunning ? Math.random() * 100 - 50 : 0),
-          targetSpeed: 2500,
-          load: baseLoad + Math.random() * 0.2,
-          temperature: baseTemp,
-          voltage: 230 + Math.random() * 10 - 5,
-          current: motorStatus.isRunning ? 20 + Math.random() * 5 : 0,
-          power: motorStatus.isRunning ? 4.5 + Math.random() * 1 : 0,
-          efficiency: motorStatus.isRunning ? 92 + Math.random() * 3 : 0,
-          operatingHours:
-            motorStatus.operatingHours + (motorStatus.isRunning ? 0.0006 : 0), // 2 seconds = 0.0006 hours
-          vibration: motorStatus.isRunning ? Math.random() * 3 : 0, // Vibration in mm/s
-          lastMaintenance: "2024-01-15",
-          nextMaintenance: "2024-04-15",
-        });
+  // Update safety status based on reading data
+  useEffect(() => {
+    if (!reading || !isLive) {
+      // Offline - all safety systems inactive
+      setSafetyStatus({
+        emergencyStop: true,
+        safetyInterlock: false,
+        overloadProtection: false,
+        temperatureProtection: false,
+        vibrationProtection: false,
+        powerSupplyStatus: false,
+      });
+      return;
+    }
 
-        // Generate speed history
-        const history = [];
-        for (let i = 59; i >= 0; i--) {
-          const timestamp = new Date(now.getTime() - i * 1000);
-          history.push({
-            timestamp: timestamp.toISOString(),
-            speed: motorStatus.isRunning
-              ? baseSpeed + Math.random() * 100 - 50
-              : 0,
-          });
-        }
-        setSpeedHistory(history);
+    // Calculate dynamic safety status based on actual reading data from C++ backend
+    const newSafetyStatus: SafetyStatus = {
+      emergencyStop: isEmergencyStop,
+      safetyInterlock: controlEnabled,
+      overloadProtection:
+        (reading.current || 0) < 50000 && (motorStatus.load || 0) < 95,
+      temperatureProtection: (reading.temperature || 0) < 85,
+      vibrationProtection: (reading.vibration || 0) < 5,
+      powerSupplyStatus:
+        (reading.voltage || 0) >= 432 && (reading.voltage || 0) <= 528,
+    };
 
-        // Show success toast notification for refresh operations
-        if (isRefresh) {
-          const motorEfficiency = motorStatus.efficiency;
-          const operatingHours = motorStatus.operatingHours;
-          const temperature = motorStatus.temperature;
+    setSafetyStatus(newSafetyStatus);
+  }, [reading, isLive, isEmergencyStop, controlEnabled, motorStatus.load]);
 
-          toast.success(
-            "🔄 Motor Data Synchronized Successfully",
-            `Synced motor ${motorId} data. Efficiency: ${motorEfficiency.toFixed(
-              1
-            )}%, Operating hours: ${operatingHours.toFixed(
-              1
-            )}h, Temperature: ${temperature.toFixed(1)}°C`
-          );
-        }
-      } catch (error) {
-        console.error("Failed to load motor control data:", error);
-
-        // Show error toast notification for refresh operations
-        if (isRefresh) {
-          toast.error(
-            "⚠️ Motor Data Sync Failed",
-            "Unable to synchronize motor data. Using cached data. Check motor status and safety systems."
-          );
-        }
-      } finally {
-        if (isRefresh) {
-          setRefreshing(false);
-        } else {
-          setLoading(false);
-        }
-      }
-    },
-    [motorStatus, motorId, toast]
-  );
-
+  // Real-time motor simulation - runs locally in browser for interactive control
   const updateRealTimeData = useCallback(() => {
     setMotorStatus((prev) => {
+      // Always update temperature cooling even when stopped
       if (!prev.isRunning || isEmergencyStop) {
-        return prev;
+        // When stopped, gradually cool down temperature
+        const ambientTemp = 22;
+        const newTemperature = Math.max(
+          ambientTemp,
+          prev.temperature - 0.1 // Cool down 0.1°C per update when stopped
+        );
+
+        return {
+          ...prev,
+          temperature: Math.round(newTemperature * 10) / 10,
+          currentSpeed: 0, // Ensure speed is 0 when stopped
+          load: 0, // Ensure load is 0 when stopped
+          power: 0, // Ensure power is 0 when stopped
+          current: 0, // Ensure current is 0 when stopped
+          vibration: 0, // Ensure vibration is 0 when stopped
+        };
       }
 
       // Physics-based motor dynamics
@@ -357,8 +378,7 @@ export default function MotorControlDashboard({
       const acceleration = 150; // RPM per second acceleration
       const deceleration = 200; // RPM per second deceleration
       const efficiency = 0.92; // Motor efficiency
-      const baseLoad = 0.05; // Base load (5%)
-      // const temperatureCoeff = 0.001; // Temperature coefficient (for future use)
+      // const baseLoad = 0.05; // Base load (5%) - now using 5% directly in calculation
       const ambientTemp = 22; // Ambient temperature in °C
 
       // Calculate current speed based on target speed and acceleration/deceleration
@@ -377,37 +397,44 @@ export default function MotorControlDashboard({
         );
       }
 
-      // Calculate load based on speed and target speed
+      // Calculate load based on speed and target speed (as percentage 0-100%)
       const speedRatio = newSpeed / maxSpeed;
       const targetRatio = prev.targetSpeed / maxSpeed;
-      const load = Math.max(
-        baseLoad,
+      const loadPercentage = Math.max(
+        5, // Minimum 5%
         Math.min(
-          1.0,
-          speedRatio * 0.8 + targetRatio * 0.2 + Math.random() * 0.1
+          100, // Maximum 100%
+          (speedRatio * 0.8 + targetRatio * 0.2) * 100 + 5 // Convert to percentage, add 5% base
         )
       );
 
       // Calculate power consumption using physics formula: P = (2π × N × T) / 60
-      // Where N = speed in RPM, T = torque (estimated from load)
-      const torque = load * 50; // Estimated torque in Nm based on load
+      // Where N = speed in RPM, T = torque (estimated from load percentage)
+      const torque = (loadPercentage / 100) * 50; // Convert load percentage to torque (0-50 Nm)
       const power = (2 * Math.PI * newSpeed * torque) / 60; // Power in watts
       const powerKW = power / 1000; // Convert to kW
 
-      // Calculate temperature based on power and efficiency
-      const heatGeneration = powerKW * (1 - efficiency) * 0.1; // Heat generation in °C per update
+      // Calculate temperature based on power and efficiency with realistic cooling
+      const heatGeneration = powerKW * (1 - efficiency) * 2.0; // Heat generation in °C per update
+
+      // Realistic cooling based on temperature difference (Newton's Law of Cooling)
+      const tempDifference = prev.temperature - ambientTemp;
+      const coolingRate = tempDifference * 0.1; // Proportional cooling (10% of temp difference)
+
       const newTemperature = Math.max(
         ambientTemp,
-        prev.temperature + heatGeneration - 0.5
-      ); // Cooling factor
+        prev.temperature + heatGeneration - coolingRate
+      );
 
       // Calculate current based on power and voltage
       const current = (power / prev.voltage) * 1000; // Current in mA
 
-      // Calculate vibration based on speed and load
+      // Calculate vibration based on speed and load using physics formula
       const vibration = Math.max(
         0,
-        (newSpeed / 1000) * 2 + load * 0.5 + Math.random() * 0.5
+        (newSpeed / 1000) * 2 +
+          (loadPercentage / 100) * 0.5 +
+          Math.sin(Date.now() * 0.001) * 0.25 // Use load percentage
       ); // Vibration in mm/s
 
       // Update speed history for the graph
@@ -425,7 +452,7 @@ export default function MotorControlDashboard({
       return {
         ...prev,
         currentSpeed: Math.round(newSpeed),
-        load: Math.round(load * 100 * 10) / 10, // Round to 1 decimal place
+        load: Math.round(loadPercentage * 10) / 10, // Load is already in percentage (0-100)
         temperature: Math.round(newTemperature * 10) / 10, // Round to 1 decimal place
         power: Math.round(powerKW * 100) / 100, // Round to 2 decimal places
         current: Math.round(current * 10) / 10, // Round to 1 decimal place
@@ -435,33 +462,44 @@ export default function MotorControlDashboard({
       };
     });
 
+    // Update speed history even when stopped
+    setSpeedHistory((prevHistory) => {
+      const currentSpeed = motorStatus.isRunning ? motorStatus.currentSpeed : 0;
+      const newHistory = [
+        ...prevHistory,
+        {
+          timestamp: new Date().toISOString(),
+          speed: currentSpeed,
+        },
+      ];
+      return newHistory.slice(-60); // Keep last 60 data points (2 minutes at 2-second intervals)
+    });
+
     // Update safety status based on current motor conditions
     setSafetyStatus(() => {
       const currentMotor = motorStatus;
 
       // Calculate dynamic safety status based on physics-based conditions
       const newSafetyStatus: SafetyStatus = {
-        emergencyStop: isEmergencyStop, // Already dynamic
-        safetyInterlock: controlEnabled, // Based on control enabled state
+        emergencyStop: isEmergencyStop,
+        safetyInterlock: controlEnabled,
         overloadProtection:
-          currentMotor.current < 50000 && currentMotor.load < 95, // Current < 50kA AND Load < 95%
-        temperatureProtection: currentMotor.temperature < 85, // Temperature < 85°C
-        vibrationProtection: currentMotor.vibration < 5, // Vibration < 5 mm/s
+          currentMotor.current < 50000 && currentMotor.load < 95,
+        temperatureProtection: currentMotor.temperature < 85,
+        vibrationProtection: currentMotor.vibration < 5,
         powerSupplyStatus:
-          currentMotor.voltage >= 432 && currentMotor.voltage <= 528, // Voltage within ±10% of 480V
+          currentMotor.voltage >= 432 && currentMotor.voltage <= 528,
       };
 
       return newSafetyStatus;
     });
   }, [motorStatus, isEmergencyStop, controlEnabled]);
 
+  // Start real-time simulation when component mounts
   useEffect(() => {
-    loadMotorControlData();
-    // Start real-time updates every 2 seconds (better real-time visualization)
     const interval = setInterval(updateRealTimeData, 2000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [motorId]);
+  }, [updateRealTimeData]);
 
   const executeCommand = async (commandType: string, value?: number) => {
     if (!controlEnabled || isEmergencyStop) return;
@@ -494,7 +532,7 @@ export default function MotorControlDashboard({
         successProbability = 0.0; // Emergency stop always fails other commands
       }
 
-      const success = Math.random() < successProbability;
+      const success = successProbability > 0.8; // Use deterministic success based on probability
 
       // Calculate physics-based response time
       let baseResponseTime = 50; // Base 50ms
@@ -517,8 +555,8 @@ export default function MotorControlDashboard({
           break;
       }
 
-      // Add network latency simulation
-      const networkLatency = Math.random() * 30 + 10; // 10-40ms
+      // Add network latency simulation (fixed based on system load)
+      const networkLatency = 20 + motorStatus.load * 10; // 20-30ms based on load
       const responseTime = baseResponseTime + networkLatency;
 
       setControlHistory((prev) =>
@@ -602,6 +640,14 @@ export default function MotorControlDashboard({
     executeCommand("speed_set", speedSetpoint);
   };
 
+  // Update target speed when speedSetpoint changes
+  useEffect(() => {
+    setMotorStatus((prev) => ({
+      ...prev,
+      targetSpeed: speedSetpoint,
+    }));
+  }, [speedSetpoint]);
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
@@ -617,14 +663,125 @@ export default function MotorControlDashboard({
     );
   }
 
+  // Show "No data available" state when offline or no reading
+  if (!reading || !isLive) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        {/* Header */}
+        <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                🎮 Real-Time Motor Control & Automation
+              </h2>
+              {/* Data Source Status Indicator */}
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  backendStatus === "connected"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                }`}
+              >
+                {backendStatus === "connected" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+              </span>
+            </div>
+            <div className="relative">
+              <button
+                onClick={performMotorSync}
+                disabled={true}
+                className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed transition-all duration-200 flex items-center gap-2 opacity-70"
+              >
+                <AnimatedGearIcon isActive={false} size="md" status="offline" />
+                <span>Sync Motor Data (Offline)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* No Data Available Content */}
+        <div className="p-6">
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
+            <div className="text-gray-500 dark:text-gray-400 text-center py-8">
+              <div className="text-4xl mb-4">🎮</div>
+              <div className="text-lg font-medium mb-2">
+                No Motor Control Data Available
+              </div>
+              <div className="text-sm mb-4">
+                Motor control requires live connection to the C++ backend
+                engine.
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
+                <div className="text-blue-800 dark:text-blue-200 font-medium mb-2">
+                  🔗 Connection Status:
+                </div>
+                <div className="text-blue-700 dark:text-blue-300 text-sm space-y-2">
+                  <div>
+                    <strong>Backend:</strong>{" "}
+                    <span
+                      className={
+                        backendStatus === "connected"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }
+                    >
+                      {backendStatus === "connected"
+                        ? "✅ Connected"
+                        : "❌ Disconnected"}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>SignalR:</strong>{" "}
+                    <span
+                      className={
+                        signalRConnected ? "text-green-600" : "text-red-600"
+                      }
+                    >
+                      {signalRConnected ? "✅ Connected" : "❌ Disconnected"}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Reading Data:</strong>{" "}
+                    <span
+                      className={reading ? "text-green-600" : "text-red-600"}
+                    >
+                      {reading ? "✅ Available" : "❌ Not Available"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                💡 <strong>Note:</strong> This dashboard displays real-time
+                motor control data from the C++ backend (motor_engine.cpp →
+                EngineService.cs → React). No fallback data is generated to
+                ensure control accuracy and safety.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            🎮 Real-Time Motor Control & Automation
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              🎮 Real-Time Motor Control & Automation
+            </h2>
+            {/* Data Source Status Indicator */}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                backendStatus === "connected"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+              }`}
+            >
+              {backendStatus === "connected" ? "🔗 LIVE DATA" : "❌ OFFLINE"}
+            </span>
+          </div>
           <div className="relative">
             <button
               onClick={performMotorSync}
@@ -637,7 +794,7 @@ export default function MotorControlDashboard({
               <AnimatedGearIcon
                 isActive={true}
                 size="md"
-                status={motorStatus.currentSpeed > 0 ? "live" : "offline"}
+                status={isLive ? "live" : "offline"}
               />
               <span className="transition-opacity duration-200">
                 {refreshing
@@ -647,7 +804,7 @@ export default function MotorControlDashboard({
             </button>
 
             {/* Status Indicator - positioned relative to button */}
-            {motorStatus.currentSpeed > 0 ? (
+            {isLive ? (
               <div className="absolute -top-3 -right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse shadow-lg">
                 LIVE
               </div>
@@ -694,30 +851,38 @@ export default function MotorControlDashboard({
                 </div>
                 <div>
                   <h4 className="text-blue-800 dark:text-blue-200 font-medium mb-2">
-                    🎮 Real-Time Motor Control
+                    🎮 Interactive Motor Control & Physics Simulation
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
-                    This control panel provides real-time motor operation
-                    capabilities with safety interlocks and emergency controls.
-                    All commands are executed with safety validation and audit
-                    logging.
+                    This interactive control panel initializes with real motor
+                    data from the C++ backend, then allows you to control and
+                    simulate motor operations locally. Start/stop the motor,
+                    adjust speed setpoints, and observe real-time physics-based
+                    behavior including acceleration, temperature dynamics,
+                    vibration patterns, and safety system responses.
                   </p>
                   <div className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
                     <div>
-                      • <strong>Safety First:</strong> All commands validated
-                      against safety systems
+                      • <strong>Initial State:</strong> Loaded from C++ backend
+                      reading (motor_engine.cpp → React)
                     </div>
                     <div>
-                      • <strong>Real-time Feedback:</strong> Instant response
-                      and status updates
+                      • <strong>Interactive Control:</strong> Start/Stop motor,
+                      Set speed (0-3000 RPM), Emergency stop
                     </div>
                     <div>
-                      • <strong>Audit Trail:</strong> Complete command history
-                      with timestamps
+                      • <strong>Physics Simulation:</strong> Local real-time
+                      calculations (acceleration 150 RPM/s, deceleration 200
+                      RPM/s)
                     </div>
                     <div>
-                      • <strong>Emergency Controls:</strong> Immediate stop
-                      capabilities for safety
+                      • <strong>Safety Systems:</strong> Real-time monitoring
+                      (temperature, vibration, current, voltage thresholds)
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                      <strong>🔗 Data Flow:</strong> Initial state from
+                      motor_engine.cpp → EngineService.cs → React, then local
+                      physics simulation for interactive control
                     </div>
                   </div>
                 </div>
@@ -846,33 +1011,40 @@ export default function MotorControlDashboard({
                 </div>
 
                 {/* Control Status */}
-                <div className="bg-white dark:bg-gray-600 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-800 dark:text-white mb-2">
-                    Control Status
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <h5 className="font-semibold text-gray-800 dark:text-white mb-3 text-sm">
+                    🎮 Control Status
                   </h5>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Control Enabled Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                         Control Enabled
                       </span>
                       <span
-                        className={`font-medium ${
-                          controlEnabled ? "text-green-600" : "text-red-600"
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${
+                          controlEnabled
+                            ? "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
+                            : "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
                         }`}
                       >
-                        {controlEnabled ? "Yes" : "No"}
+                        {controlEnabled ? "✅ Yes" : "❌ No"}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">
+
+                    {/* Emergency Stop Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                         Emergency Stop
                       </span>
                       <span
-                        className={`font-medium ${
-                          isEmergencyStop ? "text-red-600" : "text-green-600"
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${
+                          isEmergencyStop
+                            ? "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700 animate-pulse"
+                            : "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700"
                         }`}
                       >
-                        {isEmergencyStop ? "Active" : "Normal"}
+                        {isEmergencyStop ? "🚨 Active" : "✅ Normal"}
                       </span>
                     </div>
                   </div>
@@ -884,69 +1056,100 @@ export default function MotorControlDashboard({
                     📊 Physics Calculations
                   </h5>
                   <div className="space-y-3 text-xs">
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                        ⚡ Power Calculation
+                    {/* Power Calculation */}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-blue-800 dark:text-blue-200 font-semibold text-sm">
+                          ⚡ Power Calculation
+                        </div>
+                        <div className="text-blue-600 dark:text-blue-300 font-bold text-sm">
+                          💡 Current:{" "}
+                          {(
+                            (2 *
+                              Math.PI *
+                              motorStatus.currentSpeed *
+                              (motorStatus.load / 100) *
+                              50) /
+                            60 /
+                            1000
+                          ).toFixed(2)}{" "}
+                          kW
+                        </div>
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <strong>Formula:</strong> Power = (Speed/Max) × MaxPower
-                        × (1/Efficiency) + (Load × LoadFactor)
-                      </div>
-                      <div className="text-gray-500 dark:text-gray-500 mt-1">
-                        💡 <strong>Current:</strong>{" "}
-                        {(
-                          (motorStatus.currentSpeed / 3000) * 50 * (1 / 0.92) +
-                          motorStatus.load * 0.1
-                        ).toFixed(2)}{" "}
-                        kW
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                        🔄 Load Calculation
-                      </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <strong>Formula:</strong> Load = (Current Speed / Max
-                        Speed) × 0.5 + (Random Factor × 0.1)
-                      </div>
-                      <div className="text-gray-500 dark:text-gray-500 mt-1">
-                        💡 <strong>Current:</strong>{" "}
-                        {(
-                          (motorStatus.currentSpeed / 3000) * 0.5 +
-                          Math.random() * 0.1
-                        ).toFixed(1)}
-                        %
+                      <div className="text-blue-700 dark:text-blue-300 text-xs">
+                        <strong>Formula:</strong> P = (2π × Speed × Torque) / 60
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                        🌡️ Temperature Calculation
+                    {/* Load Calculation */}
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-green-800 dark:text-green-200 font-semibold text-sm">
+                          🔄 Load Calculation
+                        </div>
+                        <div className="text-green-600 dark:text-green-300 font-bold text-sm">
+                          💡 Current:{" "}
+                          {Math.max(
+                            5,
+                            Math.min(
+                              100,
+                              ((motorStatus.currentSpeed / 3000) * 0.8 +
+                                (motorStatus.targetSpeed / 3000) * 0.2) *
+                                100 +
+                                5
+                            )
+                          ).toFixed(1)}
+                          %
+                        </div>
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <strong>Formula:</strong> Temperature = Ambient + (Power
-                        × TempCoefficient)
-                      </div>
-                      <div className="text-gray-500 dark:text-gray-500 mt-1">
-                        💡 <strong>Current:</strong>{" "}
-                        {motorStatus.temperature.toFixed(1)}°C (Ambient: 22°C +
-                        Heat: {(motorStatus.power * 0.8).toFixed(1)}°C)
+                      <div className="text-green-700 dark:text-green-300 text-xs">
+                        <strong>Formula:</strong> Load = ((Speed/Max) × 0.8 +
+                        (Target/Max) × 0.2) × 100 + 5%
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-gray-700 dark:text-gray-300 font-medium mb-1">
-                        ⚡ Current Calculation
+                    {/* Temperature Calculation */}
+                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-orange-800 dark:text-orange-200 font-semibold text-sm">
+                          🌡️ Temperature Calculation
+                        </div>
+                        <div className="text-orange-600 dark:text-orange-300 font-bold text-sm">
+                          💡 Current: {motorStatus.temperature.toFixed(1)}°C
+                        </div>
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <strong>Formula:</strong> Current = (Power / Voltage) ×
-                        Efficiency Factor
+                      <div className="text-orange-700 dark:text-orange-300 text-xs">
+                        <strong>Formula:</strong> Temp = Ambient + Heat -
+                        (TempDiff × 0.1)
                       </div>
-                      <div className="text-gray-500 dark:text-gray-500 mt-1">
-                        💡 <strong>Current:</strong>{" "}
-                        {((motorStatus.power / 480) * 1.2).toFixed(1)} A (480V
-                        System)
+                      <div className="text-orange-600 dark:text-orange-400 text-xs mt-1">
+                        Heat:{" "}
+                        {(motorStatus.power * (1 - 0.92) * 2.0).toFixed(1)}°C |
+                        Cooling:{" "}
+                        {((motorStatus.temperature - 22) * 0.1).toFixed(1)}°C
+                      </div>
+                    </div>
+
+                    {/* Current Calculation */}
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-purple-800 dark:text-purple-200 font-semibold text-sm">
+                          ⚡ Current Calculation
+                        </div>
+                        <div className="text-purple-600 dark:text-purple-300 font-bold text-sm">
+                          💡 Current:{" "}
+                          {(
+                            (motorStatus.power * 1000) /
+                            (motorStatus.voltage * Math.sqrt(3) * 0.92)
+                          ).toFixed(1)}{" "}
+                          A
+                        </div>
+                      </div>
+                      <div className="text-purple-700 dark:text-purple-300 text-xs">
+                        <strong>Formula:</strong> I = (P × 1000) / (V × √3 × PF)
+                      </div>
+                      <div className="text-purple-600 dark:text-purple-400 text-xs mt-1">
+                        480V 3-Phase System | PF: 92%
                       </div>
                     </div>
                   </div>
@@ -998,7 +1201,7 @@ export default function MotorControlDashboard({
                       Load
                     </div>
                     <div className="font-medium text-lg text-gray-800 dark:text-white">
-                      {(motorStatus.load * 100).toFixed(1)}%
+                      {motorStatus.load.toFixed(1)}%
                     </div>
                   </div>
 
@@ -1024,11 +1227,15 @@ export default function MotorControlDashboard({
                 {/* Speed Chart */}
                 <div className="bg-white dark:bg-gray-600 p-4 rounded-lg">
                   <h5 className="font-medium text-gray-800 dark:text-white mb-2">
-                    Speed Trend (2 min)
+                    📊 Dynamic Speed Trend (runs at 2 seconds interval for 2
+                    minutes)
                   </h5>
-                  <div className="h-32">
+                  <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={speedHistory.slice(-60)}>
+                      <LineChart
+                        data={speedHistory.slice(-60)}
+                        margin={{ top: 10, right: 10, left: 15, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                         <XAxis
                           dataKey="timestamp"
@@ -1041,13 +1248,18 @@ export default function MotorControlDashboard({
                             });
                           }}
                           stroke="#6B7280"
-                          fontSize={10}
+                          fontSize={9}
+                          tick={{ fontSize: 9 }}
                         />
                         <YAxis
                           domain={[0, 3000]}
+                          tickCount={5}
+                          ticks={[0, 750, 1500, 2250, 3000]}
                           tickFormatter={(value) => `${value} RPM`}
                           stroke="#6B7280"
-                          fontSize={10}
+                          fontSize={9}
+                          tick={{ fontSize: 9 }}
+                          width={70}
                         />
                         <Tooltip
                           labelFormatter={(value) => {
@@ -1200,7 +1412,12 @@ export default function MotorControlDashboard({
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg hover:shadow-lg transition-shadow duration-200">
                   <div className="text-sm opacity-90">Efficiency</div>
                   <div className="text-3xl font-bold">
-                    {motorStatus.efficiency.toFixed(1)}%
+                    {(
+                      92 -
+                      motorStatus.load * 0.1 -
+                      (motorStatus.temperature - 22) * 0.05
+                    ).toFixed(1)}
+                    %
                   </div>
                   <div className="text-sm opacity-90">Performance</div>
                   <div className="text-xs opacity-60 mt-2 border-t border-orange-400 pt-2">
@@ -1229,20 +1446,24 @@ export default function MotorControlDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      📊 <strong>Formula:</strong> Voltage = 480V × (1 ± 0.05) +
-                      (Load × 0.1V)
+                      📊 <strong>Formula:</strong> System voltage (480V nominal,
+                      3-phase)
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
                         Current
                       </span>
                       <span className="font-medium text-gray-800 dark:text-white">
-                        {motorStatus.current.toFixed(2)} A
+                        {(
+                          (motorStatus.power * 1000) /
+                          (motorStatus.voltage * Math.sqrt(3) * 0.92)
+                        ).toFixed(1)}{" "}
+                        A
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       📊 <strong>Formula:</strong> Current = (Power × 1000) ÷
-                      (Voltage × Power Factor × √3)
+                      (Voltage × √3 × Power Factor)
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1297,8 +1518,8 @@ export default function MotorControlDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      📊 <strong>Formula:</strong> Load = (Speed Ratio × 0.8) +
-                      (Target Ratio × 0.2) + Random(0-10%)
+                      📊 <strong>Formula:</strong> Load = ((Speed/Max) × 0.8 +
+                      (Target/Max) × 0.2) × 100 + 5%
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
@@ -1309,20 +1530,20 @@ export default function MotorControlDashboard({
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      📊 <strong>Formula:</strong> Temp = Previous + (Power ×
-                      (1-Efficiency) × 0.1) - 0.5°C
+                      📊 <strong>Formula:</strong> Temp = Ambient + Heat -
+                      (TempDiff × 0.1)
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">
                         Torque
                       </span>
                       <span className="font-medium text-gray-800 dark:text-white">
-                        {(motorStatus.load * 60).toFixed(1)} Nm
+                        {((motorStatus.load / 100) * 50).toFixed(1)} Nm
                       </span>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      📊 <strong>Formula:</strong> Torque = Load% × 60 Nm +
-                      (Speed/1000) × 5 Nm
+                      📊 <strong>Formula:</strong> Torque = (Load% ÷ 100) × 50
+                      Nm
                     </div>
                   </div>
                 </div>
