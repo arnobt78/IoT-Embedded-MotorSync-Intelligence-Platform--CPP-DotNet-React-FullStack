@@ -25,3 +25,6 @@ dist-ssr
 .env
 .env.local
 .cursorignore
+# Ignore local package and tsc artifacts
+motor-speed-frontend@0.1.0
+tsc
