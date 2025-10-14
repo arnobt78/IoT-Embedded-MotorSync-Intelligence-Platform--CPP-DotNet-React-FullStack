@@ -1,50 +1,50 @@
 # IoT Embedded Motor Sync Intelligence - Real-time Industrial IoT Dashboard, Motor Physics Engine, Business Intelligence Platform (C++, .NET, PostgreSQL, SignalR, Docker, React, TypeScript, Vite, TailwindCSS, Shadcn UI, Recharts)
 
-<img width="1520" height="862" alt="Screenshot 2025-10-14 at 15 23 43" src="https://github.com/user-attachments/assets/8e5f8a76-bcdd-4613-9bf8-f843a62202e7" />
-<img width="1513" height="855" alt="Screenshot 2025-10-14 at 15 23 31" src="https://github.com/user-attachments/assets/a44a7f4e-d47c-4e25-ab9b-967661e9eb63" />
-<img width="1516" height="862" alt="Screenshot 2025-10-14 at 15 23 24" src="https://github.com/user-attachments/assets/80313b3e-88c5-4641-b693-daed89cf78f7" />
-<img width="1520" height="862" alt="Screenshot 2025-10-14 at 15 23 17" src="https://github.com/user-attachments/assets/fe99374a-8497-41a2-a156-783361722a1d" />
-<img width="1528" height="867" alt="Screenshot 2025-10-14 at 15 23 08" src="https://github.com/user-attachments/assets/88e5c846-b981-4c60-9a76-1766cb60b5b2" />
-<img width="1527" height="864" alt="Screenshot 2025-10-14 at 15 23 00" src="https://github.com/user-attachments/assets/b103b71b-9585-4af7-ad10-89bf7d21b1d2" />
-<img width="1539" height="755" alt="Screenshot 2025-10-14 at 15 22 51" src="https://github.com/user-attachments/assets/15364cd5-2418-4ec0-9e87-c3639fa1a5bf" />
-<img width="1814" height="864" alt="Screenshot 2025-10-14 at 15 22 38" src="https://github.com/user-attachments/assets/e8697dea-fa60-4127-adef-39f5779b2cca" />
-<img width="1810" height="862" alt="Screenshot 2025-10-14 at 15 22 30" src="https://github.com/user-attachments/assets/49d60c8f-8c29-424a-9f5c-aa7ece053d75" />
-<img width="1822" height="867" alt="Screenshot 2025-10-14 at 15 22 21" src="https://github.com/user-attachments/assets/b71c2355-5ff5-4c5c-a86b-7c92580d6dc6" />
-<img width="1813" height="867" alt="Screenshot 2025-10-14 at 15 22 13" src="https://github.com/user-attachments/assets/61b0383e-1de1-4a71-ab3e-c59ed2ce10f3" />
-<img width="1821" height="859" alt="Screenshot 2025-10-14 at 15 21 56" src="https://github.com/user-attachments/assets/d8138706-1283-4af3-989c-98a12a127463" />
-<img width="1813" height="863" alt="Screenshot 2025-10-14 at 15 21 49" src="https://github.com/user-attachments/assets/5c7697e1-1e2c-4406-b10e-0ac6dbfee9f6" />
-<img width="1814" height="856" alt="Screenshot 2025-10-14 at 15 21 41" src="https://github.com/user-attachments/assets/7c7df5d5-e53f-480f-a65d-c0ff467aa9a3" />
-<img width="1824" height="854" alt="Screenshot 2025-10-14 at 15 21 35" src="https://github.com/user-attachments/assets/c793b2b9-ddb4-46fd-94fb-c390614c5952" />
-<img width="1824" height="856" alt="Screenshot 2025-10-14 at 15 21 01" src="https://github.com/user-attachments/assets/d2548cde-5ed6-4c79-b79c-e973123734f2" />
-<img width="1820" height="850" alt="Screenshot 2025-10-14 at 15 20 43" src="https://github.com/user-attachments/assets/e8ec0302-0cdf-44bc-a21b-3a6e5a92eee9" />
-<img width="1824" height="841" alt="Screenshot 2025-10-14 at 15 19 58" src="https://github.com/user-attachments/assets/4736dc1b-0a7c-4bf0-973e-a3ff4ec924b0" />
-<img width="1817" height="861" alt="Screenshot 2025-10-14 at 15 19 46" src="https://github.com/user-attachments/assets/32274275-92d3-42ed-919c-39abb3b90a2f" />
-<img width="1823" height="866" alt="Screenshot 2025-10-14 at 15 19 38" src="https://github.com/user-attachments/assets/80c2a866-4b52-4212-91a8-057d7afcd890" />
-<img width="1814" height="861" alt="Screenshot 2025-10-14 at 15 19 18" src="https://github.com/user-attachments/assets/5f312b53-4ca2-41a7-8936-1baf19926f3f" />
-<img width="1835" height="784" alt="Screenshot 2025-10-14 at 15 19 01" src="https://github.com/user-attachments/assets/43435182-1af3-40c7-9f37-ff28c9b4c25b" />
-<img width="1826" height="661" alt="Screenshot 2025-10-14 at 15 18 53" src="https://github.com/user-attachments/assets/850323a8-d333-4e62-b0ca-2f9b17e27842" />
-<img width="1818" height="752" alt="Screenshot 2025-10-14 at 15 18 46" src="https://github.com/user-attachments/assets/7505cab0-d09e-491a-aa17-c2ef07851537" />
-<img width="1819" height="860" alt="Screenshot 2025-10-14 at 15 18 36" src="https://github.com/user-attachments/assets/7fc3064a-ebf6-4372-937b-e70857ba7024" />
-<img width="1813" height="861" alt="Screenshot 2025-10-14 at 15 17 51" src="https://github.com/user-attachments/assets/aaa0be3d-76ac-456a-af1a-cfa2014d3426" />
-<img width="1830" height="842" alt="Screenshot 2025-10-14 at 15 17 41" src="https://github.com/user-attachments/assets/ecaa6fdd-231c-4742-a544-3c138e4f401d" />
-<img width="1816" height="838" alt="Screenshot 2025-10-14 at 15 17 31" src="https://github.com/user-attachments/assets/6c9d3586-7733-4eaf-8d05-1877991e5084" />
-<img width="1814" height="862" alt="Screenshot 2025-10-14 at 15 17 23" src="https://github.com/user-attachments/assets/d19de330-edc2-40e4-ae7b-3b552919c9fe" />
-<img width="1828" height="865" alt="Screenshot 2025-10-14 at 15 17 14" src="https://github.com/user-attachments/assets/703d446d-2a07-43e3-9c54-4877d7b6cec5" />
-<img width="1816" height="857" alt="Screenshot 2025-10-14 at 15 16 48" src="https://github.com/user-attachments/assets/864bd51f-f7cd-473e-8906-73bd64d0aa0f" />
-<img width="1821" height="870" alt="Screenshot 2025-10-14 at 15 16 39" src="https://github.com/user-attachments/assets/97efc3c0-c0c2-46d7-b0e4-3ffa4a338834" />
-<img width="1820" height="868" alt="Screenshot 2025-10-14 at 15 16 30" src="https://github.com/user-attachments/assets/e657888d-b306-480c-9726-da94f6f58843" />
-<img width="1819" height="861" alt="Screenshot 2025-10-14 at 15 16 16" src="https://github.com/user-attachments/assets/6a66047f-b667-4bc0-8ed4-ffa7b59154f0" />
-<img width="1820" height="887" alt="Screenshot 2025-10-14 at 15 15 59" src="https://github.com/user-attachments/assets/33676002-30c1-4636-b782-b6aa3d60860a" />
-<img width="1817" height="861" alt="Screenshot 2025-10-14 at 15 15 37" src="https://github.com/user-attachments/assets/a19838b5-fac9-4c6c-8392-664acf0c8f14" />
-<img width="1814" height="866" alt="Screenshot 2025-10-14 at 15 15 21" src="https://github.com/user-attachments/assets/1dad962c-fe16-448d-bc81-85ddf462c009" />
-<img width="1814" height="862" alt="Screenshot 2025-10-14 at 15 15 11" src="https://github.com/user-attachments/assets/5a1c069b-06d4-4c38-a67a-c0e57f7e414f" />
-<img width="1816" height="868" alt="Screenshot 2025-10-14 at 15 14 56" src="https://github.com/user-attachments/assets/92662117-046e-43af-ac4d-dcb4d7048a4c" />
-<img width="1822" height="861" alt="Screenshot 2025-10-14 at 15 14 46" src="https://github.com/user-attachments/assets/8a7b01b3-062c-49bb-bd4a-beda11fac5ad" />
-<img width="1830" height="861" alt="Screenshot 2025-10-14 at 15 14 31" src="https://github.com/user-attachments/assets/ebc4c2e8-bd42-4387-8d3d-dcea2a1b18e4" />
-<img width="1824" height="861" alt="Screenshot 2025-10-14 at 15 14 13" src="https://github.com/user-attachments/assets/9dd6a75e-f0e2-4583-aef8-296af884f384" />
-<img width="1831" height="816" alt="Screenshot 2025-10-14 at 15 13 50" src="https://github.com/user-attachments/assets/f45db975-f2ad-407f-8814-076dd2312322" />
-<img width="1862" height="855" alt="Screenshot 2025-10-14 at 15 13 29" src="https://github.com/user-attachments/assets/071c0c4c-1750-41af-a598-5144b99e5670" />
-<img width="1859" height="911" alt="Screenshot 2025-10-14 at 15 13 04" src="https://github.com/user-attachments/assets/9a67684f-9fa7-4f72-a5dd-81b134c9a045" />
+![Screenshot 2025-10-14 at 15 23 43](https://github.com/user-attachments/assets/8e5f8a76-bcdd-4613-9bf8-f843a62202e7)
+![Screenshot 2025-10-14 at 15 23 31](https://github.com/user-attachments/assets/a44a7f4e-d47c-4e25-ab9b-967661e9eb63)
+![Screenshot 2025-10-14 at 15 23 24](https://github.com/user-attachments/assets/80313b3e-88c5-4641-b693-daed89cf78f7)
+![Screenshot 2025-10-14 at 15 23 17](https://github.com/user-attachments/assets/fe99374a-8497-41a2-a156-783361722a1d)
+![Screenshot 2025-10-14 at 15 23 08](https://github.com/user-attachments/assets/88e5c846-b981-4c60-9a76-1766cb60b5b2)
+![Screenshot 2025-10-14 at 15 23 00](https://github.com/user-attachments/assets/b103b71b-9585-4af7-ad10-89bf7d21b1d2)
+![Screenshot 2025-10-14 at 15 22 51](https://github.com/user-attachments/assets/15364cd5-2418-4ec0-9e87-c3639fa1a5bf)
+![Screenshot 2025-10-14 at 15 22 38](https://github.com/user-attachments/assets/e8697dea-fa60-4127-adef-39f5779b2cca)
+![Screenshot 2025-10-14 at 15 22 30](https://github.com/user-attachments/assets/49d60c8f-8c29-424a-9f5c-aa7ece053d75)
+![Screenshot 2025-10-14 at 15 22 21](https://github.com/user-attachments/assets/b71c2355-5ff5-4c5c-a86b-7c92580d6dc6)
+![Screenshot 2025-10-14 at 15 22 13](https://github.com/user-attachments/assets/61b0383e-1de1-4a71-ab3e-c59ed2ce10f3)
+![Screenshot 2025-10-14 at 15 21 56](https://github.com/user-attachments/assets/d8138706-1283-4af3-989c-98a12a127463)
+![Screenshot 2025-10-14 at 15 21 49](https://github.com/user-attachments/assets/5c7697e1-1e2c-4406-b10e-0ac6dbfee9f6)
+![Screenshot 2025-10-14 at 15 21 41](https://github.com/user-attachments/assets/7c7df5d5-e53f-480f-a65d-c0ff467aa9a3)
+![Screenshot 2025-10-14 at 15 21 35](https://github.com/user-attachments/assets/c793b2b9-ddb4-46fd-94fb-c390614c5952)
+![Screenshot 2025-10-14 at 15 21 01](https://github.com/user-attachments/assets/d2548cde-5ed6-4c79-b79c-e973123734f2)
+![Screenshot 2025-10-14 at 15 20 43](https://github.com/user-attachments/assets/e8ec0302-0cdf-44bc-a21b-3a6e5a92eee9)
+![Screenshot 2025-10-14 at 15 19 58](https://github.com/user-attachments/assets/4736dc1b-0a7c-4bf0-973e-a3ff4ec924b0)
+![Screenshot 2025-10-14 at 15 19 46](https://github.com/user-attachments/assets/32274275-92d3-42ed-919c-39abb3b90a2f)
+![Screenshot 2025-10-14 at 15 19 38](https://github.com/user-attachments/assets/80c2a866-4b52-4212-91a8-057d7afcd890)
+![Screenshot 2025-10-14 at 15 19 18](https://github.com/user-attachments/assets/5f312b53-4ca2-41a7-8936-1baf19926f3f)
+![Screenshot 2025-10-14 at 15 19 01](https://github.com/user-attachments/assets/43435182-1af3-40c7-9f37-ff28c9b4c25b)
+![Screenshot 2025-10-14 at 15 18 53](https://github.com/user-attachments/assets/850323a8-d333-4e62-b0ca-2f9b17e27842)
+![Screenshot 2025-10-14 at 15 18 46](https://github.com/user-attachments/assets/7505cab0-d09e-491a-aa17-c2ef07851537)
+![Screenshot 2025-10-14 at 15 18 36](https://github.com/user-attachments/assets/7fc3064a-ebf6-4372-937b-e70857ba7024)
+![Screenshot 2025-10-14 at 15 17 51](https://github.com/user-attachments/assets/aaa0be3d-76ac-456a-af1a-cfa2014d3426)
+![Screenshot 2025-10-14 at 15 17 41](https://github.com/user-attachments/assets/ecaa6fdd-231c-4742-a544-3c138e4f401d)
+![Screenshot 2025-10-14 at 15 17 31](https://github.com/user-attachments/assets/6c9d3586-7733-4eaf-8d05-1877991e5084)
+![Screenshot 2025-10-14 at 15 17 23](https://github.com/user-attachments/assets/d19de330-edc2-40e4-ae7b-3b552919c9fe)
+![Screenshot 2025-10-14 at 15 17 14](https://github.com/user-attachments/assets/703d446d-2a07-43e3-9c54-4877d7b6cec5)
+![Screenshot 2025-10-14 at 15 16 48](https://github.com/user-attachments/assets/864bd51f-f7cd-473e-8906-73bd64d0aa0f)
+![Screenshot 2025-10-14 at 15 16 39](https://github.com/user-attachments/assets/97efc3c0-c0c2-46d7-b0e4-3ffa4a338834)
+![Screenshot 2025-10-14 at 15 16 30](https://github.com/user-attachments/assets/e657888d-b306-480c-9726-da94f6f58843)
+![Screenshot 2025-10-14 at 15 16 16](https://github.com/user-attachments/assets/6a66047f-b667-4bc0-8ed4-ffa7b59154f0)
+![Screenshot 2025-10-14 at 15 15 59](https://github.com/user-attachments/assets/33676002-30c1-4636-b782-b6aa3d60860a)
+![Screenshot 2025-10-14 at 15 15 37](https://github.com/user-attachments/assets/a19838b5-fac9-4c6c-8392-664acf0c8f14)
+![Screenshot 2025-10-14 at 15 15 21](https://github.com/user-attachments/assets/1dad962c-fe16-448d-bc81-85ddf462c009)
+![Screenshot 2025-10-14 at 15 15 11](https://github.com/user-attachments/assets/5a1c069b-06d4-4c38-a67a-c0e57f7e414f)
+![Screenshot 2025-10-14 at 15 14 56](https://github.com/user-attachments/assets/92662117-046e-43af-ac4d-dcb4d7048a4c)
+![Screenshot 2025-10-14 at 15 14 46](https://github.com/user-attachments/assets/8a7b01b3-062c-49bb-bd4a-beda11fac5ad)
+![Screenshot 2025-10-14 at 15 14 31](https://github.com/user-attachments/assets/ebc4c2e8-bd42-4387-8d3d-dcea2a1b18e4)
+![Screenshot 2025-10-14 at 15 14 13](https://github.com/user-attachments/assets/9dd6a75e-f0e2-4583-aef8-296af884f384)
+![Screenshot 2025-10-14 at 15 13 50](https://github.com/user-attachments/assets/f45db975-f2ad-407f-8814-076dd2312322)
+![Screenshot 2025-10-14 at 15 13 29](https://github.com/user-attachments/assets/071c0c4c-1750-41af-a598-5144b99e5670)
+![Screenshot 2025-10-14 at 15 13 04](https://github.com/user-attachments/assets/9a67684f-9fa7-4f72-a5dd-81b134c9a045)
 
 A production-ready full-stack industrial monitoring system combining C++ physics engine, .NET backend, React frontend, and PostgreSQL database for real-time motor analytics and business intelligence.
 
