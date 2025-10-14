@@ -1,6 +1,52 @@
-# IoT Embedded Motor Sync Intelligence - Real-time Industrial IoT Dashboard, Motor Physics Engine, Business Intelligence Platform for Industrial IoT (C++, .NET, PostgreSQL, SignalR, Docker, React, TypeScript, Vite, TailwindCSS, Shadcn UI, Recharts)
+# IoT Embedded Motor Sync Intelligence - Real-time Industrial IoT Dashboard, Motor Physics Engine, Business Intelligence Platform (C++, .NET, PostgreSQL, SignalR, Docker, React, TypeScript, Vite, TailwindCSS, Shadcn UI, Recharts)
 
-**A production-ready full-stack industrial monitoring system combining C++ physics engine, .NET backend, React frontend, and PostgreSQL database for real-time motor analytics and business intelligence.**
+<img width="1520" height="862" alt="Screenshot 2025-10-14 at 15 23 43" src="https://github.com/user-attachments/assets/e2364453-3efb-4855-b162-aed843fb7ee9" />
+<img width="1513" height="855" alt="Screenshot 2025-10-14 at 15 23 31" src="https://github.com/user-attachments/assets/33283388-bea8-429a-8f29-1c481755c3d4" />
+<img width="1516" height="862" alt="Screenshot 2025-10-14 at 15 23 24" src="https://github.com/user-attachments/assets/cf8eb3e9-ea2f-415a-8cf9-5527742751b1" />
+<img width="1520" height="862" alt="Screenshot 2025-10-14 at 15 23 17" src="https://github.com/user-attachments/assets/f85129fa-43ec-42bf-b4ec-b83f65c7ad65" />
+<img width="1528" height="867" alt="Screenshot 2025-10-14 at 15 23 08" src="https://github.com/user-attachments/assets/89101bff-1c11-401b-832b-c00386996d5f" />
+<img width="1527" height="864" alt="Screenshot 2025-10-14 at 15 23 00" src="https://github.com/user-attachments/assets/7ab8f729-5762-4b2a-9e3a-63f07a7ff816" />
+<img width="1539" height="755" alt="Screenshot 2025-10-14 at 15 22 51" src="https://github.com/user-attachments/assets/2117815b-51b7-48ba-9964-afe8b7b8206c" />
+<img width="1814" height="864" alt="Screenshot 2025-10-14 at 15 22 38" src="https://github.com/user-attachments/assets/c5bc5b29-991f-4d82-87cb-7e72d0dd3b5d" />
+<img width="1810" height="862" alt="Screenshot 2025-10-14 at 15 22 30" src="https://github.com/user-attachments/assets/027822e3-e4d1-4674-af55-716e748414b5" />
+<img width="1822" height="867" alt="Screenshot 2025-10-14 at 15 22 21" src="https://github.com/user-attachments/assets/0ce5a474-24ce-408d-9135-e20faa709db0" />
+<img width="1813" height="867" alt="Screenshot 2025-10-14 at 15 22 13" src="https://github.com/user-attachments/assets/438233bf-fbc9-4ea4-a2c6-5f039bd8b9b6" />
+<img width="1821" height="859" alt="Screenshot 2025-10-14 at 15 21 56" src="https://github.com/user-attachments/assets/981ac2ef-797a-4577-8ed1-410750b77f4a" />
+<img width="1813" height="863" alt="Screenshot 2025-10-14 at 15 21 49" src="https://github.com/user-attachments/assets/a292bad6-aae1-40a7-b4c1-b0a311fd87eb" />
+<img width="1814" height="856" alt="Screenshot 2025-10-14 at 15 21 41" src="https://github.com/user-attachments/assets/41600532-2bab-4f06-9d67-4854a23627c4" />
+<img width="1824" height="854" alt="Screenshot 2025-10-14 at 15 21 35" src="https://github.com/user-attachments/assets/879d80d5-b59c-406d-b57c-e9e53d9fe748" />
+<img width="1824" height="856" alt="Screenshot 2025-10-14 at 15 21 01" src="https://github.com/user-attachments/assets/b6af8805-3773-46c2-8ffa-d75c04d1d283" />
+<img width="1820" height="850" alt="Screenshot 2025-10-14 at 15 20 43" src="https://github.com/user-attachments/assets/733709d1-3625-46a2-b36d-e1fa5b1e7ffa" />
+<img width="1824" height="841" alt="Screenshot 2025-10-14 at 15 19 58" src="https://github.com/user-attachments/assets/8313ec90-7208-4e60-be6a-05f1fa26b2c7" />
+<img width="1817" height="861" alt="Screenshot 2025-10-14 at 15 19 46" src="https://github.com/user-attachments/assets/3e3a7563-c7a6-4884-8eb9-3622f7fbbf91" />
+<img width="1823" height="866" alt="Screenshot 2025-10-14 at 15 19 38" src="https://github.com/user-attachments/assets/e85dea17-bdd8-4e11-a07a-5d712361848d" />
+<img width="1814" height="861" alt="Screenshot 2025-10-14 at 15 19 18" src="https://github.com/user-attachments/assets/1056f839-e71c-4574-894e-dbac42845f22" />
+<img width="1835" height="784" alt="Screenshot 2025-10-14 at 15 19 01" src="https://github.com/user-attachments/assets/5516b825-e3e7-4633-9348-55a11872c04b" />
+<img width="1826" height="661" alt="Screenshot 2025-10-14 at 15 18 53" src="https://github.com/user-attachments/assets/71aa2e23-695c-48ed-855e-f4ea747d8a51" />
+<img width="1818" height="752" alt="Screenshot 2025-10-14 at 15 18 46" src="https://github.com/user-attachments/assets/f9a06c2c-9d6e-472b-9ae4-3771c8ffe156" />
+<img width="1819" height="860" alt="Screenshot 2025-10-14 at 15 18 36" src="https://github.com/user-attachments/assets/0d5e91a4-7d91-44c8-875e-63fb849f326d" />
+<img width="1813" height="861" alt="Screenshot 2025-10-14 at 15 17 51" src="https://github.com/user-attachments/assets/b3581829-e2cc-4dfe-abfa-2cb172d860e9" />
+<img width="1830" height="842" alt="Screenshot 2025-10-14 at 15 17 41" src="https://github.com/user-attachments/assets/133a21b7-9e38-4449-9b42-adcbcb7a0215" />
+<img width="1816" height="838" alt="Screenshot 2025-10-14 at 15 17 31" src="https://github.com/user-attachments/assets/ce683f1a-38f4-4537-b5a2-4f80968244fa" />
+<img width="1814" height="862" alt="Screenshot 2025-10-14 at 15 17 23" src="https://github.com/user-attachments/assets/6347a9ee-a9b0-4420-a9ee-9c1fb7e42d6f" />
+<img width="1828" height="865" alt="Screenshot 2025-10-14 at 15 17 14" src="https://github.com/user-attachments/assets/3fdc464e-304a-4df4-b718-6391ad38ace0" />
+<img width="1816" height="857" alt="Screenshot 2025-10-14 at 15 16 48" src="https://github.com/user-attachments/assets/cd20c187-2712-4ba2-b79d-dad4e11cfc66" />
+<img width="1821" height="870" alt="Screenshot 2025-10-14 at 15 16 39" src="https://github.com/user-attachments/assets/927b851b-5818-40c9-b7bc-371293145e51" />
+<img width="1820" height="868" alt="Screenshot 2025-10-14 at 15 16 30" src="https://github.com/user-attachments/assets/714e1e54-e4e5-41df-a5a2-0ca8601f9243" />
+<img width="1819" height="861" alt="Screenshot 2025-10-14 at 15 16 16" src="https://github.com/user-attachments/assets/0653b19e-291a-4217-91e8-9fc1896a26c7" />
+<img width="1820" height="887" alt="Screenshot 2025-10-14 at 15 15 59" src="https://github.com/user-attachments/assets/35455bc5-56b5-4b27-8b98-1d2077ef7093" />
+<img width="1817" height="861" alt="Screenshot 2025-10-14 at 15 15 37" src="https://github.com/user-attachments/assets/f452d299-c2af-47ab-b41d-eac35ff30411" />
+<img width="1814" height="866" alt="Screenshot 2025-10-14 at 15 15 21" src="https://github.com/user-attachments/assets/d76beffb-fc35-4b54-b1cb-02588eafc5af" />
+<img width="1814" height="862" alt="Screenshot 2025-10-14 at 15 15 11" src="https://github.com/user-attachments/assets/a41c3b08-333b-4fb8-ba56-d85c766acd3b" />
+<img width="1816" height="868" alt="Screenshot 2025-10-14 at 15 14 56" src="https://github.com/user-attachments/assets/43031e1f-4e2f-4191-8429-a7cdad7419a5" />
+<img width="1822" height="861" alt="Screenshot 2025-10-14 at 15 14 46" src="https://github.com/user-attachments/assets/be4e44fb-5a43-45e7-8a39-42cad1a49b56" />
+<img width="1830" height="861" alt="Screenshot 2025-10-14 at 15 14 31" src="https://github.com/user-attachments/assets/dd778ac8-8734-43d2-8a90-7e09e0ef4f84" />
+<img width="1824" height="861" alt="Screenshot 2025-10-14 at 15 14 13" src="https://github.com/user-attachments/assets/8f7e665c-e377-4ee3-85ec-d489aaa15c85" />
+<img width="1831" height="816" alt="Screenshot 2025-10-14 at 15 13 50" src="https://github.com/user-attachments/assets/ef0f0e78-6be8-45ca-a3ee-e8374ea6078d" />
+<img width="1862" height="855" alt="Screenshot 2025-10-14 at 15 13 29" src="https://github.com/user-attachments/assets/9e459fc2-35a1-407a-9d0b-db08c5fa9f24" />
+<img width="1859" height="911" alt="Screenshot 2025-10-14 at 15 13 04" src="https://github.com/user-attachments/assets/aea2432c-2867-4f91-890c-4c22a0d14487" />
+
+A production-ready full-stack industrial monitoring system combining C++ physics engine, .NET backend, React frontend, and PostgreSQL database for real-time motor analytics and business intelligence.
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![React](https://img.shields.io/badge/React-19.1-61DAFB?logo=react)](https://react.dev/)
