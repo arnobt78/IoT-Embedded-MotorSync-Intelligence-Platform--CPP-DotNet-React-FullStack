@@ -1,5 +1,22 @@
 # IoT Embedded Motor Sync Intelligence - Real-time Industrial IoT Dashboard, Motor Physics Engine, Business Intelligence Platform (C++, .NET, PostgreSQL, SignalR, Docker, React, TypeScript, Vite, TailwindCSS, Shadcn UI, Recharts)
 
+A production-ready full-stack industrial monitoring system combining C++ physics engine, .NET backend, React frontend, and PostgreSQL database for real-time motor analytics and business intelligence.
+
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![React](https://img.shields.io/badge/React-19.1-61DAFB?logo=react)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-NeonDB-4169E1?logo=postgresql)](https://neon.tech/)
+[![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)](https://isocpp.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
+
+---
+
+## 🌟 Live Demo
+
+- **Frontend-Live:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
+- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
+- **API Documentation**: [https://embedded-motor-engine-speed-temperature.onrender.com/swagger](https://embedded-motor-engine-speed-temperature.onrender.com/swagger)
+
 ![Screenshot 2025-10-14 at 15 23 43](https://github.com/user-attachments/assets/8e5f8a76-bcdd-4613-9bf8-f843a62202e7)
 ![Screenshot 2025-10-14 at 15 23 31](https://github.com/user-attachments/assets/a44a7f4e-d47c-4e25-ab9b-967661e9eb63)
 ![Screenshot 2025-10-14 at 15 23 24](https://github.com/user-attachments/assets/80313b3e-88c5-4641-b693-daed89cf78f7)
@@ -45,25 +62,6 @@
 ![Screenshot 2025-10-14 at 15 13 50](https://github.com/user-attachments/assets/f45db975-f2ad-407f-8814-076dd2312322)
 ![Screenshot 2025-10-14 at 15 13 29](https://github.com/user-attachments/assets/071c0c4c-1750-41af-a598-5144b99e5670)
 ![Screenshot 2025-10-14 at 15 13 04](https://github.com/user-attachments/assets/9a67684f-9fa7-4f72-a5dd-81b134c9a045)
-
-A production-ready full-stack industrial monitoring system combining C++ physics engine, .NET backend, React frontend, and PostgreSQL database for real-time motor analytics and business intelligence.
-
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![React](https://img.shields.io/badge/React-19.1-61DAFB?logo=react)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-NeonDB-4169E1?logo=postgresql)](https://neon.tech/)
-[![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)](https://isocpp.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
-
----
-
-## 🌟 Live Demo
-
-- **Frontend-Live:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
-- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
-- **API Documentation**: [https://embedded-motor-engine-speed-temperature.onrender.com/swagger](https://embedded-motor-engine-speed-temperature.onrender.com/swagger)
-
----
 
 ## 📑 Table of Contents
 
