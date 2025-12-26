@@ -1,4 +1,4 @@
-// Backend migrated to Hetzner VPS (Coolify) - Dec 26, 2025
+// Backend migrated to Hetzner VPS (Coolify)
 // Backend URL configured via environment variables (VITE_API_URL)
 import React from "react";
 import ReactDOM from "react-dom/client";
