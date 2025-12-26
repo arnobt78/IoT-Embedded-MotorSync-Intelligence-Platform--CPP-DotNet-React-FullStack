@@ -83,6 +83,11 @@ try
     }
     
     // Build Npgsql connection string using proper parameter format
+    // Check if SSL is required from connection string parameters
+    var requireSsl = queryParams.ContainsKey("sslmode") && 
+                     (queryParams["sslmode"].Equals("require", StringComparison.OrdinalIgnoreCase) ||
+                      queryParams["sslmode"].Equals("prefer", StringComparison.OrdinalIgnoreCase));
+    
     var npgsqlBuilder = new NpgsqlConnectionStringBuilder
     {
         Host = host,
@@ -90,7 +95,7 @@ try
         Username = username,
         Password = password,
         Database = database,
-        SslMode = SslMode.Require,
+        SslMode = requireSsl ? SslMode.Require : SslMode.Disable,
         Pooling = true,
         MinPoolSize = 1,
         MaxPoolSize = 20,
@@ -105,7 +110,7 @@ try
     Console.WriteLine($"   Host: {host}:{port}");
     Console.WriteLine($"   Database: {database}");
     Console.WriteLine($"   Username: {username}");
-    Console.WriteLine($"   SSL Mode: Require");
+    Console.WriteLine($"   SSL Mode: {(requireSsl ? "Require" : "Disable")}");
     
     Console.WriteLine("🐘 Configuring PostgreSQL database with Entity Framework");
     
