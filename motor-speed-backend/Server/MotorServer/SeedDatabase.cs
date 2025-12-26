@@ -277,6 +277,18 @@ namespace MotorServer
                 }
 
                 await context.SaveChangesAsync();
+                
+                // Reset PostgreSQL sequence to continue from the highest ID
+                // This prevents duplicate key errors when generating new readings
+                if (successCount > 0)
+                {
+                    var maxId = records.Max(r => ParseInt(r.Id));
+                    // Use pg_get_serial_sequence to find the sequence name automatically
+                    await context.Database.ExecuteSqlRawAsync(
+                        $"SELECT setval(pg_get_serial_sequence('\"MotorReadings\"', 'Id'), {maxId}, false);");
+                    Console.WriteLine($"✅ Reset sequence to continue from ID {maxId + 1}");
+                }
+                
                 Console.WriteLine($"✅ Seeded {successCount} MotorReadings");
                 if (errorCount > 0)
                 {

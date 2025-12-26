@@ -32,6 +32,7 @@ namespace MotorServer.Data
             modelBuilder.Entity<MotorReading>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd(); // Auto-increment ID
                 entity.Property(e => e.Title).HasMaxLength(200);
                 entity.Property(e => e.MachineId).HasMaxLength(50);
                 entity.Property(e => e.Status).HasMaxLength(50);
