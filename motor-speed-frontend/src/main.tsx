@@ -1,4 +1,4 @@
-// Backend migrated to Hetzner VPS (Coolify)
+// Backend migrated to Hetzner VPS (Coolify) but having SSL issue
 // Backend URL configured via environment variables (VITE_API_URL)
 import React from "react";
 import ReactDOM from "react-dom/client";
