@@ -14,10 +14,18 @@ using Microsoft.EntityFrameworkCore;
 using MotorServer.Data;
 using MotorServer.Services;
 using MotorServer.Hubs;
+using MotorServer; // For SeedDatabase
 using Npgsql;
 using DotNetEnv;
 
 // --- Top-level code starts here ---
+
+// Check if seed command is requested
+if (args.Length > 0 && args[0].Equals("seed", StringComparison.OrdinalIgnoreCase))
+{
+    await SeedDatabase.RunSeedAsync(args);
+    return;
+}
 
 // Load .env file if it exists (for local development)
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
