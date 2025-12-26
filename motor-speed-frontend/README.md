@@ -16,17 +16,16 @@ Built with React 19, Vite, TailwindCSS, and Recharts for a responsive, real-time
 
 - [Overview](#-overview)
 - [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
+- [Technology Stack](#%EF%B8%8F-technology-stack)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
 - [Dashboard Overview](#-dashboard-overview)
-- [Component Architecture](#-component-architecture)
-- [Real-time Updates](#-real-time-updates)
+- [Component Architecture](#%EF%B8%8F-component-architecture)
 - [Code Examples](#-code-examples)
 - [Reusable Components](#-reusable-components)
-- [Deployment](#-deployment)
-- [Customization](#-customization)
+- [Deployment](#-build--deployment)
+- [Customization](#-customization-guide)
 
 ---
 
@@ -310,7 +309,7 @@ VITE_ADMIN_PASSKEY=motor2025
 
 Set these in Netlify dashboard → Site settings → Environment variables:
 
-```
+```bash
 VITE_API_URL=https://embedded-motor-engine-speed-temperature.onrender.com
 
 VITE_SIGNALR_URL=https://embedded-motor-engine-speed-temperature.onrender.com/motorHub
@@ -400,7 +399,7 @@ VITE_ADMIN_PASSKEY=motor2025
 
 ### App Structure
 
-```
+```text
 App.tsx (Root)
 ├── ToastProvider (Context)
 ├── SignalR Connection (WebSocket)
@@ -412,7 +411,7 @@ App.tsx (Root)
 
 ### Component Hierarchy
 
-```
+```text
 MainDashboard
 ├── NavBar
 ├── DashboardStats (6 cards)
@@ -1157,7 +1156,7 @@ npm run preview
    - **Publish directory**: `dist`
 3. Set environment variables:
 
-   ```
+   ```bash
    VITE_API_URL=https://your-backend.onrender.com
    VITE_SIGNALR_URL=https://your-backend.onrender.com/motorHub
    VITE_ADMIN_PASSKEY=motor2025
@@ -1686,7 +1685,7 @@ useEffect(() => {
 - **KPI**: Key Performance Indicator
 - **Predictive Maintenance**: AI-based failure prediction
 
-### Data Visualization
+### Data Visualization Components
 
 - **Recharts Components**: BarChart, LineChart, PieChart
 - **ResponsiveContainer**: Auto-sizing
@@ -1708,7 +1707,7 @@ useEffect(() => {
 
 ### Implemented Optimizations
 
-**1. Memoization**
+#### 1. Memoization
 
 ```typescript
 const latestReading = useMemo(() => readings[0], [readings]);
@@ -1716,7 +1715,7 @@ const latestReading = useMemo(() => readings[0], [readings]);
 const chartData = useMemo(() => transformData(readings), [readings]);
 ```
 
-**2. Lazy Loading**
+#### 2. Lazy Loading
 
 ```typescript
 const LazyComponent = lazy(() => import("./HeavyComponent"));
@@ -1726,7 +1725,7 @@ const LazyComponent = lazy(() => import("./HeavyComponent"));
 </Suspense>;
 ```
 
-**3. Debouncing**
+#### 3. Debouncing
 
 ```typescript
 const debouncedSearch = useMemo(
@@ -1986,6 +1985,6 @@ Thank you! 😊
 
 ---
 
-**Built with ❤️ using React, TypeScript, TailwindCSS, and modern web technologies**
+Built with ❤️ using React, TypeScript, TailwindCSS, and modern web technologies
 
-_Last Updated: October 13, 2025_
+Last Updated: October 13, 2025

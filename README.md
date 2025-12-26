@@ -67,14 +67,13 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Technology Stack](#-technology-stack)
-- [Architecture](#-architecture)
+- [Technology Stack](#%EF%B8%8F-technology-stack)
+- [Architecture](#%EF%B8%8F-architecture)
 - [Quick Start](#-quick-start)
 - [Project Structure](#-project-structure)
 - [Environment Setup](#-environment-setup)
 - [Deployment](#-deployment)
-- [Screenshots](#-screenshots)
-- [API Documentation](#-api-documentation)
+- [Screenshots](#-screenshots--demos)
 - [Contributing](#-contributing)
 
 ---
@@ -108,7 +107,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 
 ### 🎯 Core Capabilities
 
-**Real-time Monitoring**
+#### Real-time Monitoring
 
 - Live motor speed (2000-3000 RPM)
 - Temperature tracking (45-95°C)
@@ -117,7 +116,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 - Power consumption (kW)
 - 50+ industrial sensor parameters
 
-**Multi-Machine Fleet**
+#### Multi-Machine Fleet
 
 - MOTOR-001: Main drive motor (24/7 operation)
 - 3× Industrial Pumps
@@ -130,7 +129,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 - 2× Industrial Mixers
 - 1× Hydraulic Press
 
-**Business Intelligence**
+#### Business Intelligence
 
 - Executive dashboard (system health, uptime, efficiency)
 - Financial analytics (energy costs, ROI, maintenance)
@@ -139,7 +138,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 - Comparative analysis (machine ranking, departments)
 - Predictive insights (maintenance forecasts, downtime)
 
-**Advanced Features**
+#### Advanced Features
 
 - Edge computing simulation (9 nodes)
 - ML model tracking (92.6% accuracy)
@@ -404,7 +403,7 @@ VITE_ADMIN_PASSKEY=your-admin-passkey
 - **10+ Dashboards**: Main, health, business, analytics, IoT, control
 - **Real-time**: 2-second update intervals via SignalR
 
-### Business Intelligence
+### Business Intelligence Analytics
 
 - **Energy Costs**: 24h ($410), 7d ($2,873), 30d ($12,313)
 - **OEE Analysis**: Availability, performance, quality breakdown
@@ -736,7 +735,7 @@ Thank you! 😊
 
 ---
 
-**Built with ❤️ by developers, for developers**
+Built with ❤️ by developers, for developers
 
 _A comprehensive full-stack IoT platform demonstrating real-world industrial monitoring with authentic physics, modern web technologies, and production-ready architecture._
 

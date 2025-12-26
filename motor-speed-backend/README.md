@@ -16,13 +16,13 @@ This backend powers a comprehensive motor monitoring system with real-time data 
 
 - [Overview](#-overview)
 - [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
+- [Technology Stack](#%EF%B8%8F-technology-stack)
 - [Project Structure](#-project-structure)
-- [Architecture](#-architecture)
+- [Architecture](#%EF%B8%8F-architecture)
 - [Getting Started](#-getting-started)
 - [Environment Variables](#-environment-variables)
 - [API Endpoints](#-api-endpoints)
-- [Real-time Updates](#-real-time-updates)
+- [Real-time Updates](#-real-time-updates-signalr)
 - [C++ Physics Engine](#-c-physics-engine)
 - [Database Schema](#-database-schema)
 - [Business Intelligence](#-business-intelligence)
@@ -1059,7 +1059,7 @@ dotnet ef migrations remove
 
 ---
 
-## 📊 Business Intelligence
+## 📊 Business Intelligence Analytics
 
 ### Executive Summary
 
@@ -1993,28 +1993,28 @@ public async Task<BusinessInsights> GetBusinessInsightsAsync()
 
 **Key Learning Paths:**
 
-**Path 1: API Development**
+#### Path 1: API Development
 
 - Study `MotorController.cs` for RESTful API patterns
 - Learn async/await patterns with Entity Framework
 - Understand error handling and status codes
 - Practice with Swagger UI for testing
 
-**Path 2: C++ Interop**
+#### Path 2: C++ Interop
 
 - Examine P/Invoke declarations in `EngineService.cs`
 - Study `motor_engine.hpp` for C API design
 - Learn cross-platform library compilation
 - Understand memory management between C++ and C#
 
-**Path 3: Real-time Communication**
+#### Path 3: Real-time Communication
 
 - Study `MotorHub.cs` for SignalR implementation
 - Learn WebSocket connection management
 - Understand broadcast patterns
 - Practice with SignalR client libraries
 
-**Path 4: Business Logic**
+#### Path 4: Business Logic
 
 - Analyze `GetBusinessInsightsAsync()` method
 - Learn OEE, MTBF, ROI calculations
@@ -2169,7 +2169,7 @@ foreach (var machine in machines)
 ✅ **DRY Principle**: Reusable helper methods  
 ✅ **Async/Await**: Non-blocking operations throughout
 
-### Database
+### Database Operations
 
 ✅ **Migrations**: Version-controlled schema changes  
 ✅ **Indexing**: Optimized queries on Timestamp and MachineId  
