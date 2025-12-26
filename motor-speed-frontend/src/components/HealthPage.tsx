@@ -84,7 +84,7 @@ export default function HealthPage({
   >(undefined);
 
   const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
     (import.meta.env.PROD
       ? "https://embedded-motor-engine-speed-temperature.onrender.com"
       : "http://localhost:5001");
