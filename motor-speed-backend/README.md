@@ -43,7 +43,7 @@ The **Motor Speed Backend** is a sophisticated industrial monitoring system that
 - **PostgreSQL Database**: Cloud-based persistent storage with NeonDB
 - **SignalR**: Real-time bi-directional communication for live updates
 - **Entity Framework Core**: ORM for database operations with migrations
-- **Docker**: Containerized deployment for Render and other cloud platforms
+- **Docker**: Containerized deployment for Hetzner VPS (Coolify) and other cloud platforms
 
 ### What Makes This Special?
 
@@ -52,7 +52,7 @@ The **Motor Speed Backend** is a sophisticated industrial monitoring system that
 ✅ **Business Intelligence**: Comprehensive analytics including OEE, MTBF, ROI, energy costs, and predictive maintenance  
 ✅ **Edge Computing**: Simulates 9 edge nodes for distributed processing and local analytics  
 ✅ **Real-time Updates**: WebSocket-based live data streaming to connected clients  
-✅ **Production Ready**: Deployed on Render with persistent PostgreSQL database
+✅ **Production Ready**: Deployed on Hetzner VPS (Coolify) with persistent PostgreSQL database
 
 ---
 
@@ -121,6 +121,7 @@ The **Motor Speed Backend** is a sophisticated industrial monitoring system that
 ### Development Tools
 
 - **Docker**: Container-based deployment
+- **Coolify**: Self-hosting platform for Hetzner VPS
 - **Visual Studio 2022** / **VS Code**: IDEs for development
 - **dotnet CLI**: Command-line build and run tools
 
@@ -194,7 +195,7 @@ motor-speed-backend/
                  │                            │
 ┌────────────────▼────────────────────────────▼───────────────────┐
 │                    ASP.NET Core 8.0 Backend                      │
-│                  Render: embedded-motor-engine                   │
+│            Hetzner VPS (Coolify): motor-backend.duckdns.org      │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  MotorController.cs (40+ API endpoints)                  │  │
 │  │  • GET /api/motor/sample  - Generate reading             │  │
@@ -379,9 +380,9 @@ PORT=
 - ✅ **Keep `.env` file secure** - never commit to Git (already in `.gitignore`)
 - ✅ **Get NeonDB credentials** from [neon.tech](https://neon.tech) dashboard
 
-### Production Deployment (Render)
+### Production Deployment (Hetzner VPS - Coolify)
 
-Set these environment variables in Render dashboard (without quotes):
+Set these environment variables in Coolify dashboard (without quotes):
 
 ```env
 DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxx-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
@@ -392,7 +393,7 @@ FRONTEND_URL=https://your-frontend.netlify.app
 **Port Configuration:**
 
 - **Localhost**: Uses `5001` (from `launchSettings.json`)
-- **Render**: Uses `10000` (from `Dockerfile` ENV)
+- **Coolify**: Uses `10000` (from `Dockerfile` ENV)
 - **No manual PORT variable needed** - handled automatically!
 
 ### How to Get NeonDB Connection String
@@ -416,7 +417,7 @@ postgresql://neondb_owner:npg_xxxXXXxxx@ep-misty-sunset-xxx-pooler.c-2.us-east-1
 ### Base URL
 
 - **Local**: `http://localhost:5001/api/motor`
-- **Production**: `https://embedded-motor-engine-speed-temperature.onrender.com/api/motor`
+- **Production**: `https://motor-backend.duckdns.org/api/motor`
 
 ### Core Motor Endpoints
 
@@ -759,7 +760,7 @@ POST /api/motor/clear
 
 ### SignalR Hub Endpoint
 
-**URL**: `http://localhost:5001/motorHub` (local) or `https://your-backend.onrender.com/motorHub` (production)
+**URL**: `http://localhost:5001/motorHub` (local) or `https://your-backend.duckdns.org/motorHub` (production)
 
 ### Client Connection (JavaScript/TypeScript)
 
@@ -1122,14 +1123,14 @@ cost = maintenanceStatus == 2 ? $1500 : $500  // Critical vs Preventive
 
 ## 🐳 Deployment
 
-### Docker Deployment (Render)
+### Docker Deployment (Hetzner VPS - Coolify)
 
 The `Server/Dockerfile` handles:
 
 1. **Multi-stage build** (SDK for build, Runtime for deployment)
 2. **C++ compilation** (compiles `motor_engine.so` for Linux)
 3. **.NET build & publish**
-4. **Port configuration** (10000 for Render)
+4. **Port configuration** (10000 for Coolify)
 5. **Non-root user** security
 
 **Build Docker image:**
@@ -1147,21 +1148,23 @@ docker run -p 10000:10000 \
   motor-backend
 ```
 
-### Render.com Deployment
+### Hetzner VPS - Coolify Deployment
 
-1. **Connect GitHub repository** to Render
-2. **Select Docker deployment**
-3. **Set build command**: (automatic from Dockerfile)
-4. **Set environment variables**:
+1. **Set up Hetzner VPS** and install Coolify
+2. **Connect GitHub repository** to Coolify
+3. **Select Docker deployment**
+4. **Set build command**: (automatic from Dockerfile)
+5. **Set environment variables**:
 
    ```env
    DATABASE_URL=postgresql://neondb_owner:password@host/db?sslmode=require&channel_binding=require
    FRONTEND_URL=https://motor-speed-temperature.netlify.app
    ```
 
-5. **Deploy** - Render automatically builds and deploys
+6. **Configure Container Labels** for HTTPS routing (Traefik/Caddy)
+7. **Deploy** - Coolify automatically builds and deploys
 
-**Render Service URL**: `https://your-backend.onrender.com`
+**Service URL**: `https://motor-backend.duckdns.org`
 
 ### Health Checks
 
@@ -1953,7 +1956,7 @@ public async Task<BusinessInsights> GetBusinessInsightsAsync()
 
 - [ ] Compile C++ engine for Linux: `motor_engine.so`
 - [ ] Set up NeonDB PostgreSQL database
-- [ ] Configure environment variables in Render
+- [ ] Configure environment variables in Coolify
 - [ ] Test locally with production database
 - [ ] Review CORS settings
 - [ ] Check SignalR configuration
@@ -1961,7 +1964,7 @@ public async Task<BusinessInsights> GetBusinessInsightsAsync()
 ### Deployment
 
 - [ ] Push code to GitHub
-- [ ] Render auto-deploys from main branch
+- [ ] Coolify auto-deploys from main branch
 - [ ] Verify Docker build completes
 - [ ] Check database migrations run successfully
 - [ ] Test health endpoint: `/health`
@@ -2472,10 +2475,10 @@ This project demonstrates real-world industrial IoT monitoring with:
 ### Useful Links
 
 - **Live Demo (Frontend)**: <https://motor-speed-temperature.netlify.app>
-- **Live API**: <https://embedded-motor-engine-speed-temperature.onrender.com>
-- **Swagger Docs**: <https://embedded-motor-engine-speed-temperature.onrender.com/swagger>
+- **Live API**: <https://motor-backend.duckdns.org>
+- **Swagger Docs**: <https://motor-backend.duckdns.org/swagger>
 - **NeonDB**: <https://neon.tech>
-- **Render**: <https://render.com>
+- **Coolify**: <https://coolify.io>
 
 ---
 

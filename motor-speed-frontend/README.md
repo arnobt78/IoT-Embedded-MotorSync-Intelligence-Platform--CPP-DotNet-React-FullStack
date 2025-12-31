@@ -1,6 +1,6 @@
 # IoT Embedded Motor Sync Intelligence Frontend - Real-time Industrial IoT Dashboard, Motor Physics Engine, Business Intelligence Platform for Industrial IoT (React, TypeScript, Vite, TailwindCSS, Shadcn UI, SignalR, Docker)
 
-**A modern React + TypeScript frontend for real-time industrial motor monitoring with advanced analytics, business intelligence, and IoT visualization.**
+A modern React + TypeScript frontend for real-time industrial motor monitoring with advanced analytics, business intelligence, and IoT visualization.
 
 Built with React 19, Vite, TailwindCSS, and Recharts for a responsive, real-time industrial monitoring experience.
 
@@ -310,9 +310,9 @@ VITE_ADMIN_PASSKEY=motor2025
 Set these in Netlify dashboard → Site settings → Environment variables:
 
 ```bash
-VITE_API_URL=https://embedded-motor-engine-speed-temperature.onrender.com
+VITE_API_URL=https://motor-backend.duckdns.org
 
-VITE_SIGNALR_URL=https://embedded-motor-engine-speed-temperature.onrender.com/motorHub
+VITE_SIGNALR_URL=https://motor-backend.duckdns.org/motorHub
 VITE_ADMIN_PASSKEY=motor2025
 ```
 
@@ -813,7 +813,7 @@ useEffect(() => {
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? "https://embedded-motor-engine-speed-temperature.onrender.com"
+    ? "https://motor-backend.duckdns.org"
     : "http://localhost:5001");
 
 export const SIGNALR_URL =
@@ -1157,8 +1157,8 @@ npm run preview
 3. Set environment variables:
 
    ```bash
-   VITE_API_URL=https://your-backend.onrender.com
-   VITE_SIGNALR_URL=https://your-backend.onrender.com/motorHub
+   VITE_API_URL=https://motor-backend.duckdns.org
+   VITE_SIGNALR_URL=https://motor-backend.duckdns.org/motorHub
    VITE_ADMIN_PASSKEY=motor2025
    ```
 
@@ -1964,8 +1964,8 @@ Open-source and available for educational and commercial use.
 ### Useful Links
 
 - **Live Demo**: <https://motor-speed-temperature.netlify.app>
-- **Backend API**: <https://embedded-motor-engine-speed-temperature.onrender.com>
-- **Swagger Docs**: <https://embedded-motor-engine-speed-temperature.onrender.com/swagger>
+- **Backend API**: <https://motor-backend.duckdns.org>
+- **Swagger Docs**: <https://motor-backend.duckdns.org/swagger>
 - **React Docs**: <https://react.dev>
 - **Vite Docs**: <https://vitejs.dev>
 - **TailwindCSS**: <https://tailwindcss.com>

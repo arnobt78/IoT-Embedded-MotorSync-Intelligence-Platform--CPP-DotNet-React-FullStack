@@ -14,8 +14,8 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 ## 🌟 Live Demo
 
 - **Frontend-Live:** [https://motor-speed-temperature.netlify.app/](https://motor-speed-temperature.netlify.app/)
-- **Backend-Live:** [https://embedded-motor-engine-speed-temperature.onrender.com/](https://embedded-motor-engine-speed-temperature.onrender.com/)
-- **API Documentation**: [https://embedded-motor-engine-speed-temperature.onrender.com/swagger](https://embedded-motor-engine-speed-temperature.onrender.com/swagger)
+- **Backend-Live:** [https://motor-backend.duckdns.org/](https://motor-backend.duckdns.org/)
+- **API Documentation**: [https://motor-backend.duckdns.org/swagger](https://motor-backend.duckdns.org/swagger)
 
 ![Screenshot 2025-10-14 at 15 23 43](https://github.com/user-attachments/assets/8e5f8a76-bcdd-4613-9bf8-f843a62202e7)
 ![Screenshot 2025-10-14 at 15 23 31](https://github.com/user-attachments/assets/a44a7f4e-d47c-4e25-ab9b-967661e9eb63)
@@ -96,7 +96,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 ### Why It's Special
 
 ✅ **Real Physics**: Authentic industrial motor calculations (IEEE 112, IEC 60034, ISO 10816)  
-✅ **Production Ready**: Deployed on Render + Netlify with persistent cloud database  
+✅ **Production Ready**: Deployed on Hetzner VPS (Coolify) + Netlify with persistent cloud database  
 ✅ **Full Stack**: C++ physics → .NET API → React dashboard  
 ✅ **Business Focused**: Not just data, but actionable business insights  
 ✅ **Educational**: Learn physics, engineering, and software development
@@ -181,7 +181,7 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 ### DevOps
 
 - **Docker** - Containerization
-- **Render** - Backend hosting
+- **Hetzner VPS + Coolify** - Backend hosting
 - **Netlify** - Frontend hosting
 - **GitHub** - Version control
 - **CI/CD** - Auto-deploy on push
@@ -194,14 +194,14 @@ A production-ready full-stack industrial monitoring system combining C++ physics
 
 ```bash
 ┌─────────────────────────────────────────────────────────────┐
-│                    React Frontend (Netlify)                  │
+│                    React Frontend (Netlify)                 │
 │  • 10+ Dashboards  • Recharts  • Real-time UI              │
 │  • TailwindCSS     • TypeScript • SignalR Client           │
 └────────────┬───────────────────────────┬────────────────────┘
              │ REST API                  │ WebSocket
              │ (HTTP/JSON)               │ (SignalR)
 ┌────────────▼───────────────────────────▼────────────────────┐
-│              ASP.NET Core Backend (Render)                   │
+│        ASP.NET Core Backend (Hetzner VPS - Coolify)         │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │ MotorController (40+ endpoints)                     │   │
 │  └────────────┬────────────────────────────────────────┘   │
@@ -269,7 +269,7 @@ npm run dev
 No installation needed! Visit:
 
 - **Dashboard**: [https://motor-speed-temperature.netlify.app](https://motor-speed-temperature.netlify.app)
-- **API**: [https://embedded-motor-engine-speed-temperature.onrender.com](https://embedded-motor-engine-speed-temperature.onrender.com)
+- **API**: [https://motor-backend.duckdns.org](https://motor-backend.duckdns.org)
 
 ### Option 3: Docker Compose
 
@@ -367,15 +367,19 @@ VITE_ADMIN_PASSKEY=your-admin-passkey
 
 ## 🚀 Deployment
 
-### Backend (Render)
+### Backend (Hetzner VPS - Coolify)
 
 **Steps:**
 
-1. Connect GitHub repo to Render
-2. Select "Docker" deployment
-3. Set environment variables (DATABASE_URL, FRONTEND_URL)
-4. Deploy automatically on push to main
+1. Set up Hetzner VPS and install Coolify
+2. Connect GitHub repo to Coolify
+3. Select "Docker" deployment
+4. Set environment variables (DATABASE_URL, FRONTEND_URL)
+5. Configure Container Labels for HTTPS routing
+6. Deploy automatically on push to main
 
+**Result**: `https://your-backend-url.duckdns.org`
+or, if you are using Render.com, you can use the following result:
 **Result**: `https://your-backend-url.onrender.com`
 
 ### Frontend (Netlify)
@@ -517,7 +521,7 @@ make health
 
 ### API Documentation
 
-- **Swagger UI**: [https://embedded-motor-engine-speed-temperature.onrender.com/swagger](https://embedded-motor-engine-speed-temperature.onrender.com/swagger)
+- **Swagger UI**: [https://motor-backend.duckdns.org/swagger](https://motor-backend.duckdns.org/swagger)
 - **40+ endpoints** documented with request/response examples
 
 ---
@@ -548,7 +552,7 @@ make health
 - TailwindCSS for styling
 - Recharts for data visualization
 - Docker for deployment
-- Cloud hosting (Render, Netlify)
+- Cloud hosting (Hetzner VPS + Coolify, Netlify)
 
 **Software Architecture:**
 
@@ -711,7 +715,7 @@ Built with these amazing technologies:
 - ASP.NET Core, Entity Framework Core, SignalR
 - React, TypeScript, Vite, TailwindCSS, Recharts
 - PostgreSQL, NeonDB
-- Docker, Render, Netlify
+- Docker, Hetzner VPS, Coolify, Netlify
 
 Inspired by real industrial IoT monitoring systems and designed for both production use and educational purposes.
 
