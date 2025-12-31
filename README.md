@@ -268,8 +268,8 @@ npm run dev
 
 No installation needed! Visit:
 
-- **Dashboard**: [https://motor-speed-temperature.netlify.app](https://motor-speed-temperature.netlify.app)
-- **API**: [https://motor-backend.duckdns.org](https://motor-backend.duckdns.org)
+- **Dashboard**: [https://your-frontend.netlify.app](https://your-frontend.netlify.app)
+- **API**: [https://your-backend.duckdns.org](https://your-backend.duckdns.org) or [https://your-backend.onrender.com](https://your-backend.onrender.com)
 
 ### Option 3: Docker Compose
 
@@ -521,7 +521,7 @@ make health
 
 ### API Documentation
 
-- **Swagger UI**: [https://motor-backend.duckdns.org/swagger](https://motor-backend.duckdns.org/swagger)
+- **Swagger UI**: [https://your-backend.duckdns.org/swagger](https://your-backend.duckdns.org/swagger) or [https://your-backend.onrender.com/swagger](https://your-backend.onrender.com/swagger)
 - **40+ endpoints** documented with request/response examples
 
 ---
@@ -736,11 +736,3 @@ If you have any questions or want to share your work, reach out via GitHub or my
 **Enjoy building and learning!** 🚀
 
 Thank you! 😊
-
----
-
-Built with ❤️ by developers, for developers
-
-_A comprehensive full-stack IoT platform demonstrating real-world industrial monitoring with authentic physics, modern web technologies, and production-ready architecture._
-
-⭐ **Star this repo if you find it useful!**

@@ -195,7 +195,8 @@ motor-speed-backend/
                  │                            │
 ┌────────────────▼────────────────────────────▼───────────────────┐
 │                    ASP.NET Core 8.0 Backend                      │
-│            Hetzner VPS (Coolify): motor-backend.duckdns.org      │
+│        Hetzner VPS (Coolify): your-backend.duckdns.org           │
+│        OR Render.com: your-backend.onrender.com                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  MotorController.cs (40+ API endpoints)                  │  │
 │  │  • GET /api/motor/sample  - Generate reading             │  │
@@ -417,7 +418,7 @@ postgresql://neondb_owner:npg_xxxXXXxxx@ep-misty-sunset-xxx-pooler.c-2.us-east-1
 ### Base URL
 
 - **Local**: `http://localhost:5001/api/motor`
-- **Production**: `https://motor-backend.duckdns.org/api/motor`
+- **Production**: `https://your-backend.duckdns.org/api/motor` or `https://your-backend.onrender.com/api/motor`
 
 ### Core Motor Endpoints
 
@@ -760,7 +761,7 @@ POST /api/motor/clear
 
 ### SignalR Hub Endpoint
 
-**URL**: `http://localhost:5001/motorHub` (local) or `https://your-backend.duckdns.org/motorHub` (production)
+**URL**: `http://localhost:5001/motorHub` (local) or `https://your-backend.duckdns.org/motorHub` (production with DuckDNS) or `https://your-backend.onrender.com/motorHub` (production with Render.com)
 
 ### Client Connection (JavaScript/TypeScript)
 
@@ -1158,13 +1159,13 @@ docker run -p 10000:10000 \
 
    ```env
    DATABASE_URL=postgresql://neondb_owner:password@host/db?sslmode=require&channel_binding=require
-   FRONTEND_URL=https://motor-speed-temperature.netlify.app
+   FRONTEND_URL=https://your-frontend.netlify.app
    ```
 
-6. **Configure Container Labels** for HTTPS routing (Traefik/Caddy)
-7. **Deploy** - Coolify automatically builds and deploys
+6. **Configure Container Labels** for HTTPS routing (Traefik/Caddy) - if using Coolify
+7. **Deploy** - Coolify/Render automatically builds and deploys
 
-**Service URL**: `https://motor-backend.duckdns.org`
+**Service URL**: `https://your-backend.duckdns.org` (Coolify) or `https://your-backend.onrender.com` (Render.com)
 
 ### Health Checks
 
@@ -1372,7 +1373,7 @@ services.AddDbContext<AppDbContext>(opt =>
 // In Program.cs
 var allowedOrigins = new[] {
     "http://localhost:5173",
-    "https://motor-speed-temperature.netlify.app",
+    "https://your-frontend.netlify.app",
     Environment.GetEnvironmentVariable("FRONTEND_URL") ?? ""
 };
 
@@ -1926,7 +1927,7 @@ public async Task<BusinessInsights> GetBusinessInsightsAsync()
   "Cors": {
     "AllowedOrigins": [
       "http://localhost:5173",
-      "https://motor-speed-temperature.netlify.app"
+      "https://your-frontend.netlify.app"
     ]
   }
 }
@@ -2475,8 +2476,8 @@ This project demonstrates real-world industrial IoT monitoring with:
 ### Useful Links
 
 - **Live Demo (Frontend)**: <https://motor-speed-temperature.netlify.app>
-- **Live API**: <https://motor-backend.duckdns.org>
-- **Swagger Docs**: <https://motor-backend.duckdns.org/swagger>
+- **Live API**: <https://your-backend.duckdns.org> or <https://your-backend.onrender.com>
+- **Swagger Docs**: <https://your-backend.duckdns.org/swagger> or <https://your-backend.onrender.com/swagger>
 - **NeonDB**: <https://neon.tech>
 - **Coolify**: <https://coolify.io>
 

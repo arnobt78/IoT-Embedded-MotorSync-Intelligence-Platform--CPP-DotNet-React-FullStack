@@ -310,9 +310,13 @@ VITE_ADMIN_PASSKEY=motor2025
 Set these in Netlify dashboard → Site settings → Environment variables:
 
 ```bash
-VITE_API_URL=https://motor-backend.duckdns.org
+VITE_API_URL=https://your-backend.duckdns.org
+# OR if using Render.com:
+# VITE_API_URL=https://your-backend.onrender.com
 
-VITE_SIGNALR_URL=https://motor-backend.duckdns.org/motorHub
+VITE_SIGNALR_URL=https://your-backend.duckdns.org/motorHub
+# OR if using Render.com:
+# VITE_SIGNALR_URL=https://your-backend.onrender.com/motorHub
 VITE_ADMIN_PASSKEY=motor2025
 ```
 
@@ -813,7 +817,7 @@ useEffect(() => {
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? "https://motor-backend.duckdns.org"
+    ? "https://your-backend.duckdns.org" // Replace with your actual backend URL
     : "http://localhost:5001");
 
 export const SIGNALR_URL =
@@ -1157,8 +1161,12 @@ npm run preview
 3. Set environment variables:
 
    ```bash
-   VITE_API_URL=https://motor-backend.duckdns.org
-   VITE_SIGNALR_URL=https://motor-backend.duckdns.org/motorHub
+   VITE_API_URL=https://your-backend.duckdns.org
+   # OR if using Render.com:
+   # VITE_API_URL=https://your-backend.onrender.com
+   VITE_SIGNALR_URL=https://your-backend.duckdns.org/motorHub
+   # OR if using Render.com:
+   # VITE_SIGNALR_URL=https://your-backend.onrender.com/motorHub
    VITE_ADMIN_PASSKEY=motor2025
    ```
 
@@ -1964,8 +1972,8 @@ Open-source and available for educational and commercial use.
 ### Useful Links
 
 - **Live Demo**: <https://motor-speed-temperature.netlify.app>
-- **Backend API**: <https://motor-backend.duckdns.org>
-- **Swagger Docs**: <https://motor-backend.duckdns.org/swagger>
+- **Backend API**: <https://your-backend.duckdns.org> or <https://your-backend.onrender.com>
+- **Swagger Docs**: <https://your-backend.duckdns.org/swagger> or <https://your-backend.onrender.com/swagger>
 - **React Docs**: <https://react.dev>
 - **Vite Docs**: <https://vitejs.dev>
 - **TailwindCSS**: <https://tailwindcss.com>
@@ -1982,9 +1990,3 @@ If you have any questions or want to share your work, reach out via GitHub or my
 **Enjoy building and learning!** 🚀
 
 Thank you! 😊
-
----
-
-Built with ❤️ using React, TypeScript, TailwindCSS, and modern web technologies
-
-Last Updated: October 13, 2025
